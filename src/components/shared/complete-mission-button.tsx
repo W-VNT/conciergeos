@@ -22,8 +22,8 @@ export function CompleteMissionButton({ missionId, variant = "outline" }: Props)
       await completeMission(missionId);
       toast.success("Mission marquée terminée");
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message ?? "Erreur");
+    } catch (err: unknown) {
+      toast.error((err as Error).message ?? "Erreur");
     } finally {
       setLoading(false);
     }

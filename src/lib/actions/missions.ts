@@ -29,7 +29,7 @@ export async function createMission(data: MissionFormData) {
 }
 
 export async function updateMission(id: string, data: MissionFormData) {
-  const profile = await requireProfile();
+  await requireProfile();
   const parsed = missionSchema.parse(data);
   const supabase = createClient();
 
