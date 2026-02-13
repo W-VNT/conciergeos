@@ -29,15 +29,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname === '/login';
-  const isPublicPath = isLoginPage || request.nextUrl.pathname === '/';
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname === '/login';
+  const isRootPage = pathname === '/';
 
-  if (!user && !isPublicPath) {
+  // Root always redirects
+  if (isRootPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = user ? '/dashboard' : '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Not authenticated → redirect to login
+  if (!user && !isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
+  // Already authenticated on login → redirect to dashboard
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
