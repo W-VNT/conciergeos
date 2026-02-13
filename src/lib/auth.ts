@@ -39,28 +39,14 @@ export async function requireProfile(): Promise<Profile> {
     .single();
 
   if (!profile) {
-    // Auto-onboarding: create org + admin profile
-    const { data: org } = await supabase
-      .from('organisations')
-      .insert({ name: 'Ma Conciergerie' })
-      .select()
-      .single();
+    // Auto-onboarding via SECURITY DEFINER function (bypasses RLS)
+    const { data: newProfile, error } = await supabase.rpc('handle_onboarding', {
+      p_user_id: user.id,
+      p_full_name: user.email?.split('@')[0] || 'Admin',
+    });
 
-    if (!org) redirect('/login');
-
-    const { data: newProfile } = await supabase
-      .from('profiles')
-      .insert({
-        id: user.id,
-        organisation_id: org.id,
-        full_name: user.email?.split('@')[0] || 'Admin',
-        role: 'ADMIN',
-      })
-      .select()
-      .single();
-
-    if (!newProfile) redirect('/login');
-    return newProfile;
+    if (error || !newProfile) redirect('/login');
+    return newProfile as Profile;
   }
 
   return profile;
