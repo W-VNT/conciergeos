@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f9fafb;
+            background-color: #fafafa;
         }
         .container {
             max-width: 600px;
@@ -17,58 +17,68 @@
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e5e5;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 30px;
+            background-color: #0a0a0a;
+            padding: 32px 30px;
             text-align: center;
+            border-bottom: 1px solid #262626;
         }
         .logo {
             width: 48px;
             height: 48px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            background-color: #ffffff;
+            border-radius: 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            font-size: 24px;
         }
         .header h1 {
-            color: #ffffff;
+            color: #fafafa;
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 600;
+            letter-spacing: -0.01em;
         }
         .content {
             padding: 40px 30px;
         }
         .content h2 {
-            color: #111827;
+            color: #0a0a0a;
             font-size: 20px;
             font-weight: 600;
             margin: 0 0 16px 0;
+            letter-spacing: -0.01em;
         }
         .content p {
-            color: #6b7280;
+            color: #737373;
             font-size: 16px;
             line-height: 1.6;
             margin: 0 0 16px 0;
         }
         .button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff !important;
+            background-color: #0a0a0a;
+            color: #fafafa !important;
             text-decoration: none;
-            padding: 14px 32px;
+            padding: 12px 28px;
             border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: 500;
+            font-size: 15px;
             text-align: center;
             margin: 24px 0;
+            border: 1px solid #0a0a0a;
+        }
+        .button:hover {
+            background-color: #171717;
         }
         .features {
-            background-color: #f9fafb;
+            background-color: #fafafa;
+            border: 1px solid #e5e5e5;
             border-radius: 8px;
             padding: 24px;
             margin: 32px 0;
@@ -84,44 +94,51 @@
         .feature-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
+            background-color: #0a0a0a;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-right: 16px;
             flex-shrink: 0;
+            font-size: 20px;
         }
         .feature-content h3 {
-            color: #111827;
+            color: #0a0a0a;
             font-size: 16px;
             font-weight: 600;
             margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
         }
         .feature-content p {
-            color: #6b7280;
+            color: #737373;
             font-size: 14px;
             margin: 0;
         }
         .footer {
-            background-color: #f9fafb;
+            background-color: #fafafa;
             padding: 24px 30px;
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #e5e5e5;
         }
         .footer p {
-            color: #9ca3af;
+            color: #a3a3a3;
             font-size: 14px;
-            margin: 8px 0;
+            margin: 6px 0;
         }
         .footer a {
-            color: #667eea;
+            color: #525252;
             text-decoration: none;
+        }
+        .footer a:hover {
+            color: #0a0a0a;
         }
         @media only screen and (max-width: 600px) {
             .container {
                 margin: 0;
                 border-radius: 0;
+                border-left: none;
+                border-right: none;
             }
             .content {
                 padding: 24px 20px;
@@ -137,13 +154,13 @@
         </div>
 
         <div class="content">
-            <h2>Bienvenue sur ConciergeOS ! 🚀</h2>
+            <h2>Bienvenue sur ConciergeOS</h2>
 
             <p>Votre compte a été créé avec succès. Vous êtes maintenant prêt à gérer votre conciergerie de manière professionnelle et efficace.</p>
 
             <a href="https://conciergeos.vercel.app/dashboard" class="button">Accéder à mon dashboard</a>
 
-            <h3 style="color: #111827; font-size: 18px; margin: 32px 0 16px 0;">Pour bien démarrer :</h3>
+            <h3 style="color: #0a0a0a; font-size: 18px; margin: 32px 0 16px 0; font-weight: 600; letter-spacing: -0.01em;">Pour bien démarrer</h3>
 
             <div class="features">
                 <div class="feature">
@@ -179,21 +196,21 @@
                 </div>
             </div>
 
-            <p style="margin-top: 32px;"><strong>Besoin d'aide ?</strong></p>
+            <p style="margin-top: 32px; color: #0a0a0a;"><strong>Besoin d'aide ?</strong></p>
             <p style="margin-top: 8px;">
                 Notre équipe est là pour vous accompagner. Contactez-nous à
-                <a href="mailto:support@conciergeos.com" style="color: #667eea;">support@conciergeos.com</a>
+                <a href="mailto:support@conciergeos.com" style="color: #0a0a0a; text-decoration: underline;">support@conciergeos.com</a>
             </p>
         </div>
 
         <div class="footer">
-            <p><strong>ConciergeOS</strong> - Gérez votre conciergerie en toute simplicité</p>
+            <p><strong>ConciergeOS</strong> — Gérez votre conciergerie en toute simplicité</p>
             <p>
                 <a href="https://conciergeos.vercel.app">Site web</a> •
                 <a href="mailto:support@conciergeos.com">Support</a> •
                 <a href="https://conciergeos.vercel.app/docs">Documentation</a>
             </p>
-            <p style="margin-top: 16px;">© 2026 ConciergeOS. Tous droits réservés.</p>
+            <p style="margin-top: 12px;">© 2026 ConciergeOS. Tous droits réservés.</p>
         </div>
     </div>
 </body>
