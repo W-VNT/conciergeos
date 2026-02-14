@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Home, CheckCircle2, Mail } from "lucide-react";
+import { Building2, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
 
 export default function SignupPage() {
@@ -28,15 +28,6 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [orgCity, setOrgCity] = useState("");
-
-  // Step 3: First logement
-  const [logementName, setLogementName] = useState("");
-  const [logementAddress, setLogementAddress] = useState("");
-  const [logementCity, setLogementCity] = useState("");
-  const [logementPostalCode, setLogementPostalCode] = useState("");
-  const [lockboxCode, setLockboxCode] = useState("");
-  const [wifiName, setWifiName] = useState("");
-  const [wifiPassword, setWifiPassword] = useState("");
 
   // Password strength
   function getPasswordStrength(pass: string): { strength: number; label: string; color: string } {
@@ -94,24 +85,6 @@ export default function SignupPage() {
     setStep(3);
   }
 
-  async function handleStep3Submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    // Validate logement if filled
-    if (logementName.trim() && logementName.trim().length < 2) {
-      setError("Le nom du logement doit contenir au moins 2 caractères");
-      return;
-    }
-
-    // Proceed to final step
-    setStep(4);
-  }
-
-  async function handleSkipStep3() {
-    setStep(4);
-  }
-
   async function handleFinalSubmit() {
     setLoading(true);
     setError(null);
@@ -160,22 +133,6 @@ export default function SignupPage() {
           onboarding_completed: true,
         })
         .eq('id', profile.organisation_id);
-
-      // 3. Create first logement if provided
-      if (logementName.trim()) {
-        await supabase.from('logements').insert({
-          organisation_id: profile.organisation_id,
-          name: logementName.trim(),
-          address_line1: logementAddress.trim() || null,
-          city: logementCity.trim() || null,
-          postal_code: logementPostalCode.trim() || null,
-          lockbox_code: lockboxCode.trim() || null,
-          wifi_name: wifiName.trim() || null,
-          wifi_password: wifiPassword.trim() || null,
-          offer_tier: 'ESSENTIEL',
-          status: 'ACTIF',
-        });
-      }
     }
 
     // Redirect to dashboard
@@ -194,15 +151,15 @@ export default function SignupPage() {
           </div>
           <CardTitle className="text-2xl">Créer votre compte ConciergeOS</CardTitle>
           <CardDescription>
-            {step === 4
+            {step === 3
               ? "Dernière étape !"
-              : `Étape ${step} sur 4`
+              : `Étape ${step} sur 3`
             }
           </CardDescription>
 
           {/* Stepper */}
           <div className="flex items-center justify-center gap-2 mt-6">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center">
                 <div
                   className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -215,7 +172,7 @@ export default function SignupPage() {
                 >
                   {s < step ? '✓' : s}
                 </div>
-                {s < 4 && (
+                {s < 3 && (
                   <div
                     className={`h-0.5 w-12 mx-1 ${
                       s < step ? 'bg-primary' : 'bg-gray-200'
@@ -410,118 +367,8 @@ export default function SignupPage() {
             </form>
           )}
 
-          {/* Step 3: First logement */}
+          {/* Step 3: Confirmation & Submit */}
           {step === 3 && (
-            <form onSubmit={handleStep3Submit} className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-1 flex items-center gap-2">
-                  <Home className="h-5 w-5" />
-                  Premier logement (optionnel)
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Ajoutez votre premier bien en gestion. Vous pourrez en ajouter d&apos;autres plus tard.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="logement-name">Nom du logement</Label>
-                <Input
-                  id="logement-name"
-                  placeholder="Ex: Appartement Promenade"
-                  value={logementName}
-                  onChange={(e) => setLogementName(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="logement-address">Adresse</Label>
-                <Input
-                  id="logement-address"
-                  placeholder="12 Promenade des Anglais"
-                  value={logementAddress}
-                  onChange={(e) => setLogementAddress(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="logement-city">Ville</Label>
-                  <Input
-                    id="logement-city"
-                    placeholder="Nice"
-                    value={logementCity}
-                    onChange={(e) => setLogementCity(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="logement-postal">Code postal</Label>
-                  <Input
-                    id="logement-postal"
-                    placeholder="06000"
-                    value={logementPostalCode}
-                    onChange={(e) => setLogementPostalCode(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lockbox">Code boîte à clés</Label>
-                <Input
-                  id="lockbox"
-                  placeholder="1234"
-                  value={lockboxCode}
-                  onChange={(e) => setLockboxCode(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="wifi-name">Nom WiFi</Label>
-                  <Input
-                    id="wifi-name"
-                    placeholder="MyWiFi"
-                    value={wifiName}
-                    onChange={(e) => setWifiName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="wifi-password">Mot de passe WiFi</Label>
-                  <Input
-                    id="wifi-password"
-                    type="text"
-                    placeholder="••••••••"
-                    value={wifiPassword}
-                    onChange={(e) => setWifiPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(2)}
-                  className="flex-1"
-                >
-                  Retour
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSkipStep3}
-                  disabled={loading}
-                >
-                  Passer
-                </Button>
-                <Button type="submit" className="flex-1" disabled={loading}>
-                  Continuer
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* Step 4: Confirmation & Submit */}
-          {step === 4 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -546,12 +393,6 @@ export default function SignupPage() {
                     {orgCity && ` • ${orgCity}`}
                   </p>
                 </div>
-                {logementName && (
-                  <div>
-                    <p className="font-medium">Premier logement</p>
-                    <p className="text-muted-foreground">{logementName}</p>
-                  </div>
-                )}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
@@ -566,7 +407,7 @@ export default function SignupPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(2)}
                   className="flex-1"
                   disabled={loading}
                 >
