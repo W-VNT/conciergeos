@@ -86,31 +86,19 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 space-y-3">
-            <div className="text-center">
-              <Link
-                href="/forgot-password"
-                className="text-sm text-muted-foreground hover:text-primary underline"
-              >
-                Mot de passe oublié ?
-              </Link>
-            </div>
+          <div className="mt-6 space-y-3 text-center">
+            <Link
+              href="/signup"
+              className="text-sm text-primary hover:underline block"
+            >
+              Créer un compte gratuitement
+            </Link>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">
-                  Nouveau sur ConciergeOS ?
-                </span>
-              </div>
-            </div>
-
-            <Link href="/signup">
-              <Button variant="outline" className="w-full">
-                Créer un compte gratuitement
-              </Button>
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary underline block"
+            >
+              Mot de passe oublié ?
             </Link>
           </div>
         </CardContent>
