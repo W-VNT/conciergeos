@@ -86,20 +86,21 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 space-y-3 text-center">
-            <Link
-              href="/signup"
-              className="text-sm text-primary hover:underline block"
-            >
-              Créer un compte gratuitement
+          <div className="mt-6 space-y-3">
+            <Link href="/signup">
+              <Button variant="outline" className="w-full">
+                Créer un compte gratuitement
+              </Button>
             </Link>
 
-            <Link
-              href="/forgot-password"
-              className="text-sm text-muted-foreground hover:text-primary underline block"
-            >
-              Mot de passe oublié ?
-            </Link>
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-muted-foreground hover:text-primary underline"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
