@@ -11,6 +11,8 @@ import Link from "next/link";
 
 const PAGE_SIZE = 20;
 
+export const revalidate = 30;
+
 export default async function LogementsPage({
   searchParams,
 }: {

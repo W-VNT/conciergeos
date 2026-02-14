@@ -7,6 +7,9 @@ import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, INCIDENT_SEVERITY_LABELS, I
 import { ClipboardList, AlertTriangle, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 
+// Revalidate every 30 seconds (ISR cache)
+export const revalidate = 30;
+
 export default async function DashboardPage() {
   const profile = await requireProfile();
   const supabase = createClient();
@@ -17,37 +20,60 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  let missionsQuery = supabase
-    .from("missions")
-    .select("*, logement:logements(name), assignee:profiles(full_name)")
-    .gte("scheduled_at", today.toISOString())
-    .lt("scheduled_at", tomorrow.toISOString())
-    .order("scheduled_at");
+  // Parallelize all queries with Promise.all for faster loading
+  const [
+    { data: todayMissions },
+    { data: openIncidents, count: openIncidentsCount },
+    { count: criticalCount },
+    { data: resolvedIncidents },
+    { data: costData },
+  ] = await Promise.all([
+    // Today's missions
+    (async () => {
+      let query = supabase
+        .from("missions")
+        .select("*, logement:logements(name), assignee:profiles(full_name)")
+        .gte("scheduled_at", today.toISOString())
+        .lt("scheduled_at", tomorrow.toISOString())
+        .order("scheduled_at");
 
-  if (!isAdmin(profile)) {
-    missionsQuery = missionsQuery.eq("assigned_to", profile.id);
-  }
-  const { data: todayMissions } = await missionsQuery;
+      if (!isAdmin(profile)) {
+        query = query.eq("assigned_to", profile.id);
+      }
+      return query;
+    })(),
 
-  const { data: openIncidents, count: openIncidentsCount } = await supabase
-    .from("incidents")
-    .select("*, logement:logements(name)", { count: "exact" })
-    .in("status", ["OUVERT", "EN_COURS"])
-    .order("opened_at", { ascending: false })
-    .limit(10);
+    // Open incidents with count
+    supabase
+      .from("incidents")
+      .select("*, logement:logements(name)", { count: "exact" })
+      .in("status", ["OUVERT", "EN_COURS"])
+      .order("opened_at", { ascending: false })
+      .limit(10),
 
-  const { count: criticalCount } = await supabase
-    .from("incidents")
-    .select("*", { count: "exact", head: true })
-    .in("status", ["OUVERT", "EN_COURS"])
-    .eq("severity", "CRITIQUE");
+    // Critical incidents count
+    supabase
+      .from("incidents")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["OUVERT", "EN_COURS"])
+      .eq("severity", "CRITIQUE"),
 
-  const { data: resolvedIncidents } = await supabase
-    .from("incidents")
-    .select("opened_at, resolved_at")
-    .not("resolved_at", "is", null)
-    .gte("resolved_at", thirtyDaysAgo.toISOString());
+    // Resolved incidents for avg calculation
+    supabase
+      .from("incidents")
+      .select("opened_at, resolved_at")
+      .not("resolved_at", "is", null)
+      .gte("resolved_at", thirtyDaysAgo.toISOString()),
 
+    // Cost data
+    supabase
+      .from("incidents")
+      .select("cost")
+      .not("cost", "is", null)
+      .gte("created_at", thirtyDaysAgo.toISOString()),
+  ]);
+
+  // Calculate average resolution time
   let avgResolutionHours = 0;
   if (resolvedIncidents && resolvedIncidents.length > 0) {
     const totalMs = resolvedIncidents.reduce((sum, inc) => {
@@ -55,12 +81,6 @@ export default async function DashboardPage() {
     }, 0);
     avgResolutionHours = Math.round(totalMs / resolvedIncidents.length / (1000 * 60 * 60));
   }
-
-  const { data: costData } = await supabase
-    .from("incidents")
-    .select("cost")
-    .not("cost", "is", null)
-    .gte("created_at", thirtyDaysAgo.toISOString());
 
   const totalCost = costData?.reduce((sum, i) => sum + (Number(i.cost) || 0), 0) ?? 0;
 

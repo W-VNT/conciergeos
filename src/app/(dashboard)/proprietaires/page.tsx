@@ -8,6 +8,8 @@ import { SERVICE_LEVEL_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
 
+export const revalidate = 30;
+
 const PAGE_SIZE = 20;
 
 export default async function ProprietairesPage({

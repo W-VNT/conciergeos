@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Link from "next/link";
 import { Star } from "lucide-react";
 
+export const revalidate = 30;
+
 const PAGE_SIZE = 20;
 
 export default async function PrestatairesPage({ searchParams }: { searchParams: { q?: string; page?: string } }) {

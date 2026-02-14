@@ -13,6 +13,9 @@ import Link from "next/link";
 
 const PAGE_SIZE = 20;
 
+// Revalidate every 30 seconds
+export const revalidate = 30;
+
 export default async function MissionsPage({
   searchParams,
 }: {

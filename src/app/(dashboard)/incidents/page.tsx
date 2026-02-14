@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ExportCSVButton } from "@/components/shared/export-csv-button";
 import Link from "next/link";
 
+export const revalidate = 30;
+
 const PAGE_SIZE = 20;
 
 export default async function IncidentsPage({ searchParams }: { searchParams: { q?: string; status?: string; severity?: string; page?: string } }) {
