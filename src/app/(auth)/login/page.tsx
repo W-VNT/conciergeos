@@ -86,7 +86,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 space-y-3">
+          <div className="mt-4 space-y-3">
             <Link href="/signup">
               <Button variant="outline" className="w-full">
                 Créer un compte gratuitement
