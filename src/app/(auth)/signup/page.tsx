@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,24 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [orgCity, setOrgCity] = useState("");
+
+  // Check if user is already signed up but email not confirmed
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user && !user.email_confirmed_at) {
+        // User exists but email not confirmed → go to step 4
+        setEmail(user.email || "");
+        setStep(4);
+      } else if (user && user.email_confirmed_at) {
+        // User exists and email confirmed → redirect to dashboard
+        router.push('/dashboard');
+      }
+    }
+
+    checkUser();
+  }, [supabase, router]);
 
   // Password strength
   function getPasswordStrength(pass: string): { strength: number; label: string; color: string } {
@@ -135,9 +153,29 @@ export default function SignupPage() {
         .eq('id', profile.organisation_id);
     }
 
-    // Redirect to dashboard
-    router.push('/dashboard');
-    router.refresh();
+    setLoading(false);
+    // Go to email verification step instead of redirecting
+    setStep(4);
+  }
+
+  async function handleResendEmail() {
+    setLoading(true);
+    setError(null);
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+    });
+
+    if (error) {
+      setError("Erreur lors de l'envoi de l'email");
+    } else {
+      setError(null);
+      // Show success message
+      alert("Email renvoyé ! Vérifiez votre boîte de réception.");
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -149,39 +187,45 @@ export default function SignupPage() {
               <Building2 className="h-7 w-7 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Créer votre compte ConciergeOS</CardTitle>
+          <CardTitle className="text-2xl">
+            {step === 4 ? "Vérifiez votre email" : "Créer votre compte ConciergeOS"}
+          </CardTitle>
           <CardDescription>
-            {step === 3
+            {step === 4
+              ? "Une dernière étape avant d'accéder à votre espace"
+              : step === 3
               ? "Dernière étape !"
               : `Étape ${step} sur 3`
             }
           </CardDescription>
 
-          {/* Stepper */}
-          <div className="flex items-center justify-center gap-2 mt-6">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center">
-                <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    s < step
-                      ? 'bg-primary text-primary-foreground'
-                      : s === step
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-gray-200 text-gray-500'
-                  }`}
-                >
-                  {s < step ? '✓' : s}
-                </div>
-                {s < 3 && (
+          {/* Stepper - Hidden on step 4 */}
+          {step < 4 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex items-center">
                   <div
-                    className={`h-0.5 w-12 mx-1 ${
-                      s < step ? 'bg-primary' : 'bg-gray-200'
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      s < step
+                        ? 'bg-primary text-primary-foreground'
+                        : s === step
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-gray-200 text-gray-500'
                     }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+                  >
+                    {s < step ? '✓' : s}
+                  </div>
+                  {s < 3 && (
+                    <div
+                      className={`h-0.5 w-12 mx-1 ${
+                        s < step ? 'bg-primary' : 'bg-gray-200'
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="pt-6">
@@ -421,6 +465,61 @@ export default function SignupPage() {
                 >
                   {loading ? 'Création du compte...' : 'Créer mon compte'}
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Email Verification */}
+          {step === 4 && (
+            <div className="space-y-6 text-center">
+              <div className="flex justify-center">
+                <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Mail className="h-10 w-10 text-blue-600" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Consultez votre boîte email</h3>
+                <p className="text-muted-foreground">
+                  Nous avons envoyé un email de confirmation à
+                </p>
+                <p className="text-lg font-medium mt-1">{email}</p>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-left">
+                <p className="font-medium text-yellow-900 mb-2">📌 Instructions</p>
+                <ol className="text-yellow-800 space-y-1 list-decimal list-inside">
+                  <li>Ouvrez votre boîte email</li>
+                  <li>Recherchez l&apos;email de ConciergeOS</li>
+                  <li>Cliquez sur le lien de confirmation</li>
+                  <li>Vous serez automatiquement redirigé vers votre dashboard</li>
+                </ol>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+                <p>💡 L&apos;email peut prendre quelques minutes à arriver.</p>
+                <p className="mt-1">Pensez à vérifier vos <strong>spams</strong> si vous ne le voyez pas.</p>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button
+                  onClick={handleResendEmail}
+                  variant="outline"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? 'Envoi...' : 'Renvoyer l\'email'}
+                </Button>
+
+                <p className="text-xs text-muted-foreground">
+                  Mauvaise adresse email ?{" "}
+                  <button
+                    onClick={() => setStep(1)}
+                    className="underline hover:text-primary"
+                  >
+                    Recommencer
+                  </button>
+                </p>
               </div>
             </div>
           )}

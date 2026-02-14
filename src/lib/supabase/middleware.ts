@@ -35,10 +35,19 @@ export async function updateSession(request: NextRequest) {
   const isRootPage = pathname === '/';
   const isAuthPage = isLoginPage || isSignupPage;
 
+  // Check if email is confirmed
+  const isEmailConfirmed = user?.email_confirmed_at != null;
+
   // Root always redirects
   if (isRootPage) {
     const url = request.nextUrl.clone();
-    url.pathname = user ? '/dashboard' : '/login';
+    if (!user) {
+      url.pathname = '/login';
+    } else if (!isEmailConfirmed) {
+      url.pathname = '/signup'; // Stay on signup to show email verification
+    } else {
+      url.pathname = '/dashboard';
+    }
     return NextResponse.redirect(url);
   }
 
@@ -49,8 +58,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Already authenticated on login or signup → redirect to dashboard
-  if (user && isAuthPage) {
+  // Authenticated but email not confirmed → keep on signup page
+  if (user && !isEmailConfirmed && !isSignupPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/signup';
+    return NextResponse.redirect(url);
+  }
+
+  // Already authenticated with confirmed email on login or signup → redirect to dashboard
+  if (user && isEmailConfirmed && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
