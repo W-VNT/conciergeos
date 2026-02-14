@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2 } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -23,21 +23,12 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-      setError("Vérifiez votre email pour confirmer votre inscription.");
-      setLoading(false);
-      return;
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      setError(error.message);
+      setError(error.message === "Invalid login credentials"
+        ? "Email ou mot de passe incorrect"
+        : error.message
+      );
       setLoading(false);
       return;
     }
@@ -57,7 +48,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl">ConciergeOS</CardTitle>
           <CardDescription>
-            {isSignUp ? "Créer un compte" : "Connectez-vous à votre espace"}
+            Connectez-vous à votre espace
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -67,10 +58,11 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="email@example.com"
+                placeholder="vous@votreconciergerie.fr"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -83,23 +75,43 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                autoComplete="current-password"
               />
             </div>
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Chargement..." : isSignUp ? "Créer le compte" : "Se connecter"}
+              {loading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-              className="text-sm text-muted-foreground hover:text-primary"
-            >
-              {isSignUp ? "Déjà un compte ? Se connecter" : "Pas de compte ? S'inscrire"}
-            </button>
+
+          <div className="mt-6 space-y-3">
+            <div className="text-center">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-muted-foreground hover:text-primary underline"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">
+                  Nouveau sur ConciergeOS ?
+                </span>
+              </div>
+            </div>
+
+            <Link href="/signup">
+              <Button variant="outline" className="w-full">
+                Créer un compte gratuitement
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

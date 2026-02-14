@@ -31,8 +31,9 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === '/login';
-  const isOnboardingPage = pathname === '/onboarding';
+  const isSignupPage = pathname === '/signup';
   const isRootPage = pathname === '/';
+  const isAuthPage = isLoginPage || isSignupPage;
 
   // Root always redirects
   if (isRootPage) {
@@ -41,40 +42,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Not authenticated → redirect to login (except on login page)
-  if (!user && !isLoginPage) {
+  // Not authenticated → redirect to login (except on login/signup pages)
+  if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // Authenticated user: check if onboarding completed
-  if (user && !isLoginPage && !isOnboardingPage) {
-    // Fetch user's organisation to check onboarding status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organisation_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.organisation_id) {
-      const { data: org } = await supabase
-        .from('organisations')
-        .select('onboarding_completed')
-        .eq('id', profile.organisation_id)
-        .single();
-
-      // If onboarding not completed, redirect to onboarding
-      if (org && !org.onboarding_completed) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/onboarding';
-        return NextResponse.redirect(url);
-      }
-    }
-  }
-
-  // Already authenticated on login → redirect to dashboard
-  if (user && isLoginPage) {
+  // Already authenticated on login or signup → redirect to dashboard
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
