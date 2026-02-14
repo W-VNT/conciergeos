@@ -19,6 +19,9 @@ export type EntityType = 'LOGEMENT' | 'MISSION' | 'INCIDENT';
 export interface Organisation {
   id: string;
   name: string;
+  onboarding_completed: boolean;
+  city: string | null;
+  logo_url: string | null;
   created_at: string;
 }
 
