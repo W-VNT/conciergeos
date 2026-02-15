@@ -14,10 +14,12 @@ import {
   Calendar,
   FileText,
   CalendarCheck,
+  BarChart3,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/logements", label: "Logements", icon: Home },
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/contrats", label: "Contrats", icon: FileText },

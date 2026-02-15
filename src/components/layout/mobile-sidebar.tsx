@@ -12,10 +12,12 @@ import {
   Wrench,
   Building2,
   Calendar,
+  BarChart3,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/logements", label: "Logements", icon: Home },
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/missions", label: "Missions", icon: ClipboardList },
