@@ -123,8 +123,8 @@ BEGIN
   RAISE NOTICE '✅ 17 réservations créées';
 
   -- Missions de ménage
-  INSERT INTO missions (organisation_id, logement_id, type, scheduled_at, status, notes, prestataire_id)
-  SELECT v_org_id, logement_id, 'MENAGE', check_out_date || ' 11:00:00', 'TERMINEE', 'Ménage après départ', v_prest1_id
+  INSERT INTO missions (organisation_id, logement_id, type, scheduled_at, status, notes)
+  SELECT v_org_id, logement_id, 'MENAGE', check_out_date || ' 11:00:00', 'TERMINEE', 'Ménage après départ'
   FROM reservations
   WHERE organisation_id = v_org_id AND check_out_date < CURRENT_DATE
   LIMIT 8;
