@@ -52,40 +52,40 @@ BEGIN
 
   INSERT INTO proprietaires (organisation_id, full_name, email, phone)
   VALUES (p_org_id, 'Marie Dubois', 'marie.dubois@example.com', '+33 6 12 34 56 78');
-  SELECT id INTO STRICT v_proprio1_id FROM proprietaires WHERE email = 'marie.dubois@example.com';
+  SELECT id INTO STRICT v_proprio1_id FROM proprietaires WHERE email = 'marie.dubois@example.com' AND organisation_id = p_org_id;
 
   INSERT INTO proprietaires (organisation_id, full_name, email, phone)
   VALUES (p_org_id, 'Jean Martin', 'jean.martin@example.com', '+33 6 23 45 67 89');
-  SELECT id INTO STRICT v_proprio2_id FROM proprietaires WHERE email = 'jean.martin@example.com';
+  SELECT id INTO STRICT v_proprio2_id FROM proprietaires WHERE email = 'jean.martin@example.com' AND organisation_id = p_org_id;
 
   INSERT INTO proprietaires (organisation_id, full_name, email, phone)
   VALUES (p_org_id, 'Sophie Laurent', 'sophie.laurent@example.com', '+33 6 34 56 78 90');
-  SELECT id INTO STRICT v_proprio3_id FROM proprietaires WHERE email = 'sophie.laurent@example.com';
+  SELECT id INTO STRICT v_proprio3_id FROM proprietaires WHERE email = 'sophie.laurent@example.com' AND organisation_id = p_org_id;
 
   -- ============================================================
   -- 2. LOGEMENTS
   -- ============================================================
   RAISE NOTICE '🏠 Creating logements...';
 
-  INSERT INTO logements (organisation_id, proprietaire_id, name, address, city, postal_code, bedrooms, bathrooms, capacity)
-  VALUES (p_org_id, v_proprio1_id, 'Studio Marais', '15 rue des Archives', 'Paris', '75003', 1, 1, 2);
-  SELECT id INTO STRICT v_log1_id FROM logements WHERE name = 'Studio Marais';
+  INSERT INTO logements (organisation_id, owner_id, name, address_line1, city, postal_code, bedrooms, max_guests)
+  VALUES (p_org_id, v_proprio1_id, 'Studio Marais', '15 rue des Archives', 'Paris', '75003', 1, 2);
+  SELECT id INTO STRICT v_log1_id FROM logements WHERE name = 'Studio Marais' AND organisation_id = p_org_id;
 
-  INSERT INTO logements (organisation_id, proprietaire_id, name, address, city, postal_code, bedrooms, bathrooms, capacity)
-  VALUES (p_org_id, v_proprio1_id, 'Appartement Tour Eiffel', '8 avenue de la Bourdonnais', 'Paris', '75007', 2, 1, 4);
-  SELECT id INTO STRICT v_log2_id FROM logements WHERE name = 'Appartement Tour Eiffel';
+  INSERT INTO logements (organisation_id, owner_id, name, address_line1, city, postal_code, bedrooms, max_guests)
+  VALUES (p_org_id, v_proprio1_id, 'Appartement Tour Eiffel', '8 avenue de la Bourdonnais', 'Paris', '75007', 2, 4);
+  SELECT id INTO STRICT v_log2_id FROM logements WHERE name = 'Appartement Tour Eiffel' AND organisation_id = p_org_id;
 
-  INSERT INTO logements (organisation_id, proprietaire_id, name, address, city, postal_code, bedrooms, bathrooms, capacity)
-  VALUES (p_org_id, v_proprio2_id, 'Loft Belleville', '42 rue de Belleville', 'Paris', '75020', 3, 2, 6);
-  SELECT id INTO STRICT v_log3_id FROM logements WHERE name = 'Loft Belleville';
+  INSERT INTO logements (organisation_id, owner_id, name, address_line1, city, postal_code, bedrooms, max_guests)
+  VALUES (p_org_id, v_proprio2_id, 'Loft Belleville', '42 rue de Belleville', 'Paris', '75020', 3, 6);
+  SELECT id INTO STRICT v_log3_id FROM logements WHERE name = 'Loft Belleville' AND organisation_id = p_org_id;
 
-  INSERT INTO logements (organisation_id, proprietaire_id, name, address, city, postal_code, bedrooms, bathrooms, capacity)
-  VALUES (p_org_id, v_proprio2_id, 'Duplex Montmartre', '25 rue Lepic', 'Paris', '75018', 2, 2, 5);
-  SELECT id INTO STRICT v_log4_id FROM logements WHERE name = 'Duplex Montmartre';
+  INSERT INTO logements (organisation_id, owner_id, name, address_line1, city, postal_code, bedrooms, max_guests)
+  VALUES (p_org_id, v_proprio2_id, 'Duplex Montmartre', '25 rue Lepic', 'Paris', '75018', 2, 5);
+  SELECT id INTO STRICT v_log4_id FROM logements WHERE name = 'Duplex Montmartre' AND organisation_id = p_org_id;
 
-  INSERT INTO logements (organisation_id, proprietaire_id, name, address, city, postal_code, bedrooms, bathrooms, capacity)
-  VALUES (p_org_id, v_proprio3_id, 'Maison Saint-Germain', '12 rue de Grenelle', 'Paris', '75006', 4, 3, 8);
-  SELECT id INTO STRICT v_log5_id FROM logements WHERE name = 'Maison Saint-Germain';
+  INSERT INTO logements (organisation_id, owner_id, name, address_line1, city, postal_code, bedrooms, max_guests)
+  VALUES (p_org_id, v_proprio3_id, 'Maison Saint-Germain', '12 rue de Grenelle', 'Paris', '75006', 4, 8);
+  SELECT id INTO STRICT v_log5_id FROM logements WHERE name = 'Maison Saint-Germain' AND organisation_id = p_org_id;
 
   -- ============================================================
   -- 3. CONTRATS
@@ -94,23 +94,23 @@ BEGIN
 
   INSERT INTO contrats (organisation_id, logement_id, proprietaire_id, type, commission_rate, start_date, end_date, status)
   VALUES (p_org_id, v_log1_id, v_proprio1_id, 'GESTION_COMPLETE', 15.00, '2025-01-01', '2026-12-31', 'ACTIF');
-  SELECT id INTO STRICT v_contrat1_id FROM contrats WHERE logement_id = v_log1_id;
+  SELECT id INTO STRICT v_contrat1_id FROM contrats WHERE logement_id = v_log1_id AND organisation_id = p_org_id;
 
   INSERT INTO contrats (organisation_id, logement_id, proprietaire_id, type, commission_rate, start_date, end_date, status)
   VALUES (p_org_id, v_log2_id, v_proprio1_id, 'GESTION_COMPLETE', 18.00, '2025-01-01', '2026-12-31', 'ACTIF');
-  SELECT id INTO STRICT v_contrat2_id FROM contrats WHERE logement_id = v_log2_id;
+  SELECT id INTO STRICT v_contrat2_id FROM contrats WHERE logement_id = v_log2_id AND organisation_id = p_org_id;
 
   INSERT INTO contrats (organisation_id, logement_id, proprietaire_id, type, commission_rate, start_date, end_date, status)
   VALUES (p_org_id, v_log3_id, v_proprio2_id, 'CONCIERGERIE', 12.00, '2025-01-01', '2026-12-31', 'ACTIF');
-  SELECT id INTO STRICT v_contrat3_id FROM contrats WHERE logement_id = v_log3_id;
+  SELECT id INTO STRICT v_contrat3_id FROM contrats WHERE logement_id = v_log3_id AND organisation_id = p_org_id;
 
   INSERT INTO contrats (organisation_id, logement_id, proprietaire_id, type, commission_rate, start_date, end_date, status)
   VALUES (p_org_id, v_log4_id, v_proprio2_id, 'GESTION_COMPLETE', 20.00, '2025-01-01', '2026-12-31', 'ACTIF');
-  SELECT id INTO STRICT v_contrat4_id FROM contrats WHERE logement_id = v_log4_id;
+  SELECT id INTO STRICT v_contrat4_id FROM contrats WHERE logement_id = v_log4_id AND organisation_id = p_org_id;
 
   INSERT INTO contrats (organisation_id, logement_id, proprietaire_id, type, commission_rate, start_date, end_date, status)
   VALUES (p_org_id, v_log5_id, v_proprio3_id, 'GESTION_LOCATIVE', 16.00, '2025-01-01', '2026-12-31', 'ACTIF');
-  SELECT id INTO STRICT v_contrat5_id FROM contrats WHERE logement_id = v_log5_id;
+  SELECT id INTO STRICT v_contrat5_id FROM contrats WHERE logement_id = v_log5_id AND organisation_id = p_org_id;
 
   -- ============================================================
   -- 4. PRESTATAIRES
@@ -119,15 +119,15 @@ BEGIN
 
   INSERT INTO prestataires (organisation_id, name, specialty, email, phone, reliability_score)
   VALUES (p_org_id, 'NetClean Pro', 'MENAGE', 'contact@netclean.fr', '+33 1 42 00 00 01', 5);
-  SELECT id INTO STRICT v_prest1_id FROM prestataires WHERE name = 'NetClean Pro';
+  SELECT id INTO STRICT v_prest1_id FROM prestataires WHERE name = 'NetClean Pro' AND organisation_id = p_org_id;
 
   INSERT INTO prestataires (organisation_id, name, specialty, email, phone, reliability_score)
   VALUES (p_org_id, 'Plomberie Express', 'PLOMBERIE', 'contact@plomberie-express.fr', '+33 1 42 00 00 02', 4);
-  SELECT id INTO STRICT v_prest2_id FROM prestataires WHERE name = 'Plomberie Express';
+  SELECT id INTO STRICT v_prest2_id FROM prestataires WHERE name = 'Plomberie Express' AND organisation_id = p_org_id;
 
   INSERT INTO prestataires (organisation_id, name, specialty, email, phone, reliability_score)
   VALUES (p_org_id, 'Électricité Plus', 'ELECTRICITE', 'contact@elec-plus.fr', '+33 1 42 00 00 03', 5);
-  SELECT id INTO STRICT v_prest3_id FROM prestataires WHERE name = 'Électricité Plus';
+  SELECT id INTO STRICT v_prest3_id FROM prestataires WHERE name = 'Électricité Plus' AND organisation_id = p_org_id;
 
   -- ============================================================
   -- 5. RÉSERVATIONS (Janvier-Février 2026)
