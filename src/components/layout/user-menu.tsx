@@ -78,15 +78,16 @@ export function UserMenu({ profile }: UserMenuProps) {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Avatar Button */}
+      {/* Avatar Button - Mobile optimized */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
+        aria-label="Menu utilisateur"
       >
         {/* Avatar with online status */}
         <div className="relative">
           <div
-            className={`h-10 w-10 rounded-full overflow-hidden flex items-center justify-center ${
+            className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden flex items-center justify-center ${
               profile.avatar_url ? "bg-transparent" : `${getAvatarColor(profile.full_name)} text-white`
             }`}
           >
@@ -97,26 +98,26 @@ export function UserMenu({ profile }: UserMenuProps) {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-sm font-semibold">
+              <span className="text-xs sm:text-sm font-semibold">
                 {getInitials(profile.full_name)}
               </span>
             )}
           </div>
           {/* Online status indicator */}
-          <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+          <div className="absolute bottom-0 right-0 h-2.5 w-2.5 sm:h-3 sm:w-3 bg-green-500 border-2 border-white rounded-full" />
         </div>
 
         {/* Name and role (hidden on mobile) */}
-        <div className="hidden sm:block text-left">
+        <div className="hidden md:block text-left">
           <p className="text-sm font-medium">{profile.full_name}</p>
           <p className="text-xs text-muted-foreground">
             {USER_ROLE_LABELS[profile.role]}
           </p>
         </div>
 
-        {/* Chevron indicator */}
+        {/* Chevron indicator (hidden on mobile) */}
         <ChevronDown
-          className={`h-4 w-4 text-muted-foreground transition-transform hidden sm:block ${
+          className={`h-4 w-4 text-muted-foreground transition-transform hidden md:block ${
             isOpen ? "rotate-180" : ""
           }`}
         />
