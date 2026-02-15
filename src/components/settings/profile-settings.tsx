@@ -24,15 +24,15 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
     setLoading(true);
 
     try {
-      const result = await updateProfile({
-        full_name: fullName,
-        phone: phone || undefined,
-      });
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
+      try {
+        await updateProfile({
+          full_name: fullName,
+          phone: phone || undefined,
+        });
         toast.success("Profil mis à jour avec succès");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
+      }
       }
     } catch (error) {
       toast.error("Une erreur est survenue");

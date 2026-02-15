@@ -24,15 +24,15 @@ export default function OrganisationSettings({ organisation }: Props) {
     e.preventDefault();
     setLoading(true);
 
-    const result = await updateOrganisation({
-      name,
-      city: city || undefined,
-    });
-
-    if (result.error) {
-      toast.error(result.error);
-    } else {
+    try {
+      await updateOrganisation({
+        name,
+        city: city || undefined,
+      });
       toast.success("Organisation mise à jour");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
+    }
     }
 
     setLoading(false);
