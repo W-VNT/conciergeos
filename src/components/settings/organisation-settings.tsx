@@ -26,7 +26,7 @@ export default function OrganisationSettings({ organisation }: Props) {
 
     const result = await updateOrganisation({
       name,
-      city: city || null,
+      city: city || undefined,
     });
 
     if (result.error) {
