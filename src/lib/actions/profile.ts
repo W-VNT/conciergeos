@@ -39,6 +39,19 @@ export async function updateProfile(data: UpdateProfileData) {
 }
 
 /**
+ * Update avatar URL only
+ */
+export async function updateAvatarUrl(avatar_url: string | null) {
+  try {
+    await updateProfile({ avatar_url });
+    return { success: true };
+  } catch (error) {
+    console.error("Update avatar URL error:", error);
+    return { error: error instanceof Error ? error.message : "Erreur lors de la mise à jour de l'avatar" };
+  }
+}
+
+/**
  * Upload avatar to storage and update profile
  */
 export async function uploadAvatar(formData: FormData): Promise<string> {
