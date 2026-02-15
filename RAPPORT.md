@@ -368,25 +368,39 @@ const missionPrice = {
 ### E. Finance & Facturation
 
 **Implemente (Phase 1-2):**
-- [x] Table `revenus` avec suivi detaille par reservation
-- [x] **Calcul automatique des commissions** selon contrat actif (trigger DB)
-- [x] **Auto-creation revenus** depuis reservations confirmees (trigger DB)
-- [x] Vues agregees pour performance (revenus_mensuels, revenus_par_logement)
-- [x] Page `/finances` dediee avec filtre de periode
-- [x] **4 KPIs financiers**: CA Brut, Commissions, Charges, Marge nette
-- [x] **Tableau revenus par logement** (nb reservations, CA brut, commissions %, CA net)
-- [x] Commissions variables par contrat (12-20%)
-- [x] Server actions pour recuperation donnees financieres
-- [x] Navigation dans sidebar (icone DollarSign)
+- [x] **Base de données:**
+  - Table `revenus` avec suivi détaillé par réservation (migration 0031)
+  - Calcul automatique des commissions selon contrat actif (trigger `calculate_commission_for_reservation`)
+  - Auto-création revenus depuis réservations confirmées (trigger `auto_create_revenu`)
+  - Vues agrégées pour performance: `revenus_mensuels`, `revenus_mensuels_global`, `charges_mensuelles` (migration 0033)
+  - Commissions variables par contrat (12-20%)
+- [x] **Page /finances:**
+  - Page dédiée avec filtre de période (DateFilter réutilisé)
+  - 4 KPIs financiers: CA Brut, Commissions, Charges, Marge nette
+  - Tableau revenus par logement (nb réservations, CA brut, commissions %, CA net)
+  - Navigation dans sidebar (icône DollarSign)
+  - Server actions pour récupération données financières (`src/lib/actions/finances.ts`)
+- [x] **Données de démo:**
+  - Script SQL prêt à l'emploi (`seed-ready.sql`)
+  - 3 propriétaires, 5 logements Paris, 5 contrats actifs
+  - 17 réservations Janvier-Février 2026 (~15,000€ CA brut)
+  - 1 prestataire, ~8 missions de ménage
+  - Calcul automatique revenus et commissions par trigger
 
-**A implementer:**
+**En cours d'implémentation:**
+- [ ] Composants finances réutilisables (`src/components/finances/`)
+  - [ ] RevenueChart (graphique évolution mensuelle avec recharts)
+  - [ ] RevenusTable (tableau détaillé avec tri et filtres)
+  - [ ] ExportSection (boutons export CSV/PDF)
+
+**A implementer (Phase 3):**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Factures prestataires | Moyenne | Suivi des factures recues, liaison avec incidents/missions |
-| Export comptable | Moyenne | Export CSV/PDF compatible logiciel comptable |
-| Graphiques evolution | Moyenne | Charts mensuels avec recharts |
-| Relances paiement | Basse | Alertes pour factures impayees |
+| Factures prestataires | Moyenne | Table `factures_prestataires`, CRUD complet, workflow ATTENTE→VALIDEE→PAYEE |
+| Export comptable | Moyenne | Export CSV/PDF compatible logiciel comptable (json2csv, jspdf) |
+| Graphiques avancés | Basse | Pie charts par plateforme, stacked bars, prévisions ML |
+| Relances paiement | Basse | Alertes pour factures impayées, emails automatiques |
 
 ---
 
@@ -618,23 +632,27 @@ L'application est perceptiblement lente, surtout en mode developpement.
 
 ### Tables actuelles
 - `organisations` - Multi-tenant
-- `profiles` - Utilisateurs (lie a auth.users)
-- `proprietaires` - Proprietaires de biens
+- `profiles` - Utilisateurs (lié à auth.users)
+- `proprietaires` - Propriétaires de biens
 - `logements` - Biens en gestion
-- `missions` - Taches planifiees
+- `missions` - Tâches planifiées
 - `prestataires` - Fournisseurs de services
-- `incidents` - Problemes et sinistres
-- `attachments` - Pieces jointes (photos)
+- `incidents` - Problèmes et sinistres
+- `attachments` - Pièces jointes (photos)
+- `contrats` - Mandats de gestion (proprio ↔ conciergerie) ✅
+- `reservations` - Réservations voyageurs ✅
+- `revenus` - Suivi financier par réservation ✅
+- `notifications` - Notifications in-app ✅
+- `invitations` - Invitations membres équipe ✅
+- `equipements` - Inventaire équipements par logement ✅
+- `checklist_templates` - Templates de checklists ✅
+- `checklist_template_items` - Items des templates ✅
+- `mission_checklist_items` - Progression checklists par mission ✅
 
-### Tables a creer
-- `contrats` - Mandats de gestion (proprio <-> conciergerie)
-- `reservations` - Reservations voyageurs
-- `voyageurs` - Fiches voyageurs
-- `revenus` - Suivi financier par reservation
-- `notifications` - Notifications in-app
-- `activity_logs` - Journal d'activite
-- `checklists` - Modeles de checklists par logement
-- `inventaires` - Equipements par logement
+### Tables à créer (Phase 3+)
+- `factures_prestataires` - Facturation fournisseurs
+- `activity_logs` - Journal d'activité global
+- `tarifs` - Grilles tarifaires saisonnières
 
 ### Securite
 - RLS (Row Level Security) sur toutes les tables
@@ -642,12 +660,36 @@ L'application est perceptiblement lente, surtout en mode developpement.
 - Fonctions `SECURITY DEFINER` pour l'onboarding et l'automatisation
 - Roles ADMIN (CRUD complet) et OPERATEUR (lecture + missions/incidents)
 
-### Donnees de demo
-- 5 proprietaires (3 VIP, 2 Standard)
-- 8 logements (Nice, Cannes, Antibes, Monaco, Villefranche)
-- 6 prestataires (menage, plomberie, electricite, clim, multi-services)
-- 17 missions (4 aujourd'hui, mix de tous les types/statuts)
-- 8 incidents (4 ouverts dont 1 critique, 4 resolus avec couts)
+### Données de démo
+
+**Script SQL prêt:** `seed-ready.sql` (exécution via Supabase SQL Editor)
+
+**Données créées automatiquement:**
+- **3 propriétaires** (Marie Dubois, Jean Martin, Sophie Laurent) avec emails @example.com
+- **5 logements** à Paris :
+  - Studio Marais (1ch, 2 personnes)
+  - Appartement Tour Eiffel (2ch, 4 personnes)
+  - Loft Belleville (3ch, 6 personnes)
+  - Duplex Montmartre (2ch, 5 personnes)
+  - Maison Saint-Germain (4ch, 8 personnes)
+- **5 contrats actifs** (2025-2026) avec commissions variables 12-20%
+- **1 prestataire** (NetClean Pro - spécialité ménage)
+- **17 réservations** Janvier-Février 2026 (~15,000€ CA brut)
+  - Plateformes: Airbnb, Booking, Direct
+  - Montants: 270€ à 2,100€ par réservation
+- **~8 missions ménage** auto-créées (statut TERMINE)
+- **Revenus calculés automatiquement** via triggers DB avec commissions
+
+**Features automatiques:**
+- Trigger auto-création revenus depuis réservations CONFIRMEE
+- Trigger calcul commission selon contrat actif au moment du check-in
+- Nettoyage des anciennes données démo au re-run (emails @example.com)
+
+**anciennes données (migrations 0034-0037):**
+- 5 propriétaires (3 VIP, 2 Standard) - Nice, Cannes, Antibes, Monaco, Villefranche
+- 6 prestataires (ménage, plomberie, électricité, clim, multi-services)
+- 17 missions (mix types/statuts)
+- 8 incidents (4 ouverts dont 1 critique, 4 résolus avec coûts)
 
 ---
 
@@ -655,5 +697,9 @@ L'application est perceptiblement lente, surtout en mode developpement.
 
 - **GitHub** : W-VNT/conciergeos
 - **Supabase** : xhyoleegdoyxorgcjpiz (eu-west)
-- **Vercel** : A redeployer apres stabilisation locale
-- **Migrations** : 11 fichiers SQL (supabase/migrations/)
+- **Vercel** : A redéployer après stabilisation locale
+- **Migrations** : 37+ fichiers SQL (supabase/migrations/)
+  - 0001-0030: Fondation, tables principales, features MVP
+  - 0031-0033: Module finances (revenus, triggers, vues)
+  - 0034-0037: Fonctions seed démo
+- **Seed script** : `seed-ready.sql` (prêt pour exécution manuelle SQL Editor)
