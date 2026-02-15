@@ -124,7 +124,7 @@ BEGIN
 
   -- Missions de ménage
   INSERT INTO missions (organisation_id, logement_id, type, scheduled_at, status, notes)
-  SELECT v_org_id, logement_id, 'MENAGE', (check_out_date || ' 11:00:00')::timestamptz, 'TERMINEE', 'Ménage après départ'
+  SELECT v_org_id, logement_id, 'MENAGE', (check_out_date || ' 11:00:00')::timestamptz, 'TERMINE', 'Ménage après départ'
   FROM reservations
   WHERE organisation_id = v_org_id AND check_out_date < CURRENT_DATE
   LIMIT 8;
