@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
 import { getFinancialSummary, getRevenusByLogement } from "@/lib/actions/finances";
-import SeedButton from "@/components/dev/seed-button";
 
 // Revalidate every 60 seconds
 export const revalidate = 60;
@@ -62,10 +61,7 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
           <h1 className="text-2xl font-bold">Finances</h1>
           <p className="text-muted-foreground mt-1">{rangeLabel}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <SeedButton />
-          <DateFilter />
-        </div>
+        <DateFilter />
       </div>
 
       {/* KPIs financiers */}
