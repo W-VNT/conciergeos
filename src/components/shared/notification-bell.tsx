@@ -1,0 +1,169 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getUnreadNotifications, markAsRead } from "@/lib/actions/notifications";
+import type { Notification } from "@/types/database";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+
+export function NotificationBell() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadNotifications();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function loadNotifications() {
+    setLoading(true);
+    const data = await getUnreadNotifications();
+    setNotifications(data);
+    setLoading(false);
+  }
+
+  async function handleMarkAsRead(notificationId: string) {
+    try {
+      await markAsRead(notificationId);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  }
+
+  function getNotificationIcon(type: string) {
+    switch (type) {
+      case "INCIDENT_CRITICAL":
+        return "🚨";
+      case "MISSION_ASSIGNED":
+        return "📋";
+      case "MISSION_URGENT":
+        return "⚠️";
+      case "CONTRACT_EXPIRING":
+        return "📄";
+      case "RESERVATION_CREATED":
+        return "🏠";
+      default:
+        return "ℹ️";
+    }
+  }
+
+  function getNotificationLink(notification: Notification): string {
+    if (!notification.entity_type || !notification.entity_id) {
+      return "/notifications";
+    }
+
+    switch (notification.entity_type) {
+      case "MISSION":
+        return `/missions/${notification.entity_id}`;
+      case "INCIDENT":
+        return `/incidents/${notification.entity_id}`;
+      case "CONTRAT":
+        return `/contrats/${notification.entity_id}`;
+      case "LOGEMENT":
+        return `/logements/${notification.entity_id}`;
+      default:
+        return "/notifications";
+    }
+  }
+
+  const unreadCount = notifications.length;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <div className="flex items-center justify-between px-4 py-2">
+          <h3 className="font-semibold">Notifications</h3>
+          {unreadCount > 0 && (
+            <Link
+              href="/notifications"
+              className="text-xs text-primary hover:underline"
+            >
+              Tout voir
+            </Link>
+          )}
+        </div>
+        <DropdownMenuSeparator />
+
+        {loading ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Chargement...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+            Aucune notification
+          </div>
+        ) : (
+          <div className="max-h-[400px] overflow-y-auto">
+            {notifications.map((notification) => (
+              <DropdownMenuItem
+                key={notification.id}
+                className="cursor-pointer p-0"
+                onSelect={() => handleMarkAsRead(notification.id)}
+              >
+                <Link
+                  href={getNotificationLink(notification)}
+                  className="flex gap-3 px-4 py-3 w-full hover:bg-gray-50"
+                >
+                  <div className="text-2xl flex-shrink-0">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(notification.created_at), {
+                        addSuffix: true,
+                        locale: fr,
+                      })}
+                    </p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </div>
+        )}
+
+        {notifications.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link
+                href="/notifications"
+                className="text-center text-sm text-primary cursor-pointer"
+              >
+                Voir toutes les notifications
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

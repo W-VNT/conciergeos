@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Map } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -38,7 +40,14 @@ export default async function LogementsPage({
 
   return (
     <div>
-      <PageHeader title="Logements" createHref="/logements/new" createLabel="Nouveau logement" showCreate={admin} />
+      <PageHeader title="Logements" createHref="/logements/new" createLabel="Nouveau logement" showCreate={admin}>
+        <Button variant="outline" asChild>
+          <Link href="/logements/carte">
+            <Map className="h-4 w-4 mr-2" />
+            Voir la carte
+          </Link>
+        </Button>
+      </PageHeader>
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher un logement..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />

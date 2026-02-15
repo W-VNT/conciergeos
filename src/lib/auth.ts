@@ -25,7 +25,10 @@ export async function getProfile(): Promise<Profile | null> {
     .eq('id', user.id)
     .single();
 
-  return data;
+  if (!data) return null;
+
+  // Add email from auth.users to profile
+  return { ...data, email: user.email };
 }
 
 export async function requireProfile(): Promise<Profile> {
@@ -46,10 +49,11 @@ export async function requireProfile(): Promise<Profile> {
     });
 
     if (error || !newProfile) redirect('/login');
-    return newProfile as Profile;
+    return { ...newProfile, email: user.email } as Profile;
   }
 
-  return profile;
+  // Add email from auth.users to profile
+  return { ...profile, email: user.email };
 }
 
 export function isAdmin(profile: Profile): boolean {

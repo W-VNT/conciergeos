@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Wrench,
   Building2,
+  Calendar,
 } from "lucide-react";
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/logements", label: "Logements", icon: Home },
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/missions", label: "Missions", icon: ClipboardList },
+  { href: "/calendrier", label: "Calendrier", icon: Calendar },
   { href: "/incidents", label: "Incidents", icon: AlertTriangle },
   { href: "/prestataires", label: "Prestataires", icon: Wrench },
 ];

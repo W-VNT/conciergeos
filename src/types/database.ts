@@ -13,7 +13,21 @@ export type MissionPriority = 'NORMALE' | 'HAUTE' | 'CRITIQUE';
 export type Specialty = 'MENAGE' | 'PLOMBERIE' | 'ELECTRICITE' | 'CLIM' | 'AUTRE';
 export type IncidentSeverity = 'MINEUR' | 'MOYEN' | 'CRITIQUE';
 export type IncidentStatus = 'OUVERT' | 'EN_COURS' | 'RESOLU' | 'CLOS';
-export type EntityType = 'LOGEMENT' | 'MISSION' | 'INCIDENT';
+export type EntityType = 'LOGEMENT' | 'MISSION' | 'INCIDENT' | 'CONTRAT';
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED';
+export type ContractType = 'EXCLUSIF' | 'SIMPLE';
+export type ContractStatus = 'ACTIF' | 'EXPIRE' | 'RESILIE';
+export type BookingPlatform = 'AIRBNB' | 'BOOKING' | 'DIRECT' | 'AUTRE';
+export type ReservationStatus = 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
+export type NotificationType =
+  | 'MISSION_ASSIGNED'
+  | 'MISSION_URGENT'
+  | 'INCIDENT_CRITICAL'
+  | 'INCIDENT_ASSIGNED'
+  | 'CONTRACT_EXPIRING'
+  | 'TEAM_INVITATION'
+  | 'RESERVATION_CREATED'
+  | 'SYSTEM';
 
 // Tables
 export interface Organisation {
@@ -30,6 +44,9 @@ export interface Profile {
   organisation_id: string;
   full_name: string;
   role: UserRole;
+  phone: string | null;
+  avatar_url: string | null;
+  email?: string | null; // From auth.users, joined in queries
   created_at: string;
 }
 
@@ -45,6 +62,44 @@ export interface Proprietaire {
   updated_at: string;
 }
 
+export interface Contrat {
+  id: string;
+  organisation_id: string;
+  proprietaire_id: string;
+  logement_id: string | null;
+  type: ContractType;
+  start_date: string;
+  end_date: string;
+  commission_rate: number;
+  status: ContractStatus;
+  conditions: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  proprietaire?: Proprietaire | null;
+  logement?: Logement | null;
+}
+
+export interface Reservation {
+  id: string;
+  organisation_id: string;
+  logement_id: string;
+  guest_name: string;
+  guest_email: string | null;
+  guest_phone: string | null;
+  guest_count: number;
+  check_in_date: string;
+  check_out_date: string;
+  platform: BookingPlatform;
+  amount: number | null;
+  status: ReservationStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+}
+
 export interface Logement {
   id: string;
   organisation_id: string;
@@ -54,10 +109,17 @@ export interface Logement {
   city: string | null;
   postal_code: string | null;
   country: string | null;
+  latitude: number | null;
+  longitude: number | null;
   offer_tier: OfferTier;
   lockbox_code: string | null;
   wifi_name: string | null;
   wifi_password: string | null;
+  bedrooms: number | null;
+  beds: number | null;
+  max_guests: number | null;
+  ical_url: string | null;
+  ical_last_synced_at: string | null;
   notes: string | null;
   status: LogementStatus;
   created_at: string;
@@ -130,6 +192,32 @@ export interface Attachment {
   created_at: string;
 }
 
+export interface Invitation {
+  id: string;
+  organisation_id: string;
+  email: string;
+  role: UserRole;
+  token: string;
+  invited_by: string;
+  expires_at: string;
+  status: InvitationStatus;
+  created_at: string;
+  accepted_at: string | null;
+}
+
+export interface Notification {
+  id: string;
+  organisation_id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  entity_type: EntityType | null;
+  entity_id: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
 // Enum label maps for UI display
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrateur',
@@ -193,4 +281,28 @@ export const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
   EN_COURS: 'En cours',
   RESOLU: 'Résolu',
   CLOS: 'Clos',
+};
+
+export const CONTRACT_TYPE_LABELS: Record<ContractType, string> = {
+  EXCLUSIF: 'Exclusif',
+  SIMPLE: 'Simple',
+};
+
+export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
+  ACTIF: 'Actif',
+  EXPIRE: 'Expiré',
+  RESILIE: 'Résilié',
+};
+
+export const BOOKING_PLATFORM_LABELS: Record<BookingPlatform, string> = {
+  AIRBNB: 'Airbnb',
+  BOOKING: 'Booking.com',
+  DIRECT: 'Direct',
+  AUTRE: 'Autre',
+};
+
+export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
+  CONFIRMEE: 'Confirmée',
+  ANNULEE: 'Annulée',
+  TERMINEE: 'Terminée',
 };

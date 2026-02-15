@@ -10,6 +10,7 @@ import { deleteLogement } from "@/lib/actions/logements";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
+import { SyncIcalButton } from "@/components/shared/sync-ical-button";
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -28,6 +29,11 @@ export default async function LogementDetailPage({ params }: { params: { id: str
   return (
     <div className="space-y-6">
       <PageHeader title={logement.name} showCreate={false}>
+        <SyncIcalButton
+          logementId={logement.id}
+          hasIcalUrl={!!logement.ical_url}
+          lastSyncedAt={logement.ical_last_synced_at}
+        />
         {admin && (
           <>
             <Button variant="outline" asChild><Link href={`/logements/${logement.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link></Button>
@@ -38,7 +44,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         )}
       </PageHeader>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -46,6 +52,15 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             <div className="flex justify-between"><span className="text-muted-foreground">Offre</span><StatusBadge value={logement.offer_tier} label={OFFER_TIER_LABELS[logement.offer_tier as keyof typeof OFFER_TIER_LABELS]} /></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><StatusBadge value={logement.status} label={LOGEMENT_STATUS_LABELS[logement.status as keyof typeof LOGEMENT_STATUS_LABELS]} /></div>
             {prop && <div className="flex justify-between"><span className="text-muted-foreground">Propriétaire</span><Link href={`/proprietaires/${prop.id}`} className="hover:underline">{prop.full_name}</Link></div>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Capacité</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Chambres</span><span>{logement.bedrooms ?? "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Lits</span><span>{logement.beds ?? "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Capacité max</span><span>{logement.max_guests ? `${logement.max_guests} voyageurs` : "—"}</span></div>
           </CardContent>
         </Card>
 

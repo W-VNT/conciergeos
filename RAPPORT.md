@@ -4,6 +4,171 @@
 
 ---
 
+## 📋 Architecture & Fonctionnement métier
+
+### Système de forfaits propriétaires (STANDARD / VIP)
+
+**Champ:** `proprietaires.service_level` (enum `service_level`)
+
+**Fonctionnement actuel:**
+- Champ **informatif** pour qualifier le niveau de service du propriétaire
+- `STANDARD` : Service de base
+- `VIP` : Service premium avec priorité
+
+**Utilisation:**
+- Affiché sur la fiche propriétaire et dans les listes
+- Badge de couleur pour identification visuelle rapide
+- **Actuellement sans impact fonctionnel** - prévu pour futures évolutions :
+  - Tarification différenciée (commissions, frais)
+  - Priorité sur l'assignation des missions
+  - Rapports mensuels détaillés pour VIP
+  - SLA garantis (temps de réponse incidents)
+
+**Implémentation technique:**
+```typescript
+// src/types/database.ts
+export type ServiceLevel = 'STANDARD' | 'VIP';
+
+// Migration SQL
+CREATE TYPE service_level AS ENUM ('STANDARD', 'VIP');
+ALTER TABLE proprietaires ADD COLUMN service_level service_level DEFAULT 'STANDARD';
+```
+
+---
+
+### Système d'offres logements (ESSENTIEL / SÉRÉNITÉ / SIGNATURE)
+
+**Champ:** `logements.offer_tier` (enum `offer_tier`)
+
+**Fonctionnement actuel:**
+- Définit le **niveau de prestation** pour un logement spécifique
+- `ESSENTIEL` : Service basique (check-in/out, ménage standard)
+- `SÉRÉNITÉ` : Service intermédiaire (+ interventions, suivi renforcé)
+- `SIGNATURE` : Service premium (tout inclus, conciergerie complète)
+
+**Utilisation:**
+- Affiché sur la fiche logement et dans les listes
+- Badge de couleur pour identification visuelle
+- **Actuellement sans impact fonctionnel** - prévu pour :
+  - Grille tarifaire par offre
+  - Services inclus automatiques (ex: SIGNATURE = intervention urgence 24/7)
+  - Tarification ménage différenciée
+  - Templates de messages personnalisés par offre
+
+**Différence avec `service_level`:**
+- `service_level` (proprietaire) = Niveau global du client
+- `offer_tier` (logement) = Prestation spécifique par bien
+- Un propriétaire VIP peut avoir des logements en offre ESSENTIEL ou SIGNATURE
+
+**Implémentation technique:**
+```typescript
+// src/types/database.ts
+export type OfferTier = 'ESSENTIEL' | 'SERENITE' | 'SIGNATURE';
+
+// Migration SQL
+CREATE TYPE offer_tier AS ENUM ('ESSENTIEL', 'SERENITE', 'SIGNATURE');
+ALTER TABLE logements ADD COLUMN offer_tier offer_tier DEFAULT 'ESSENTIEL';
+```
+
+**Exemple d'usage futur:**
+```typescript
+// Calculer le prix d'une mission selon l'offre
+const missionPrice = {
+  ESSENTIEL: 50,
+  SERENITE: 75,
+  SIGNATURE: 120,
+}[logement.offer_tier];
+```
+
+---
+
+### Mobile First UX
+
+**Approche responsive:**
+- **Mobile First** : Design prioritaire pour mobile (320px+)
+- **Breakpoints TailwindCSS** :
+  - `sm:` 640px (tablette portrait)
+  - `md:` 768px (tablette landscape)
+  - `lg:` 1024px (desktop)
+  - `xl:` 1280px (grand écran)
+
+**Composants adaptatifs:**
+
+1. **Navigation**
+   - Mobile : Burger menu (Sheet) + topbar
+   - Desktop : Sidebar fixe (256px) + topbar
+   ```tsx
+   // Sidebar cachée sur mobile, fixe sur desktop
+   <aside className="hidden md:flex md:w-64 md:fixed" />
+
+   // Burger menu visible uniquement mobile
+   <Button className="md:hidden">
+     <Menu />
+   </Button>
+   ```
+
+2. **Grilles responsives**
+   - Mobile : 1 colonne
+   - Tablette : 2 colonnes
+   - Desktop : 3-4 colonnes
+   ```tsx
+   // KPI cards dashboard
+   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+
+   // Formulaires
+   <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+   ```
+
+3. **Tables responsives**
+   - Mobile : Cards empilées (+ lisible)
+   - Desktop : Table classique
+   ```tsx
+   // Liste missions : affichage adaptatif
+   {missions.map(mission => (
+     <div className="block md:grid md:grid-cols-5 p-3 border rounded">
+       {/* Contenu responsive */}
+     </div>
+   ))}
+   ```
+
+4. **Typography responsive**
+   - Titres adaptés : `text-2xl md:text-3xl`
+   - Espacement réduit mobile : `px-4 md:px-6`
+   - Touch targets min 44x44px (Apple guidelines)
+
+**Améliorations UX:**
+
+1. **Loading states**
+   - Skeleton screens pour données async
+   - Spinners pour actions utilisateur
+   - Toast notifications (sonner)
+
+2. **Accessibility**
+   - Labels sémantiques (aria-label)
+   - Focus visible (ring-2)
+   - Contraste WCAG AA minimum
+
+3. **Performance**
+   - Server Components (RSC) par défaut
+   - Client Components uniquement si nécessaire
+   - ISR (revalidate 30s) sur dashboard
+   - Pagination sur toutes les listes
+
+4. **Feedback utilisateur**
+   - Toasts pour succès/erreur
+   - États disabled sur boutons pending
+   - Badges colorés (statuts, priorités)
+   - Notifications temps réel (polling 30s)
+
+**Points d'amélioration identifiés:**
+- [ ] Skeleton loading sur pages lentes
+- [ ] Infinite scroll sur listes (alternative pagination)
+- [ ] PWA (offline mode, install prompt)
+- [ ] Dark mode complet
+- [ ] Swipe gestures mobile (ex: swipe mission = terminer)
+
+---
+
 ## 1. Fonctionnalites implementees
 
 ### Fondation (Prompt 1)
@@ -34,6 +199,7 @@
 - [x] Bouton "Terminer" rapide
 - [x] Automatisation : CHECKOUT termine -> creation auto MENAGE (scheduled_at + 2h, anti-doublon +-24h)
 - [x] Filtres par statut et type
+- [x] Vue calendrier mensuelle (grille 6x7, navigation mois, filtres type/statut, lien sidebar)
 
 ### Prestataires & Incidents (Prompt 4)
 - [x] CRUD prestataires (specialite, zone, taux horaire, score fiabilite 1-5)
@@ -45,50 +211,103 @@
   - Resolution moyenne (30j)
   - Cout incidents (30j)
 - [x] Listes missions du jour + incidents ouverts sur le dashboard
+- [x] Top 5 logements avec le plus d'incidents (widget dashboard)
 
 ### Pieces jointes & Export (Prompt 5)
 - [x] Upload photos (Supabase Storage) sur logements, missions, incidents
 - [x] Export CSV sur toutes les entites (proprietaires, logements, missions, prestataires, incidents)
 - [x] API route protegee pour servir les fichiers storage
 
+### Profil utilisateur & Equipe (Section B)
+- [x] Page Mon profil avec tabs (Profil / Securite / Equipe)
+- [x] Modification nom, telephone, upload avatar
+- [x] Changement mot de passe
+- [x] Gestion des membres (liste, invitation par email, suppression)
+- [x] Table invitations avec statuts et page acceptation
+
+### Contrats (Section C)
+- [x] CRUD complet contrats
+- [x] Types : EXCLUSIF / SIMPLE
+- [x] Statuts : ACTIF / EXPIRE / RESILIE (mise a jour auto par trigger)
+- [x] Upload documents contractuels (PDFs via attachments)
+- [x] Alertes expiration (widget dashboard + indicateur liste)
+
+### Logements - Ameliorations (Section G)
+- [x] Capacite : bedrooms, beds, max_guests
+- [x] Vue carte interactive (Mapbox, markers colores, popups)
+- [x] Geocodage automatique (adresse -> GPS via Mapbox API)
+
+### Reservations & Calendrier (Section D - Phase 1 & 2)
+- [x] CRUD complet reservations (voyageur, dates, plateforme, montant)
+- [x] Statuts : CONFIRMEE, ANNULEE, TERMINEE
+- [x] Plateformes : Airbnb, Booking, Direct, Autre
+- [x] Auto-creation missions (CHECKIN, CHECKOUT, MENAGE)
+- [x] Page liste avec recherche et filtres
+- [x] Fiche voyageur (nom, email, tel, nb personnes)
+- [x] Sync iCal (import calendriers Airbnb/Booking via URL)
+- [x] Calendrier multi-logements (vue mensuelle reservations + missions)
+- [x] KPI Taux d'occupation (% jours occupes du mois)
+- [x] KPI Revenus du mois (CA total reservations confirmees)
+
+### Notifications (Section F - Phase 1)
+- [x] Notifications in-app (table + triggers DB)
+- [x] Cloche de notifications dans topbar (badge count non-lus)
+- [x] Page /notifications complete (liste, marquer lu, supprimer)
+- [x] Triggers automatiques :
+  - Mission assignee → notif operateur
+  - Mission urgente → notif admins
+  - Incident critique → notif admins
+  - Fonction helper contrats expirants (pour cron)
+- [x] Templates d'emails HTML/texte (prets a activer)
+- [x] Systeme d'envoi email via Resend (doc complete)
+- [x] Documentation activation EMAIL_SETUP.md
+
 ---
 
 ## 2. Fonctionnalites manquantes
 
-### A. Prompts non couverts (priorite immediate)
-
-| Feature | Prompt | Description |
-|---------|--------|-------------|
-| Vue calendrier/agenda | Prompt 3 | Vue calendrier des missions (semaine/mois) en complement de la vue liste |
-| Top 5 logements incidents | Prompt 4 | Widget dashboard : Top 5 logements avec le plus d'incidents |
-
----
-
 ### B. Profil utilisateur & Equipe
 
-Le profil utilisateur est actuellement minimal (nom + role). Il manque :
+**Implemente:**
+- [x] Page "Mon profil" avec tabs (Profil / Securite / Equipe)
+- [x] Modification nom, telephone
+- [x] Upload avatar (bucket Supabase Storage, preview circulaire, max 2MB)
+- [x] Changement mot de passe avec indicateur de force
+- [x] Champs profiles : phone, avatar_url
+- [x] Email affiche (read-only, depuis auth.users)
+- [x] Gestion des membres (liste, avatars, roles, suppression avec protections)
+- [x] Invitation par email (token UUID, expiration 7j, page acceptation, validations)
+- [x] Table invitations avec statuts (PENDING, ACCEPTED, EXPIRED, CANCELLED)
+- [x] Server actions team : getTeamMembers, inviteMember, cancelInvitation, removeMember
+
+**A implementer (Basse priorite - Post-MVP):**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Page "Mon profil" | Haute | Voir/editer son nom, email, telephone, avatar |
-| Changement mot de passe | Haute | Modifier son mot de passe depuis l'app |
-| Photo de profil / avatar | Moyenne | Upload avatar, affiche dans la topbar et les assignations |
-| Gestion des membres | Haute | Page admin pour inviter/supprimer des operateurs dans l'organisation |
-| Invitation par email | Haute | Envoyer un lien d'invitation pour rejoindre l'organisation |
-| Permissions granulaires | Moyenne | Permissions plus fines que ADMIN/OPERATEUR (ex: acces lecture seul sur finances) |
+| Permissions granulaires | Basse | Permissions plus fines que ADMIN/OPERATEUR (DECISION: garder 2 roles pour MVP) |
 | Journal d'activite utilisateur | Basse | Historique des actions par utilisateur (qui a fait quoi, quand) |
 
 ---
 
 ### C. Proprietaires & Contrats
 
-Le module proprietaires manque de profondeur pour un vrai usage metier :
+**Implemente:**
+- [x] Contrats / Mandats de gestion (CRUD complet)
+- [x] Types de contrat : EXCLUSIF / SIMPLE
+- [x] Statuts : ACTIF / EXPIRE / RESILIE (mise a jour automatique par trigger)
+- [x] Champs : proprietaire, logement (optionnel), dates, taux commission, conditions
+- [x] Page liste avec filtres et recherche
+- [x] Formulaire creation/edition avec validation
+- [x] Page detail avec infos complete
+- [x] Documents contractuels (upload PDFs via module attachments, entity_type CONTRAT)
+- [x] Alertes expiration contrats :
+  - Widget dashboard montrant contrats expirant dans 30j (avec urgence <7j)
+  - Indicateur visuel sur liste contrats (icone + jours restants)
+
+**A implementer:**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Contrats / Mandats de gestion | Haute | CRUD contrats : type (exclusif/simple), date debut/fin, taux commission, conditions |
-| Statut contrat | Haute | ACTIF / EXPIRE / RESILIE avec alertes d'expiration |
-| Documents contractuels | Haute | Upload PDF des mandats signes, avenants, etats des lieux |
 | Historique facturation proprio | Haute | Suivi des commissions dues/payees par proprietaire |
 | Rapport mensuel proprietaire | Moyenne | PDF auto-genere : revenus, missions effectuees, incidents, photos |
 | Portail proprietaire (lecture) | Basse | Acces en lecture seule pour les proprietaires (voir leurs biens, missions, revenus) |
@@ -98,18 +317,51 @@ Le module proprietaires manque de profondeur pour un vrai usage metier :
 
 ### D. Reservations & Calendrier
 
-Absent du MVP, c'est pourtant le coeur du metier :
+**Implemente (Phase 1):**
+- [x] Module reservations (CRUD complet)
+  - Table reservations avec champs: guest, dates, plateforme, montant
+  - Plateformes: AIRBNB, BOOKING, DIRECT, AUTRE
+  - Statuts: CONFIRMEE, ANNULEE, TERMINEE
+  - Page liste avec recherche et filtres
+  - Formulaire creation/edition avec validation
+  - Page detail complete avec infos sejour
+- [x] Auto-creation missions
+  - CHECKIN (jour arrivee 15h)
+  - CHECKOUT (jour depart 11h)
+  - MENAGE (jour depart 13h, 2h apres checkout)
+  - Creation automatique quand statut = CONFIRMEE
+  - Anti-doublon (verifie si missions existent deja)
+- [x] Fiche voyageur basique (nom, email, tel, nb personnes)
+
+**Implemente (Phase 2):**
+- [x] Sync iCal
+  - Champs logements: ical_url, ical_last_synced_at (migration 0023)
+  - Parsing iCal avec ical.js (VEVENT -> reservations)
+  - Server actions: syncIcal(logementId), syncAllIcals()
+  - Bouton sync sur page detail logement avec timestamp derniere sync
+  - Creation/mise a jour reservations depuis calendrier externe
+  - Gestion des doublons (check dates + logement)
+- [x] Calendrier multi-logements
+  - Page /calendrier mise a jour pour afficher reservations + missions
+  - Reservations affichees comme blocs multi-jours (check-in -> check-out)
+  - Missions affichees comme points colores
+  - Filtre par statut reservation
+  - Legende distinguant reservations (barres) et missions (points)
+- [x] KPI Taux d'occupation
+  - Calcul: jours occupes / jours disponibles du mois
+  - Affichage dashboard avec pourcentage + details
+  - Base: reservations confirmees du mois en cours
+- [x] KPI Revenus du mois
+  - Somme des montants reservations confirmees du mois
+  - Affichage dashboard avec total en euros
+
+**A implementer (Phase 3 - Post-MVP):**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Module reservations | Haute | CRUD reservations : voyageur, dates arrivee/depart, plateforme, montant |
-| Sync iCal | Haute | Import automatique des calendriers Airbnb/Booking via URL iCal |
-| Calendrier multi-logements | Haute | Vue calendrier avec toutes les reservations par logement |
-| Taux d'occupation | Haute | KPI : taux d'occupation par logement, par mois |
-| Revenus par logement | Haute | Suivi CA par bien, par mois, par plateforme |
-| Auto-creation missions | Moyenne | Reservation creee -> auto-generer CHECKIN + CHECKOUT + MENAGE |
-| Fiche voyageur | Moyenne | Nom, telephone, email, nombre de personnes, notes |
+| Revenus par logement | Moyenne | Breakdown CA par logement, par mois, par plateforme |
 | Check-in en ligne | Basse | Formulaire public pour le voyageur (identite, heure arrivee) |
+| Sync iCal automatique | Moyenne | Cron job pour sync automatique toutes les X heures |
 
 ---
 
@@ -130,10 +382,24 @@ Aucun module financier actuellement :
 
 ### F. Communication & Notifications
 
+**Implemente (Phase 1):**
+- [x] Notifications in-app
+  - Table notifications + enum notification_type (migration 0024)
+  - Triggers DB automatiques (mission assignee, incident critique, mission urgente)
+  - Composant NotificationBell dans topbar (badge count, dropdown)
+  - Page /notifications complete (liste, marquer lu/supprimer, filtres)
+  - Polling auto toutes les 30s pour mises a jour en temps reel
+  - Format timestamp relatif (date-fns)
+- [x] Notifications email (structure prete)
+  - Templates HTML/texte (mission, incident, contrat, invitation)
+  - Helper sendEmail() avec support Resend
+  - Documentation complete EMAIL_SETUP.md
+  - Desactive par defaut (activation facile via RESEND_API_KEY)
+
+**A implementer:**
+
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Notifications in-app | Haute | Cloche de notifications : nouveau incident, mission assignee, contrat expirant |
-| Notifications email | Haute | Emails automatiques pour les evenements critiques |
 | Templates de messages | Moyenne | Messages pre-rediges pour voyageurs (instructions arrivee, wifi, etc.) |
 | SMS / WhatsApp | Basse | Envoi de notifications par SMS ou WhatsApp (Twilio) |
 | Chat interne equipe | Basse | Discussion entre admin et operateurs par mission/logement |
@@ -142,11 +408,29 @@ Aucun module financier actuellement :
 
 ### G. Logements - Ameliorations
 
+**Implemente:**
+- [x] Capacite / Chambres (bedrooms, beds, max_guests)
+  - Champs ajoutes a la table logements (migration 0018)
+  - Formulaire avec validation Zod
+  - Affichage page detail dans carte dediee
+- [x] Vue carte des logements (Mapbox + react-map-gl)
+  - Page /logements/carte avec carte interactive
+  - Markers colores par statut (ACTIF=bleu, PAUSE=orange, ARCHIVE=gris)
+  - Popups cliquables avec infos (nom, ville, offre, statut, capacite)
+  - Navigation + controles carte
+  - Stats affichees (nombre sur carte, sans coordonnees)
+- [x] Geocodage automatique (Mapbox Geocoding API)
+  - Bouton "Geolocaliser automatiquement" dans formulaire logement
+  - Conversion adresse -> GPS coordinates sans saisie manuelle
+  - Validation et affichage adresse trouvee
+  - Champs latitude/longitude remplis automatiquement
+
+**A implementer:**
+
 | Feature | Priorite | Description |
 |---------|----------|-------------|
 | Inventaire / Equipements | Moyenne | Liste du mobilier, electromenager, linge par logement |
 | Checklist menage | Moyenne | Liste de taches standardisee par logement (personnalisable) |
-| Capacite / Chambres | Haute | Nombre de chambres, lits, capacite max voyageurs |
 | Tarification | Moyenne | Grille tarifaire par saison (haute/basse/moyenne) |
 | Score qualite | Basse | Note automatique basee sur les avis voyageurs |
 | Historique maintenance | Moyenne | Timeline de toutes les interventions/incidents par logement |
@@ -154,7 +438,46 @@ Aucun module financier actuellement :
 
 ---
 
-### H. Ameliorations UX generales
+### H. Portails externes (V2 - Post-MVP)
+
+**Decision MVP:** Les proprietaires et prestataires restent des **contacts** (tables separees), ils ne se connectent PAS au SaaS.
+- Ils recoivent emails/SMS pour communication
+- Seuls ADMIN et OPERATEUR (equipe conciergerie) se connectent
+
+**Vision V2 (apres validation du MVP):** Ajouter des portails dedies avec authentification.
+
+| Feature | Role | Description |
+|---------|------|-------------|
+| **Portail Proprietaire** | PROPRIETAIRE | Role additionnel pour les proprietaires qui veulent un acces |
+| - Vue logements | PROPRIETAIRE | Voir uniquement leurs biens (RLS par proprietaire_id) |
+| - Reservations & revenus | PROPRIETAIRE | Calendrier des reservations, CA par bien |
+| - Historique missions | PROPRIETAIRE | Voir missions effectuees (checkin, checkout, menages) |
+| - Incidents & photos | PROPRIETAIRE | Suivi des incidents resolus avec photos |
+| - Rapports mensuels | PROPRIETAIRE | Dashboard simplifie avec KPIs |
+| - Acces lecture seule | PROPRIETAIRE | Aucune creation/modification possible |
+| **Portail Prestataire** | PRESTATAIRE | Role additionnel pour les prestataires actifs |
+| - Mes missions assignees | PRESTATAIRE | Voir uniquement les missions ou ils sont assignes |
+| - Marquer mission terminee | PRESTATAIRE | Bouton terminer + upload photos du travail |
+| - Historique interventions | PRESTATAIRE | Liste de toutes leurs missions passees |
+| - Upload photos/factures | PRESTATAIRE | Joindre photos avant/apres et factures |
+| - Calendrier personnel | PRESTATAIRE | Vue calendrier de leurs missions a venir |
+
+**Architecture technique V2:**
+- Ajouter roles `PROPRIETAIRE` et `PRESTATAIRE` a l'enum `user_role`
+- Lier `profiles.id` a `proprietaires.user_id` (nullable) et `prestataires.user_id` (nullable)
+- Policies RLS adaptees : proprietaire voit que ses biens, prestataire que ses missions
+- Dashboards specifiques par role (layout conditionnel)
+- Invitations separees pour proprio vs prestataire
+
+**Pourquoi attendre la V2:**
+- **MVP = Valider l'outil interne** pour la conciergerie d'abord
+- Tester 2-3 mois en prod pour identifier vrais besoins
+- Economiser 3-4 semaines de dev complexe
+- Eviter maintenance de portails peu utilises
+
+---
+
+### I. Ameliorations UX generales
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
@@ -168,7 +491,7 @@ Aucun module financier actuellement :
 
 ---
 
-### I. Ameliorations techniques
+### J. Ameliorations techniques
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
@@ -215,10 +538,10 @@ L'application est perceptiblement lente, surtout en mode developpement.
 
 ### Phase 1 - Stabilisation MVP (1-2 semaines)
 - [ ] Optimisation performance (Promise.all, loading.tsx)
-- [ ] Page "Mon profil" + changement mot de passe
+- [x] Page "Mon profil" + changement mot de passe
 - [ ] Page Settings organisation
-- [ ] Gestion des membres (inviter operateurs)
-- [ ] Vue calendrier missions
+- [x] Gestion des membres (inviter operateurs)
+- [x] Vue calendrier missions
 - [ ] Top 5 logements incidents (dashboard)
 - [ ] Deploy Vercel stable
 

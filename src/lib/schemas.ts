@@ -18,10 +18,16 @@ export const logementSchema = z.object({
   city: z.string().default(''),
   postal_code: z.string().default(''),
   country: z.string().default('France'),
+  latitude: z.coerce.number().nullable().default(null),
+  longitude: z.coerce.number().nullable().default(null),
   offer_tier: z.enum(['ESSENTIEL', 'SERENITE', 'SIGNATURE']).default('ESSENTIEL'),
   lockbox_code: z.string().default(''),
   wifi_name: z.string().default(''),
   wifi_password: z.string().default(''),
+  bedrooms: z.coerce.number().nullable().default(null),
+  beds: z.coerce.number().nullable().default(null),
+  max_guests: z.coerce.number().nullable().default(null),
+  ical_url: z.string().url('URL invalide').or(z.literal('')).default(''),
   notes: z.string().default(''),
   status: z.enum(['ACTIF', 'PAUSE', 'ARCHIVE']).default('ACTIF'),
 });
@@ -64,3 +70,38 @@ export const incidentSchema = z.object({
   cost: z.coerce.number().nullable().default(null),
 });
 export type IncidentFormData = z.infer<typeof incidentSchema>;
+
+// Contrats
+export const contratSchema = z.object({
+  proprietaire_id: z.string().min(1, 'Propriétaire requis'),
+  logement_id: z.string().default(''),
+  type: z.enum(['EXCLUSIF', 'SIMPLE']).default('SIMPLE'),
+  start_date: z.string().min(1, 'Date de début requise'),
+  end_date: z.string().min(1, 'Date de fin requise'),
+  commission_rate: z.coerce.number().min(0, 'La commission doit être positive').max(100, 'La commission ne peut pas dépasser 100%'),
+  status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE']).default('ACTIF'),
+  conditions: z.string().default(''),
+}).refine((data) => new Date(data.start_date) < new Date(data.end_date), {
+  message: 'La date de fin doit être après la date de début',
+  path: ['end_date'],
+});
+export type ContratFormData = z.infer<typeof contratSchema>;
+
+// Reservations
+export const reservationSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  guest_name: z.string().min(1, 'Nom du voyageur requis'),
+  guest_email: z.string().email('Email invalide').default(''),
+  guest_phone: z.string().default(''),
+  guest_count: z.coerce.number().min(1, 'Minimum 1 voyageur').default(1),
+  check_in_date: z.string().min(1, 'Date d\'arrivée requise'),
+  check_out_date: z.string().min(1, 'Date de départ requise'),
+  platform: z.enum(['AIRBNB', 'BOOKING', 'DIRECT', 'AUTRE']).default('DIRECT'),
+  amount: z.coerce.number().min(0, 'Le montant doit être positif').nullable().default(null),
+  status: z.enum(['CONFIRMEE', 'ANNULEE', 'TERMINEE']).default('CONFIRMEE'),
+  notes: z.string().default(''),
+}).refine((data) => new Date(data.check_in_date) < new Date(data.check_out_date), {
+  message: 'La date de départ doit être après la date d\'arrivée',
+  path: ['check_out_date'],
+});
+export type ReservationFormData = z.infer<typeof reservationSchema>;
