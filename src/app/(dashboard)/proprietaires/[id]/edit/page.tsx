@@ -14,7 +14,7 @@ export default async function EditProprietairePage({ params }: { params: { id: s
 
   return (
     <div>
-      <PageHeader title="Modifier le propriétaire" showCreate={false} />
+      <PageHeader title="Modifier le propriétaire" showCreate={false} showBack={true} backHref={`/proprietaires/${params.id}`} />
       <ProprietaireForm proprietaire={data} />
     </div>
   );

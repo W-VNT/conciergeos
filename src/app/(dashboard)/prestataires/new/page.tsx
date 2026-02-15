@@ -9,7 +9,7 @@ export default async function NewPrestatairePage() {
 
   return (
     <div>
-      <PageHeader title="Nouveau prestataire" showCreate={false} />
+      <PageHeader title="Nouveau prestataire" showCreate={false} showBack={true} backHref="/prestataires" />
       <PrestataireForm />
     </div>
   );

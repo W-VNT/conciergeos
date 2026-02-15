@@ -11,7 +11,12 @@ export default async function NewIncidentPage({ searchParams }: { searchParams: 
 
   return (
     <div>
-      <PageHeader title="Nouvel incident" showCreate={false} />
+      <PageHeader
+        title="Nouvel incident"
+        showCreate={false}
+        showBack={true}
+        backHref="/incidents"
+      />
       <IncidentForm logements={logements ?? []} prestataires={prestataires ?? []} defaultLogementId={searchParams.logement_id} defaultMissionId={searchParams.mission_id} />
     </div>
   );

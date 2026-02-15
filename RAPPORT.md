@@ -367,15 +367,25 @@ const missionPrice = {
 
 ### E. Finance & Facturation
 
-Aucun module financier actuellement :
+**Implemente (Phase 1-2):**
+- [x] Table `revenus` avec suivi detaille par reservation
+- [x] **Calcul automatique des commissions** selon contrat actif (trigger DB)
+- [x] **Auto-creation revenus** depuis reservations confirmees (trigger DB)
+- [x] Vues agregees pour performance (revenus_mensuels, revenus_par_logement)
+- [x] Page `/finances` dediee avec filtre de periode
+- [x] **4 KPIs financiers**: CA Brut, Commissions, Charges, Marge nette
+- [x] **Tableau revenus par logement** (nb reservations, CA brut, commissions %, CA net)
+- [x] Commissions variables par contrat (12-20%)
+- [x] Server actions pour recuperation donnees financieres
+- [x] Navigation dans sidebar (icone DollarSign)
+
+**A implementer:**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Suivi revenus par logement | Haute | CA brut par reservation, commissions, charges |
-| Commissions conciergerie | Haute | Calcul automatique selon le contrat/mandat du proprietaire |
 | Factures prestataires | Moyenne | Suivi des factures recues, liaison avec incidents/missions |
-| Tableau de bord financier | Moyenne | CA total, charges, marge, par mois/trimestre |
 | Export comptable | Moyenne | Export CSV/PDF compatible logiciel comptable |
+| Graphiques evolution | Moyenne | Charts mensuels avec recharts |
 | Relances paiement | Basse | Alertes pour factures impayees |
 
 ---

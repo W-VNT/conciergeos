@@ -33,7 +33,12 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Mission ${MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}`} showCreate={false}>
+      <PageHeader
+        title={`Mission ${MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}`}
+        showCreate={false}
+        showBack={true}
+        backHref="/missions"
+      >
         {mission.status !== "TERMINE" && mission.status !== "ANNULE" && <CompleteMissionButton missionId={mission.id} variant="default" />}
         <Button variant="outline" asChild>
           <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-2" /> Créer incident</Link>

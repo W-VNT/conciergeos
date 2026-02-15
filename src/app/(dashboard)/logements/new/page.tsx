@@ -13,7 +13,12 @@ export default async function NewLogementPage() {
 
   return (
     <div>
-      <PageHeader title="Nouveau logement" showCreate={false} />
+      <PageHeader
+        title="Nouveau logement"
+        showCreate={false}
+        showBack={true}
+        backHref="/logements"
+      />
       <LogementForm proprietaires={proprietaires ?? []} />
     </div>
   );

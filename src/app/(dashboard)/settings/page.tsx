@@ -23,7 +23,7 @@ export default async function SettingsPage() {
 
       <Card className="p-6">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-4" : "grid-cols-2"}`}>
+          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2"}`}>
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="security">Sécurité</TabsTrigger>
             {isAdmin && <TabsTrigger value="organisation">Organisation</TabsTrigger>}

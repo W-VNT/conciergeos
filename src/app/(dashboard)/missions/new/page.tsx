@@ -12,7 +12,12 @@ export default async function NewMissionPage() {
 
   return (
     <div>
-      <PageHeader title="Nouvelle mission" showCreate={false} />
+      <PageHeader
+        title="Nouvelle mission"
+        showCreate={false}
+        showBack={true}
+        backHref="/missions"
+      />
       <MissionForm logements={logements ?? []} profiles={profiles ?? []} isAdmin={isAdmin(profile)} currentUserId={profile.id} />
     </div>
   );

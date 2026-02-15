@@ -15,7 +15,9 @@ import {
   FileText,
   CalendarCheck,
   BarChart3,
+  DollarSign,
 } from "lucide-react";
+import type { Profile, Organisation } from "@/types/database";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,14 +26,45 @@ const navItems = [
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/contrats", label: "Contrats", icon: FileText },
   { href: "/reservations", label: "Réservations", icon: CalendarCheck },
+  { href: "/finances", label: "Finances", icon: DollarSign },
   { href: "/missions", label: "Missions", icon: ClipboardList },
   { href: "/calendrier", label: "Calendrier", icon: Calendar },
   { href: "/incidents", label: "Incidents", icon: AlertTriangle },
   { href: "/prestataires", label: "Prestataires", icon: Wrench },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  profile: Profile;
+  organisation: Organisation | null;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function getAvatarColor(name: string): string {
+  const colors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-orange-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-teal-500",
+    "bg-red-500",
+  ];
+  const index = name.charCodeAt(0) % colors.length;
+  return colors[index];
+}
+
+export function Sidebar({ profile, organisation }: SidebarProps) {
   const pathname = usePathname();
+  const isAdmin = profile.role === "ADMIN";
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white border-r">
@@ -61,6 +94,71 @@ export function Sidebar() {
           );
         })}
       </nav>
+      {/* Organisation footer */}
+      {organisation && (
+        <div className="border-t px-3 py-4">
+          {isAdmin ? (
+            <Link
+              href="/organisation"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                pathname.startsWith("/organisation")
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-gray-100 hover:text-foreground"
+              )}
+              title="Paramètres de l'organisation"
+            >
+              <div
+                className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${
+                  organisation.logo_url
+                    ? "bg-transparent"
+                    : getAvatarColor(organisation.name)
+                }`}
+              >
+                {organisation.logo_url ? (
+                  <img
+                    src={organisation.logo_url}
+                    alt={organisation.name}
+                    className="h-full w-full object-cover rounded-full"
+                  />
+                ) : (
+                  getInitials(organisation.name)
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{organisation.name}</p>
+                <p className="text-xs text-muted-foreground">Organisation</p>
+              </div>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <div
+                className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${
+                  organisation.logo_url
+                    ? "bg-transparent"
+                    : getAvatarColor(organisation.name)
+                }`}
+              >
+                {organisation.logo_url ? (
+                  <img
+                    src={organisation.logo_url}
+                    alt={organisation.name}
+                    className="h-full w-full object-cover rounded-full"
+                  />
+                ) : (
+                  getInitials(organisation.name)
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-muted-foreground truncate">
+                  {organisation.name}
+                </p>
+                <p className="text-xs text-muted-foreground">Organisation</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

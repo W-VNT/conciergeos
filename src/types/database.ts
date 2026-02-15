@@ -30,6 +30,7 @@ export type NotificationType =
   | 'SYSTEM';
 export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'AUTRE';
 export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
+export type FactureStatus = 'ATTENTE' | 'VALIDEE' | 'PAYEE' | 'REFUSEE';
 
 // Tables
 export interface Organisation {
@@ -100,6 +101,49 @@ export interface Reservation {
   updated_at: string;
   // Joined
   logement?: Logement | null;
+}
+
+export interface Revenu {
+  id: string;
+  organisation_id: string;
+  reservation_id: string;
+  logement_id: string;
+  contrat_id: string | null;
+  montant_brut: number;
+  taux_commission: number;
+  montant_commission: number;
+  montant_net: number;
+  date_reservation: string;
+  date_checkin: string;
+  date_checkout: string;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  reservation?: Reservation | null;
+  logement?: Logement | null;
+  contrat?: Contrat | null;
+}
+
+export interface FacturePrestataire {
+  id: string;
+  organisation_id: string;
+  prestataire_id: string;
+  mission_id: string | null;
+  incident_id: string | null;
+  numero_facture: string | null;
+  montant: number;
+  date_emission: string;
+  date_echeance: string | null;
+  status: FactureStatus;
+  date_paiement: string | null;
+  description: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  prestataire?: Prestataire | null;
+  mission?: Mission | null;
+  incident?: Incident | null;
 }
 
 export interface Logement {

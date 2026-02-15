@@ -16,7 +16,12 @@ export default async function EditLogementPage({ params }: { params: { id: strin
 
   return (
     <div>
-      <PageHeader title="Modifier le logement" showCreate={false} />
+      <PageHeader
+        title="Modifier le logement"
+        showCreate={false}
+        showBack={true}
+        backHref={`/logements/${params.id}`}
+      />
       <LogementForm logement={logement} proprietaires={proprietaires ?? []} />
     </div>
   );

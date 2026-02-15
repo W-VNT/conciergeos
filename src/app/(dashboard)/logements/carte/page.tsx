@@ -27,7 +27,12 @@ export default async function LogementsCartePage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <PageHeader title="Carte des logements" showCreate={false}>
+      <PageHeader
+        title="Carte des logements"
+        showCreate={false}
+        showBack={true}
+        backHref="/logements"
+      >
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
           <span>

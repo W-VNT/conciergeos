@@ -31,7 +31,12 @@ export default async function LogementDetailPage({ params }: { params: { id: str
 
   return (
     <div className="space-y-6">
-      <PageHeader title={logement.name} showCreate={false}>
+      <PageHeader
+        title={logement.name}
+        showCreate={false}
+        showBack={true}
+        backHref="/logements"
+      >
         <SyncIcalButton
           logementId={logement.id}
           hasIcalUrl={!!logement.ical_url}

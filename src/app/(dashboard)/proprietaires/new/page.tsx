@@ -9,7 +9,7 @@ export default async function NewProprietairePage() {
 
   return (
     <div>
-      <PageHeader title="Nouveau propriétaire" showCreate={false} />
+      <PageHeader title="Nouveau propriétaire" showCreate={false} showBack={true} backHref="/proprietaires" />
       <ProprietaireForm />
     </div>
   );

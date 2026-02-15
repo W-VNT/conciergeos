@@ -16,7 +16,12 @@ export default async function EditMissionPage({ params }: { params: { id: string
 
   return (
     <div>
-      <PageHeader title="Modifier la mission" showCreate={false} />
+      <PageHeader
+        title="Modifier la mission"
+        showCreate={false}
+        showBack={true}
+        backHref={`/missions/${params.id}`}
+      />
       <MissionForm mission={mission} logements={logements ?? []} profiles={profiles ?? []} isAdmin={isAdmin(profile)} currentUserId={profile.id} />
     </div>
   );

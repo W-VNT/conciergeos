@@ -163,7 +163,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             <button
               onClick={() => {
                 setIsOpen(false);
-                router.push("/settings");
+                router.push("/account");
               }}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
             >

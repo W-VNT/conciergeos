@@ -16,7 +16,12 @@ export default async function EditIncidentPage({ params }: { params: { id: strin
 
   return (
     <div>
-      <PageHeader title="Modifier l&apos;incident" showCreate={false} />
+      <PageHeader
+        title="Modifier l&apos;incident"
+        showCreate={false}
+        showBack={true}
+        backHref={`/incidents/${params.id}`}
+      />
       <IncidentForm incident={incident} logements={logements ?? []} prestataires={prestataires ?? []} />
     </div>
   );

@@ -27,7 +27,12 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Détail incident" showCreate={false}>
+      <PageHeader
+        title="Détail incident"
+        showCreate={false}
+        showBack={true}
+        backHref="/incidents"
+      >
         <Button variant="outline" asChild><Link href={`/incidents/${incident.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link></Button>
         {admin && (
           <form action={async () => { "use server"; await deleteIncident(incident.id); }}>

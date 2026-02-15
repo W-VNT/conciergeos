@@ -14,7 +14,7 @@ export default async function EditPrestatairePage({ params }: { params: { id: st
 
   return (
     <div>
-      <PageHeader title="Modifier le prestataire" showCreate={false} />
+      <PageHeader title="Modifier le prestataire" showCreate={false} showBack={true} backHref={`/prestataires/${params.id}`} />
       <PrestataireForm prestataire={data} />
     </div>
   );
