@@ -42,7 +42,16 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
 
   try {
     // Dynamic import to avoid requiring resend if not configured
-    const { Resend } = await import("resend");
+    // Using require for optional dependency
+    let Resend;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      Resend = require("resend").Resend;
+    } catch {
+      console.warn("⚠️ Resend package not installed. Please run: npm install resend");
+      return;
+    }
+
     const resend = new Resend(apiKey);
 
     const { error } = await resend.emails.send({
