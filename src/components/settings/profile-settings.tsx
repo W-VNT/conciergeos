@@ -24,18 +24,13 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
     setLoading(true);
 
     try {
-      try {
-        await updateProfile({
-          full_name: fullName,
-          phone: phone || undefined,
-        });
-        toast.success("Profil mis à jour avec succès");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
-      }
-      }
+      await updateProfile({
+        full_name: fullName,
+        phone: phone || undefined,
+      });
+      toast.success("Profil mis à jour avec succès");
     } catch (error) {
-      toast.error("Une erreur est survenue");
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue");
     } finally {
       setLoading(false);
     }

@@ -31,11 +31,10 @@ export default function OrganisationSettings({ organisation }: Props) {
       });
       toast.success("Organisation mise à jour");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue");
+    } finally {
+      setLoading(false);
     }
-    }
-
-    setLoading(false);
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
