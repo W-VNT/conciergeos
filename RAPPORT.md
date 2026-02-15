@@ -424,17 +424,34 @@ Aucun module financier actuellement :
   - Conversion adresse -> GPS coordinates sans saisie manuelle
   - Validation et affichage adresse trouvee
   - Champs latitude/longitude remplis automatiquement
+- [x] Inventaire / Equipements (migration 0028)
+  - Table equipements avec categories (ELECTROMENAGER, MOBILIER, LINGE, AUTRE)
+  - États (BON, MOYEN, A_REMPLACER)
+  - Composant InventaireSection sur page détail logement
+  - CRUD complet avec dialog modal
+  - Affichage groupé par catégorie
+- [x] Checklist Ménage (migration 0029)
+  - Tables checklist_templates, checklist_template_items, mission_checklist_items
+  - Composant ChecklistManager sur page mission
+  - Cocher/décocher tâches avec suivi de progression
+  - Barre de progression (% complété)
+  - Groupage par catégorie
+- [x] Historique Maintenance
+  - Composant HistoriqueMaintenance sur page logement
+  - Timeline chronologique missions + incidents + réservations
+  - Affichage des 20 derniers événements
+  - Liens cliquables vers entités
+  - Format relatif des dates (il y a X jours)
 
 **A implementer:**
 
 | Feature | Priorite | Description |
 |---------|----------|-------------|
-| Inventaire / Equipements | Moyenne | Liste du mobilier, electromenager, linge par logement |
-| Checklist menage | Moyenne | Liste de taches standardisee par logement (personnalisable) |
 | Tarification | Moyenne | Grille tarifaire par saison (haute/basse/moyenne) |
 | Score qualite | Basse | Note automatique basee sur les avis voyageurs |
-| Historique maintenance | Moyenne | Timeline de toutes les interventions/incidents par logement |
 | Galerie photos publique | Basse | Photos ordonnees pour presentation aux proprietaires/voyageurs |
+| Upload photo par tâche checklist | Basse | Photo avant/après pour chaque item de checklist |
+| Templates checklist admin | Basse | Page admin pour créer/modifier templates de checklist |
 
 ---
 

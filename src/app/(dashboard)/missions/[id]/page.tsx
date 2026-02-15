@@ -11,6 +11,7 @@ import { CompleteMissionButton } from "@/components/shared/complete-mission-butt
 import { Pencil, Trash2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
+import { ChecklistManager } from "@/components/missions/checklist-manager";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -59,6 +60,8 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           {mission.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1">{mission.notes}</p></div>}
         </CardContent>
       </Card>
+
+      <ChecklistManager missionId={params.id} />
 
       <PhotoSection organisationId={profile.organisation_id} entityType="MISSION" entityId={params.id} initialAttachments={attachments ?? []} canUpload={true} canDelete={true} />
     </div>

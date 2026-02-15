@@ -14,10 +14,14 @@ export async function updatePassword(newPassword: string) {
       return { error: "Non authentifié" };
     }
 
+    // Validate password strength
     if (newPassword.length < 8) {
-      return { error: "Le mot de passe doit contenir au moins 8 caractères" };
+      return {
+        error: "Le mot de passe doit contenir au moins 8 caractères",
+      };
     }
 
+    // Update password
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });

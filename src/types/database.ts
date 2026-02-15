@@ -28,6 +28,8 @@ export type NotificationType =
   | 'TEAM_INVITATION'
   | 'RESERVATION_CREATED'
   | 'SYSTEM';
+export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'AUTRE';
+export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
 
 // Tables
 export interface Organisation {
@@ -218,6 +220,55 @@ export interface Notification {
   created_at: string;
 }
 
+export interface Equipement {
+  id: string;
+  organisation_id: string;
+  logement_id: string;
+  categorie: EquipementCategorie;
+  nom: string;
+  quantite: number;
+  etat: EquipementEtat;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChecklistTemplate {
+  id: string;
+  organisation_id: string;
+  nom: string;
+  type_mission: MissionType;
+  description: string | null;
+  actif: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChecklistTemplateItem {
+  id: string;
+  template_id: string;
+  titre: string;
+  description: string | null;
+  categorie: string | null;
+  ordre: number;
+  photo_requise: boolean;
+  created_at: string;
+}
+
+export interface MissionChecklistItem {
+  id: string;
+  mission_id: string;
+  item_id: string;
+  completed: boolean;
+  photo_url: string | null;
+  notes: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
+  created_at: string;
+  // Joined
+  item?: ChecklistTemplateItem;
+}
+
 // Enum label maps for UI display
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrateur',
@@ -305,4 +356,17 @@ export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
   CONFIRMEE: 'Confirmée',
   ANNULEE: 'Annulée',
   TERMINEE: 'Terminée',
+};
+
+export const EQUIPEMENT_CATEGORIE_LABELS: Record<EquipementCategorie, string> = {
+  ELECTROMENAGER: 'Électroménager',
+  MOBILIER: 'Mobilier',
+  LINGE: 'Linge',
+  AUTRE: 'Autre',
+};
+
+export const EQUIPEMENT_ETAT_LABELS: Record<EquipementEtat, string> = {
+  BON: 'Bon état',
+  MOYEN: 'État moyen',
+  A_REMPLACER: 'À remplacer',
 };

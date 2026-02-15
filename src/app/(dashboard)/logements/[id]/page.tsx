@@ -11,6 +11,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
+import { InventaireSection } from "@/components/logements/inventaire-section";
+import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -21,8 +23,9 @@ export default async function LogementDetailPage({ params }: { params: { id: str
   if (!logement) notFound();
 
   const { data: attachments } = await supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).order("created_at", { ascending: false });
-  const { data: missions } = await supabase.from("missions").select("id, type, status, scheduled_at").eq("logement_id", params.id).order("scheduled_at", { ascending: false }).limit(5);
-  const { data: incidents } = await supabase.from("incidents").select("id, severity, status, description, opened_at").eq("logement_id", params.id).order("opened_at", { ascending: false }).limit(5);
+  const { data: missions } = await supabase.from("missions").select("id, type, status, scheduled_at, notes").eq("logement_id", params.id).order("scheduled_at", { ascending: false });
+  const { data: incidents } = await supabase.from("incidents").select("id, severity, status, description, opened_at").eq("logement_id", params.id).order("opened_at", { ascending: false });
+  const { data: reservations } = await supabase.from("reservations").select("id, guest_name, guest_count, check_in_date, status").eq("logement_id", params.id).order("check_in_date", { ascending: false });
 
   const prop = logement.proprietaire as { id: string; full_name: string } | null;
 
@@ -76,6 +79,14 @@ export default async function LogementDetailPage({ params }: { params: { id: str
       </div>
 
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
+
+      <InventaireSection logementId={params.id} />
+
+      <HistoriqueMaintenance
+        missions={missions ?? []}
+        incidents={incidents ?? []}
+        reservations={reservations ?? []}
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

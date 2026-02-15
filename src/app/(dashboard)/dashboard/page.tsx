@@ -6,25 +6,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/types/database";
 import { ClipboardList, AlertTriangle, Clock, DollarSign, FileText, AlertCircle, Percent, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
 
 // Revalidate every 30 seconds (ISR cache)
 export const revalidate = 30;
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const profile = await requireProfile();
   const supabase = createClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyDaysFromNow = new Date(today);
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  // Current month boundaries for occupation/revenue KPIs
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  // Calculate date range based on filter
+  const range = (searchParams.range as DateRange) || "30d";
+  let startDate: Date;
+  let endDate: Date = new Date(today);
+  endDate.setHours(23, 59, 59, 999);
+
+  if (range === "custom" && searchParams.start && searchParams.end) {
+    startDate = new Date(searchParams.start as string);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date(searchParams.end as string);
+    endDate.setHours(23, 59, 59, 999);
+  } else if (range === "7d") {
+    startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 7);
+  } else if (range === "90d") {
+    startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 90);
+  } else {
+    // Default: 30d
+    startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 30);
+  }
 
   // Parallelize all queries with Promise.all for faster loading
   const [
@@ -73,14 +95,14 @@ export default async function DashboardPage() {
       .from("incidents")
       .select("opened_at, resolved_at")
       .not("resolved_at", "is", null)
-      .gte("resolved_at", thirtyDaysAgo.toISOString()),
+      .gte("resolved_at", startDate.toISOString()),
 
     // Cost data
     supabase
       .from("incidents")
       .select("cost")
       .not("cost", "is", null)
-      .gte("created_at", thirtyDaysAgo.toISOString()),
+      .gte("created_at", startDate.toISOString()),
 
     // Expiring contracts (ending in next 30 days)
     supabase
@@ -103,13 +125,13 @@ export default async function DashboardPage() {
       .select("id, name")
       .eq("status", "ACTIF"),
 
-    // Current month reservations for occupation & revenue KPIs
+    // Reservations for the selected date range
     supabase
       .from("reservations")
       .select("check_in_date, check_out_date, amount, status")
       .eq("status", "CONFIRMEE")
-      .gte("check_out_date", firstDayOfMonth.toISOString())
-      .lte("check_in_date", lastDayOfMonth.toISOString()),
+      .gte("check_out_date", startDate.toISOString())
+      .lte("check_in_date", endDate.toISOString()),
   ]);
 
   // Calculate average resolution time
@@ -144,38 +166,44 @@ export default async function DashboardPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Calculate occupation rate for current month
-  const daysInCurrentMonth = lastDayOfMonth.getDate();
-  const totalAvailableDays = (logements?.length ?? 0) * daysInCurrentMonth;
+  // Calculate occupation rate for selected date range
+  const daysInRange = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const totalAvailableDays = (logements?.length ?? 0) * daysInRange;
 
   let occupiedDays = 0;
   currentMonthReservations?.forEach((reservation) => {
     const checkIn = new Date(reservation.check_in_date);
     const checkOut = new Date(reservation.check_out_date);
 
-    // Clamp dates to current month boundaries
-    const effectiveCheckIn = checkIn < firstDayOfMonth ? firstDayOfMonth : checkIn;
-    const effectiveCheckOut = checkOut > lastDayOfMonth ? new Date(lastDayOfMonth.getTime() + 86400000) : checkOut;
+    // Clamp dates to selected date range boundaries
+    const effectiveCheckIn = checkIn < startDate ? startDate : checkIn;
+    const effectiveCheckOut = checkOut > endDate ? new Date(endDate.getTime() + 86400000) : checkOut;
 
-    // Calculate nights in current month
+    // Calculate nights in the date range
     const nights = Math.ceil((effectiveCheckOut.getTime() - effectiveCheckIn.getTime()) / (1000 * 60 * 60 * 24));
     occupiedDays += Math.max(0, nights);
   });
 
   const occupationRate = totalAvailableDays > 0 ? Math.round((occupiedDays / totalAvailableDays) * 100) : 0;
 
-  // Calculate current month revenue
+  // Calculate revenue for selected date range
   const currentMonthRevenue = currentMonthReservations?.reduce((sum, r) => sum + (Number(r.amount) || 0), 0) ?? 0;
+
+  // Format range label for display
+  const rangeLabel = range === "7d" ? "7j" : range === "90d" ? "90j" : range === "custom" ? "période" : "30j";
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <DateFilter />
+      </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <KpiCard title="Missions du jour" value={todayMissions?.length ?? 0} icon={ClipboardList} />
         <KpiCard title="Incidents ouverts" value={openIncidentsCount ?? 0} description={`dont ${criticalCount ?? 0} critique(s)`} icon={AlertTriangle} />
-        <KpiCard title="Résolution moy. (30j)" value={`${avgResolutionHours}h`} icon={Clock} />
-        <KpiCard title="Coût incidents (30j)" value={`${totalCost.toFixed(0)}€`} icon={DollarSign} />
+        <KpiCard title={`Résolution moy. (${rangeLabel})`} value={`${avgResolutionHours}h`} icon={Clock} />
+        <KpiCard title={`Coût incidents (${rangeLabel})`} value={`${totalCost.toFixed(0)}€`} icon={DollarSign} />
         <KpiCard
           title="Taux d'occupation"
           value={`${occupationRate}%`}
@@ -183,8 +211,9 @@ export default async function DashboardPage() {
           icon={Percent}
         />
         <KpiCard
-          title="Revenus du mois"
+          title="Revenus"
           value={`${currentMonthRevenue.toFixed(0)}€`}
+          description={rangeLabel}
           icon={TrendingUp}
         />
       </div>

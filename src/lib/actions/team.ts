@@ -302,3 +302,142 @@ export async function removeMember(userId: string) {
     return { error: "Une erreur est survenue" };
   }
 }
+
+/**
+ * Verify invitation token and get invitation details
+ */
+export async function verifyInvitationToken(token: string) {
+  try {
+    const supabase = await createClient();
+
+    // Get invitation by token
+    const { data: invitation, error } = await supabase
+      .from("invitations")
+      .select(`
+        *,
+        organisation:organisations(name),
+        inviter:profiles!invited_by(full_name)
+      `)
+      .eq("token", token)
+      .eq("status", "PENDING")
+      .single();
+
+    if (error || !invitation) {
+      return { error: "Invitation non trouvée ou invalide" };
+    }
+
+    // Check if expired
+    const now = new Date();
+    const expiresAt = new Date(invitation.expires_at);
+    if (now > expiresAt) {
+      // Mark as expired
+      await supabase
+        .from("invitations")
+        .update({ status: "EXPIRED" })
+        .eq("id", invitation.id);
+
+      return { error: "Cette invitation a expiré" };
+    }
+
+    return { invitation };
+  } catch (error) {
+    console.error("Verify invitation error:", error);
+    return { error: "Une erreur est survenue" };
+  }
+}
+
+/**
+ * Accept invitation and create profile in organisation
+ */
+export async function acceptInvitation(token: string) {
+  try {
+    const supabase = await createClient();
+
+    // Get current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Vous devez être connecté pour accepter une invitation" };
+    }
+
+    // Get invitation
+    const { data: invitation, error: invitationError } = await supabase
+      .from("invitations")
+      .select("*")
+      .eq("token", token)
+      .eq("status", "PENDING")
+      .single();
+
+    if (invitationError || !invitation) {
+      return { error: "Invitation non trouvée ou invalide" };
+    }
+
+    // Check if expired
+    const now = new Date();
+    const expiresAt = new Date(invitation.expires_at);
+    if (now > expiresAt) {
+      await supabase
+        .from("invitations")
+        .update({ status: "EXPIRED" })
+        .eq("id", invitation.id);
+
+      return { error: "Cette invitation a expiré" };
+    }
+
+    // Check if email matches
+    if (user.email !== invitation.email) {
+      return {
+        error: `Cette invitation est pour ${invitation.email}. Veuillez vous connecter avec le bon compte.`,
+      };
+    }
+
+    // Check if user already has a profile in this org
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .eq("organisation_id", invitation.organisation_id)
+      .single();
+
+    if (existingProfile) {
+      return { error: "Vous êtes déjà membre de cette organisation" };
+    }
+
+    // Create profile for the user in the organisation
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: user.id,
+      organisation_id: invitation.organisation_id,
+      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Nouveau membre",
+      role: invitation.role,
+    });
+
+    if (profileError) {
+      console.error("Create profile error:", profileError);
+      return { error: "Erreur lors de la création du profil" };
+    }
+
+    // Mark invitation as accepted
+    const { error: updateError } = await supabase
+      .from("invitations")
+      .update({
+        status: "ACCEPTED",
+        accepted_at: new Date().toISOString(),
+      })
+      .eq("id", invitation.id);
+
+    if (updateError) {
+      console.error("Update invitation error:", updateError);
+      // Don't return error here, profile is already created
+    }
+
+    revalidatePath("/settings");
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Accept invitation error:", error);
+    return { error: "Une erreur est survenue" };
+  }
+}
