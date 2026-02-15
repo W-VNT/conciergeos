@@ -26,7 +26,7 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
     try {
       const result = await updateProfile({
         full_name: fullName,
-        phone: phone || null,
+        phone: phone || undefined,
       });
 
       if (result.error) {
