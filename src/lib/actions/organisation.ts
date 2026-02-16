@@ -215,3 +215,70 @@ export async function getCurrentOrganisation() {
 
   return organisation;
 }
+
+/**
+ * Delete organisation (DANGER ZONE)
+ * This will CASCADE delete all related data:
+ * - proprietaires, logements, missions, reservations, contrats, revenus, etc.
+ * - profiles (users will lose access)
+ */
+export async function deleteOrganisation(confirmationName: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Non authentifié");
+  }
+
+  // Get user's profile to check role and organisation
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organisation_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    throw new Error("Profil non trouvé");
+  }
+
+  if (profile.role !== "ADMIN") {
+    throw new Error("Accès refusé - Admin uniquement");
+  }
+
+  // Get organisation to verify name
+  const { data: organisation } = await supabase
+    .from("organisations")
+    .select("name")
+    .eq("id", profile.organisation_id)
+    .single();
+
+  if (!organisation) {
+    throw new Error("Organisation non trouvée");
+  }
+
+  // Verify confirmation name matches
+  if (organisation.name !== confirmationName) {
+    throw new Error("Le nom de l'organisation ne correspond pas");
+  }
+
+  // Delete organisation (CASCADE will handle all related data)
+  const { error } = await supabase
+    .from("organisations")
+    .delete()
+    .eq("id", profile.organisation_id);
+
+  if (error) {
+    console.error("Delete organisation error:", error);
+    throw new Error("Erreur lors de la suppression de l'organisation");
+  }
+
+  // Sign out the user (they no longer have access)
+  await supabase.auth.signOut();
+
+  revalidatePath("/");
+
+  return { success: true };
+}

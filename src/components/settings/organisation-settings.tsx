@@ -6,19 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { updateOrganisation, uploadOrganisationLogo, deleteOrganisationLogo } from "@/lib/actions/organisation";
-import { Building2, Upload, X } from "lucide-react";
+import { updateOrganisation, uploadOrganisationLogo, deleteOrganisationLogo, deleteOrganisation } from "@/lib/actions/organisation";
+import { Building2, Upload, X, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 interface Props {
   organisation: Organisation;
 }
 
 export default function OrganisationSettings({ organisation }: Props) {
+  const router = useRouter();
   const [name, setName] = useState(organisation.name);
   const [city, setCity] = useState(organisation.city || "");
   const [logoUrl, setLogoUrl] = useState(organisation.logo_url);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [confirmationName, setConfirmationName] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,6 +94,23 @@ export default function OrganisationSettings({ organisation }: Props) {
       toast.error(err.message || "Erreur lors de la suppression");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleDeleteOrganisation() {
+    setDeleting(true);
+
+    try {
+      await deleteOrganisation(confirmationName);
+      toast.success("Organisation supprimée");
+      // User is automatically signed out, redirect happens via auth callback
+      router.push("/login");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la suppression");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setConfirmationName("");
     }
   }
 
@@ -176,6 +206,98 @@ export default function OrganisationSettings({ organisation }: Props) {
           </Button>
         </form>
       </div>
+
+      {/* Danger Zone */}
+      <div className="border-t border-destructive/30 pt-6 mt-6">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold text-destructive mb-2">
+                Zone de danger
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                La suppression de l'organisation est <strong>irréversible</strong>.
+                Toutes les données seront définitivement supprimées :
+              </p>
+              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1 mb-4">
+                <li>Tous les propriétaires, logements et réservations</li>
+                <li>Toutes les missions, incidents et contrats</li>
+                <li>Tous les revenus et données financières</li>
+                <li>Tous les membres de l'équipe perdront l'accès</li>
+                <li>Tous les fichiers uploadés (photos, documents)</li>
+              </ul>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Supprimer définitivement l'organisation
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Supprimer l'organisation
+            </DialogTitle>
+            <DialogDescription className="space-y-3 pt-2">
+              <p className="font-semibold">
+                Cette action est irréversible et supprimera définitivement :
+              </p>
+              <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Toutes les données de l'organisation</li>
+                <li>Tous les utilisateurs et leurs accès</li>
+                <li>Tous les fichiers uploadés</li>
+              </ul>
+              <p className="text-sm font-medium pt-2">
+                Pour confirmer, tapez le nom de l'organisation :{" "}
+                <span className="font-bold text-foreground">{organisation.name}</span>
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Input
+              placeholder={organisation.name}
+              value={confirmationName}
+              onChange={(e) => setConfirmationName(e.target.value)}
+              autoComplete="off"
+              className="border-destructive/50 focus-visible:ring-destructive"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setConfirmationName("");
+              }}
+              disabled={deleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteOrganisation}
+              disabled={confirmationName !== organisation.name || deleting}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleting ? "Suppression..." : "Supprimer définitivement"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
