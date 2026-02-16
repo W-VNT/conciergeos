@@ -49,7 +49,6 @@ export function AcceptInvitationContent() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
 
       // Verify invitation token
       const result = await verifyInvitationToken(token);
@@ -60,12 +59,19 @@ export function AcceptInvitationContent() {
         return;
       }
 
+      // If user is not logged in, redirect directly to signup
+      if (!user) {
+        router.push(`/signup?invitation=${token}&email=${encodeURIComponent(result.invitation.email)}`);
+        return;
+      }
+
+      setIsLoggedIn(true);
       setInvitation(result.invitation);
       setLoading(false);
     }
 
     loadInvitation();
-  }, [token, supabase]);
+  }, [token, supabase, router]);
 
   async function handleAccept() {
     if (!token || !invitation) return;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
+import { verifyInvitationToken, acceptInvitation } from "@/lib/actions/team";
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Invitation handling
+  const invitationToken = searchParams.get("invitation");
+  const invitationEmail = searchParams.get("email");
+  const [isInvitation, setIsInvitation] = useState(false);
+  const [invitationOrgName, setInvitationOrgName] = useState<string>("");
 
   // Step 1: Account
   const [email, setEmail] = useState("");
@@ -28,6 +36,25 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [orgCity, setOrgCity] = useState("");
+
+  // Check invitation and pre-fill data
+  useEffect(() => {
+    async function checkInvitation() {
+      if (invitationToken && invitationEmail) {
+        const result = await verifyInvitationToken(invitationToken);
+        if (!result.error && result.invitation) {
+          setIsInvitation(true);
+          setEmail(invitationEmail);
+          setInvitationOrgName(result.invitation.organisation?.name || "");
+          if (result.invitation.invited_name) {
+            setFullName(result.invitation.invited_name);
+          }
+        }
+      }
+    }
+
+    checkInvitation();
+  }, [invitationToken, invitationEmail]);
 
   // Check if user is already signed up but email not confirmed
   useEffect(() => {
@@ -83,7 +110,12 @@ export default function SignupPage() {
       return;
     }
 
-    setStep(2);
+    // If invitation, skip org step and go directly to confirmation
+    if (isInvitation) {
+      setStep(3);
+    } else {
+      setStep(2);
+    }
   }
 
   async function handleStep2Submit(e: React.FormEvent) {
@@ -108,16 +140,26 @@ export default function SignupPage() {
     setError(null);
 
     // 1. Create Supabase auth account
+    const signupOptions: any = {
+      data: {
+        full_name: fullName.trim(),
+      },
+    };
+
+    // Only add org data if NOT an invitation
+    if (!isInvitation) {
+      signupOptions.data.org_name = orgName.trim();
+      signupOptions.data.org_city = orgCity.trim() || null;
+    } else {
+      // Mark this as invitation signup to prevent org creation
+      signupOptions.data.is_invitation = true;
+      signupOptions.data.invitation_token = invitationToken;
+    }
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: {
-        data: {
-          full_name: fullName.trim(),
-          org_name: orgName.trim(),
-          org_city: orgCity.trim() || null,
-        },
-      },
+      options: signupOptions,
     });
 
     if (authError) {
@@ -135,8 +177,19 @@ export default function SignupPage() {
       return;
     }
 
+    // If invitation, accept it immediately after account creation
+    if (isInvitation && invitationToken) {
+      const acceptResult = await acceptInvitation(invitationToken);
+      if (acceptResult.error) {
+        setError(acceptResult.error);
+        setLoading(false);
+        return;
+      }
+    }
+
     // Note: Organisation will be created automatically by handle_onboarding
     // using the user_metadata (org_name, full_name, org_city) when user first logs in
+    // UNLESS is_invitation is true
 
     setLoading(false);
     // Go to email verification step instead of redirecting
@@ -173,19 +226,21 @@ export default function SignupPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">
-            {step === 4 ? "Vérifiez votre email" : "Créer votre compte ConciergeOS"}
+            {step === 4 ? "Vérifiez votre email" : isInvitation ? `Rejoindre ${invitationOrgName}` : "Créer votre compte ConciergeOS"}
           </CardTitle>
           <CardDescription>
             {step === 4
               ? "Une dernière étape avant d'accéder à votre espace"
+              : isInvitation
+              ? "Créez votre compte pour accepter l'invitation"
               : step === 3
               ? "Dernière étape !"
               : `Étape ${step} sur 3`
             }
           </CardDescription>
 
-          {/* Stepper - Hidden on step 4 */}
-          {step < 4 && (
+          {/* Stepper - Hidden on step 4 and for invitations */}
+          {step < 4 && !isInvitation && (
             <div className="flex items-center justify-center gap-2 mt-6">
               {[1, 2, 3].map((s) => (
                 <div key={s} className="flex items-center">
@@ -204,6 +259,32 @@ export default function SignupPage() {
                     <div
                       className={`h-0.5 w-12 mx-1 ${
                         s < step ? 'bg-primary' : 'bg-gray-200'
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {step < 4 && isInvitation && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              {[1, 2].map((s) => (
+                <div key={s} className="flex items-center">
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      (s === 1 && step === 1) || (s === 2 && step === 3)
+                        ? 'bg-primary text-primary-foreground'
+                        : s === 1 && step === 3
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {(s === 1 && step === 3) ? '✓' : s}
+                  </div>
+                  {s < 2 && (
+                    <div
+                      className={`h-0.5 w-12 mx-1 ${
+                        step === 3 ? 'bg-primary' : 'bg-gray-200'
                       }`}
                     />
                   )}
@@ -240,7 +321,14 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
+                  readOnly={isInvitation}
+                  className={isInvitation ? "bg-muted" : ""}
                 />
+                {isInvitation && (
+                  <p className="text-xs text-muted-foreground">
+                    Email de l'invitation (non modifiable)
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -415,28 +503,45 @@ export default function SignupPage() {
                   <p className="font-medium">Nom</p>
                   <p className="text-muted-foreground">{fullName}</p>
                 </div>
-                <div>
-                  <p className="font-medium">Conciergerie</p>
-                  <p className="text-muted-foreground">
-                    {orgName}
-                    {orgCity && ` • ${orgCity}`}
-                  </p>
-                </div>
+                {isInvitation ? (
+                  <div>
+                    <p className="font-medium">Vous rejoignez</p>
+                    <p className="text-muted-foreground">{invitationOrgName}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-medium">Conciergerie</p>
+                    <p className="text-muted-foreground">
+                      {orgName}
+                      {orgCity && ` • ${orgCity}`}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                <p className="font-medium text-blue-900 mb-1">📧 Vérification email</p>
-                <p className="text-blue-700">
-                  Après création, vous recevrez un email de confirmation à{" "}
-                  <strong>{email}</strong>. Pensez à vérifier vos spams.
-                </p>
-              </div>
+              {isInvitation ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
+                  <p className="font-medium text-green-900 mb-1">✓ Invitation</p>
+                  <p className="text-green-700">
+                    Votre compte sera créé et vous rejoindrez automatiquement{" "}
+                    <strong>{invitationOrgName}</strong>.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                  <p className="font-medium text-blue-900 mb-1">📧 Vérification email</p>
+                  <p className="text-blue-700">
+                    Après création, vous recevrez un email de confirmation à{" "}
+                    <strong>{email}</strong>. Pensez à vérifier vos spams.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(isInvitation ? 1 : 2)}
                   className="flex-1"
                   disabled={loading}
                 >
@@ -448,7 +553,7 @@ export default function SignupPage() {
                   size="lg"
                   disabled={loading}
                 >
-                  {loading ? 'Création du compte...' : 'Créer mon compte'}
+                  {loading ? 'Création du compte...' : isInvitation ? 'Accepter et créer mon compte' : 'Créer mon compte'}
                 </Button>
               </div>
             </div>
