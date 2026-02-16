@@ -41,10 +41,8 @@ DECLARE
 BEGIN
   RAISE NOTICE 'Nettoyage des données pour organisation: %', v_org_id;
 
-  -- Supprime tout ce qui est lié à cette organisation
-  -- L'ordre n'a pas d'importance car ON DELETE CASCADE fait le travail
-  DELETE FROM mission_checklist_items WHERE organisation_id = v_org_id;
-  DELETE FROM checklist_template_items WHERE organisation_id = v_org_id;
+  -- Supprime les données avec organisation_id direct
+  -- CASCADE supprimera automatiquement les tables liées (mission_checklist_items, etc.)
   DELETE FROM checklist_templates WHERE organisation_id = v_org_id;
   DELETE FROM equipements WHERE organisation_id = v_org_id;
   DELETE FROM revenus WHERE organisation_id = v_org_id;
@@ -60,6 +58,8 @@ BEGIN
   DELETE FROM notifications WHERE organisation_id = v_org_id;
 
   -- Ne supprime PAS profiles ni organisations (garde le compte admin)
+  -- Les tables liées (mission_checklist_items, checklist_template_items)
+  -- sont automatiquement supprimées par ON DELETE CASCADE
 
   RAISE NOTICE '✅ Données nettoyées avec succès!';
   RAISE NOTICE 'Organisation et profils admin conservés.';
