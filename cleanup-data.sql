@@ -11,7 +11,6 @@ TRUNCATE TABLE mission_checklist_items CASCADE;
 TRUNCATE TABLE checklist_template_items CASCADE;
 TRUNCATE TABLE checklist_templates CASCADE;
 TRUNCATE TABLE equipements CASCADE;
-TRUNCATE TABLE factures_prestataires CASCADE;
 TRUNCATE TABLE revenus CASCADE;
 TRUNCATE TABLE attachments CASCADE;
 TRUNCATE TABLE incidents CASCADE;
@@ -26,8 +25,7 @@ TRUNCATE TABLE notifications CASCADE;
 TRUNCATE TABLE profiles CASCADE;
 TRUNCATE TABLE organisations CASCADE;
 
--- Redémarre les séquences
-ALTER SEQUENCE IF EXISTS organisations_id_seq RESTART WITH 1;
+-- Note: factures_prestataires n'existe pas encore (Phase 3)
 */
 
 -- ============================================================
