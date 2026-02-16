@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
-import { verifyInvitationToken, acceptInvitation } from "@/lib/actions/team";
+import { verifyInvitationToken } from "@/lib/actions/team";
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
@@ -177,19 +177,9 @@ export default function SignupPage() {
       return;
     }
 
-    // If invitation, accept it immediately after account creation
-    if (isInvitation && invitationToken) {
-      const acceptResult = await acceptInvitation(invitationToken);
-      if (acceptResult.error) {
-        setError(acceptResult.error);
-        setLoading(false);
-        return;
-      }
-    }
-
-    // Note: Organisation will be created automatically by handle_onboarding
-    // using the user_metadata (org_name, full_name, org_city) when user first logs in
-    // UNLESS is_invitation is true
+    // Note: handle_onboarding trigger will automatically:
+    // - If invitation: create profile in invited organisation
+    // - If normal signup: create new organisation and admin profile
 
     setLoading(false);
     // Go to email verification step instead of redirecting
