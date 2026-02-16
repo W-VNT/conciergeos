@@ -30,17 +30,17 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Invitation à rejoindre ${organisationName}</title>
           </head>
-          <body style="margin: 0; padding: 0; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <!-- Wrapper avec gradient background -->
-            <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); padding: 40px 20px;">
+          <body style="margin: 0; padding: 0; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <!-- Wrapper avec fond clair -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background: #f5f5f5; padding: 40px 20px;">
               <tr>
                 <td align="center">
                   <!-- Container principal -->
-                  <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); max-width: 600px;">
+                  <table width="480" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); max-width: 480px; border: 1px solid #e5e5e5;">
 
                     <!-- Header avec logo -->
                     <tr>
-                      <td style="background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%); padding: 50px 40px; text-align: center; position: relative;">
+                      <td style="background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%); padding: 40px 30px; text-align: center; position: relative;">
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
                             <td align="center">
@@ -56,7 +56,7 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
 
                     <!-- Corps du message -->
                     <tr>
-                      <td style="padding: 50px 40px;">
+                      <td style="padding: 40px 30px;">
                         <!-- Badge invitation -->
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
@@ -168,7 +168,7 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
 
                     <!-- Footer -->
                     <tr>
-                      <td style="background: #fafafa; padding: 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+                      <td style="background: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #e5e5e5;">
                         <p style="margin: 0 0 16px 0; color: #525252; font-size: 14px; font-weight: 600;">
                           ConciergeOS
                         </p>
