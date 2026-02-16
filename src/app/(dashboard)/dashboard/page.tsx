@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
 import { ClipboardList, AlertTriangle, FileText } from "lucide-react";
 import Link from "next/link";
+import { CalendarWidget } from "@/components/dashboard/calendar-widget";
 
 // Revalidate every 30 seconds (ISR cache)
 export const revalidate = 30;
@@ -22,18 +23,21 @@ export default async function DashboardPage() {
 
   // Parallelize essential queries only
   const [
-    { data: todayMissions },
+    { data: upcomingMissions },
     { data: openIncidents, count: openIncidentsCount },
     { count: criticalCount },
     { count: expiringContractsCount },
   ] = await Promise.all([
-    // Today's missions
+    // Today's and tomorrow's missions
     (async () => {
+      const dayAfterTomorrow = new Date(tomorrow);
+      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
       let query = supabase
         .from("missions")
         .select("*, logement:logements(name), assignee:profiles(full_name)")
         .gte("scheduled_at", today.toISOString())
-        .lt("scheduled_at", tomorrow.toISOString())
+        .lt("scheduled_at", dayAfterTomorrow.toISOString())
         .order("scheduled_at");
 
       if (!isAdmin(profile)) {
@@ -66,29 +70,42 @@ export default async function DashboardPage() {
       .lte("end_date", sevenDaysFromNow.toISOString()),
   ]);
 
+  // Filter today's missions for the card
+  const todayMissions = upcomingMissions?.filter(m => {
+    const missionDate = new Date(m.scheduled_at);
+    return missionDate >= today && missionDate < tomorrow;
+  });
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      {/* Essential KPIs only */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          title="Missions du jour"
-          value={todayMissions?.length ?? 0}
-          icon={ClipboardList}
-        />
-        <KpiCard
-          title="Incidents ouverts"
-          value={openIncidentsCount ?? 0}
-          description={`dont ${criticalCount ?? 0} critique(s)`}
-          icon={AlertTriangle}
-        />
-        <KpiCard
-          title="Contrats expirant (7j)"
-          value={expiringContractsCount ?? 0}
-          description={expiringContractsCount && expiringContractsCount > 0 ? "À renouveler" : "Aucun"}
-          icon={FileText}
-        />
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
+        {/* Calendar Widget */}
+        <div className="lg:row-span-2">
+          <CalendarWidget missions={upcomingMissions || []} />
+        </div>
+
+        {/* Essential KPIs */}
+        <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <KpiCard
+            title="Missions du jour"
+            value={todayMissions?.length ?? 0}
+            icon={ClipboardList}
+          />
+          <KpiCard
+            title="Incidents ouverts"
+            value={openIncidentsCount ?? 0}
+            description={`dont ${criticalCount ?? 0} critique(s)`}
+            icon={AlertTriangle}
+          />
+          <KpiCard
+            title="Contrats expirant (7j)"
+            value={expiringContractsCount ?? 0}
+            description={expiringContractsCount && expiringContractsCount > 0 ? "À renouveler" : "Aucun"}
+            icon={FileText}
+          />
+        </div>
       </div>
 
       {/* Essential sections only */}
