@@ -135,23 +135,8 @@ export default function SignupPage() {
       return;
     }
 
-    // 2. Update organisation name and city
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organisation_id')
-      .eq('id', authData.user.id)
-      .single();
-
-    if (profile?.organisation_id) {
-      await supabase
-        .from('organisations')
-        .update({
-          name: orgName.trim(),
-          city: orgCity.trim() || null,
-          onboarding_completed: true,
-        })
-        .eq('id', profile.organisation_id);
-    }
+    // Note: Organisation will be created automatically by handle_onboarding
+    // using the user_metadata (org_name, full_name, org_city) when user first logs in
 
     setLoading(false);
     // Go to email verification step instead of redirecting

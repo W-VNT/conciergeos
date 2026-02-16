@@ -1,9 +1,9 @@
--- Seed demo data pour Ma Conciergerie
--- Organisation ID: 120d6708-f264-44e2-a4a6-d2fa40215f57
+-- Seed demo data pour ClassAzur
+-- Organisation ID: 475e2c84-b11a-4e9d-a49b-4be82c8b81ad
 
 DO $$
 DECLARE
-  v_org_id UUID := '120d6708-f264-44e2-a4a6-d2fa40215f57';
+  v_org_id UUID := '475e2c84-b11a-4e9d-a49b-4be82c8b81ad';
   v_admin_id UUID;
 
   v_proprio1_id UUID;
@@ -25,7 +25,7 @@ BEGIN
   DELETE FROM prestataires WHERE organisation_id = v_org_id AND email LIKE '%@plomberie-express.fr';
   DELETE FROM prestataires WHERE organisation_id = v_org_id AND email LIKE '%@elec-plus.fr';
 
-  RAISE NOTICE '🏢 Création des données pour Ma Conciergerie...';
+  RAISE NOTICE '🏢 Création des données pour ClassAzur...';
 
   -- Propriétaires
   INSERT INTO proprietaires (organisation_id, full_name, email, phone)
@@ -90,7 +90,7 @@ BEGIN
 
   RAISE NOTICE '✅ 1 prestataire créé';
 
-  -- Réservations Janvier-Février 2026
+  -- Réservations Janvier-Février-Mars 2026
   INSERT INTO reservations (organisation_id, logement_id, guest_name, guest_email, check_in_date, check_out_date, platform, amount, status)
   VALUES
     -- Studio Marais
@@ -99,6 +99,8 @@ BEGIN
     (v_org_id, v_log1_id, 'Clara Martin', 'clara@example.com', '2026-01-20', '2026-01-25', 'AIRBNB', 450, 'CONFIRMEE'),
     (v_org_id, v_log1_id, 'David Chen', 'david@example.com', '2026-02-01', '2026-02-07', 'DIRECT', 540, 'CONFIRMEE'),
     (v_org_id, v_log1_id, 'Emma Wilson', 'emma@example.com', '2026-02-10', '2026-02-14', 'BOOKING', 360, 'CONFIRMEE'),
+    (v_org_id, v_log1_id, 'Victor Hugo', 'victor@example.com', '2026-02-20', '2026-02-25', 'AIRBNB', 450, 'CONFIRMEE'),
+    (v_org_id, v_log1_id, 'Wendy Lee', 'wendy@example.com', '2026-02-27', '2026-03-05', 'DIRECT', 630, 'CONFIRMEE'),
 
     -- Appartement Tour Eiffel
     (v_org_id, v_log2_id, 'François Leroy', 'francois@example.com', '2026-01-03', '2026-01-08', 'AIRBNB', 750, 'CONFIRMEE'),
@@ -106,30 +108,41 @@ BEGIN
     (v_org_id, v_log2_id, 'Hans Mueller', 'hans@example.com', '2026-01-19', '2026-01-24', 'DIRECT', 750, 'CONFIRMEE'),
     (v_org_id, v_log2_id, 'Isabelle Petit', 'isabelle@example.com', '2026-01-26', '2026-02-02', 'AIRBNB', 1050, 'CONFIRMEE'),
     (v_org_id, v_log2_id, 'James Brown', 'james@example.com', '2026-02-05', '2026-02-10', 'BOOKING', 750, 'CONFIRMEE'),
+    (v_org_id, v_log2_id, 'Kelly Moore', 'kelly@example.com', '2026-02-18', '2026-02-23', 'AIRBNB', 750, 'CONFIRMEE'),
+    (v_org_id, v_log2_id, 'Luis Santos', 'luis@example.com', '2026-02-25', '2026-03-03', 'BOOKING', 1200, 'CONFIRMEE'),
 
     -- Loft Belleville
     (v_org_id, v_log3_id, 'Laura Garcia', 'laura@example.com', '2026-01-06', '2026-01-13', 'AIRBNB', 1400, 'CONFIRMEE'),
     (v_org_id, v_log3_id, 'Marco Polo', 'marco@example.com', '2026-01-15', '2026-01-22', 'DIRECT', 1400, 'CONFIRMEE'),
     (v_org_id, v_log3_id, 'Nina Simone', 'nina@example.com', '2026-01-25', '2026-02-01', 'BOOKING', 1400, 'CONFIRMEE'),
+    (v_org_id, v_log3_id, 'Oliver Stone', 'oliver@example.com', '2026-02-19', '2026-02-26', 'AIRBNB', 1400, 'CONFIRMEE'),
 
     -- Duplex Montmartre
     (v_org_id, v_log4_id, 'Pierre Dubois', 'pierre@example.com', '2026-01-04', '2026-01-11', 'BOOKING', 1050, 'CONFIRMEE'),
     (v_org_id, v_log4_id, 'Quincy Jones', 'quincy@example.com', '2026-01-14', '2026-01-20', 'AIRBNB', 900, 'CONFIRMEE'),
+    (v_org_id, v_log4_id, 'Rachel Green', 'rachel@example.com', '2026-02-21', '2026-02-28', 'DIRECT', 1050, 'CONFIRMEE'),
 
     -- Maison Saint-Germain
     (v_org_id, v_log5_id, 'Thomas Anderson', 'thomas@example.com', '2026-01-07', '2026-01-14', 'AIRBNB', 2100, 'CONFIRMEE'),
-    (v_org_id, v_log5_id, 'Uma Thurman', 'uma@example.com', '2026-01-18', '2026-01-25', 'DIRECT', 2100, 'CONFIRMEE');
+    (v_org_id, v_log5_id, 'Uma Thurman', 'uma@example.com', '2026-01-18', '2026-01-25', 'DIRECT', 2100, 'CONFIRMEE'),
+    (v_org_id, v_log5_id, 'Zoe Clark', 'zoe@example.com', '2026-02-22', '2026-03-01', 'BOOKING', 2100, 'CONFIRMEE');
 
-  RAISE NOTICE '✅ 17 réservations créées';
+  RAISE NOTICE '✅ 24 réservations créées';
 
-  -- Missions de ménage
+  -- Missions de ménage (passées = TERMINE, futures = A_FAIRE)
+  -- Missions terminées (réservations passées)
   INSERT INTO missions (organisation_id, logement_id, type, scheduled_at, status, notes)
   SELECT v_org_id, logement_id, 'MENAGE', (check_out_date || ' 11:00:00')::timestamptz, 'TERMINE', 'Ménage après départ'
   FROM reservations
-  WHERE organisation_id = v_org_id AND check_out_date < CURRENT_DATE
-  LIMIT 8;
+  WHERE organisation_id = v_org_id AND check_out_date < CURRENT_DATE;
 
-  RAISE NOTICE '✅ Missions créées';
+  -- Missions à faire (réservations futures)
+  INSERT INTO missions (organisation_id, logement_id, type, scheduled_at, status, notes)
+  SELECT v_org_id, logement_id, 'MENAGE', (check_out_date || ' 11:00:00')::timestamptz, 'A_FAIRE', 'Ménage après départ'
+  FROM reservations
+  WHERE organisation_id = v_org_id AND check_out_date >= CURRENT_DATE;
+
+  RAISE NOTICE '✅ Missions créées (terminées + à faire)';
 
   RAISE NOTICE '';
   RAISE NOTICE '🎉 Données de démo créées avec succès!';
@@ -138,8 +151,9 @@ BEGIN
   RAISE NOTICE '   • 5 logements à Paris';
   RAISE NOTICE '   • 5 contrats actifs (12-20%% commission)';
   RAISE NOTICE '   • 1 prestataire';
-  RAISE NOTICE '   • 17 réservations (Janvier-Février 2026)';
-  RAISE NOTICE '   • ~15,000€ CA brut';
+  RAISE NOTICE '   • 24 réservations (Janvier-Mars 2026)';
+  RAISE NOTICE '   • Missions: passées (terminées) + futures (à faire)';
+  RAISE NOTICE '   • ~22,000€ CA brut';
   RAISE NOTICE '';
   RAISE NOTICE '💡 Les revenus seront calculés automatiquement par les triggers!';
   RAISE NOTICE '   Recharge la page /finances pour voir les données.';

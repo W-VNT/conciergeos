@@ -107,10 +107,18 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
 
       // Copy invitation URL to clipboard
       if (result.invitationUrl) {
-        await navigator.clipboard.writeText(result.invitationUrl);
-        toast.success("Lien d'invitation copié dans le presse-papier", {
-          description: "Envoyez-le par email au nouveau membre",
-        });
+        try {
+          await navigator.clipboard.writeText(result.invitationUrl);
+          toast.success("Lien d'invitation copié dans le presse-papier", {
+            description: "Envoyez-le par email au nouveau membre",
+          });
+        } catch (err) {
+          // Fallback if clipboard API is not available or permission denied
+          toast.info("Lien d'invitation créé", {
+            description: result.invitationUrl,
+            duration: 10000,
+          });
+        }
       }
 
       setInviteEmail("");

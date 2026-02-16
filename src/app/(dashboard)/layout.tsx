@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   const organisation = await getCurrentOrganisation();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Sidebar profile={profile} organisation={organisation} />
       <div className="md:pl-64 flex flex-col min-h-screen">
         <Topbar profile={profile} organisation={organisation} />

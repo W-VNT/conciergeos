@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { MobileSidebar } from "./mobile-sidebar";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Profile, Organisation } from "@/types/database";
 
 interface TopbarProps {
@@ -37,6 +38,7 @@ export function Topbar({ profile, organisation }: TopbarProps) {
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2">
         <NotificationBell />
+        <ThemeToggle />
         <UserMenu profile={profile} />
       </div>
     </header>

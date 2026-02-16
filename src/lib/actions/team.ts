@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { sendInvitationEmail } from "@/lib/email";
 
 export async function getTeamMembers() {
   try {
@@ -118,10 +119,10 @@ export async function inviteMember(data: { email: string; role: "ADMIN" | "OPERA
       return { error: "Non authentifié" };
     }
 
-    // Get current user's profile
+    // Get current user's profile with organisation
     const { data: currentProfile } = await supabase
       .from("profiles")
-      .select("organisation_id, role")
+      .select("organisation_id, role, full_name, organisation:organisations(name)")
       .eq("id", user.id)
       .single();
 
@@ -186,9 +187,21 @@ export async function inviteMember(data: { email: string; role: "ADMIN" | "OPERA
       return { error: "Erreur lors de la création de l'invitation" };
     }
 
-    // TODO: Send invitation email with token
-    // For now, just return success with the token for testing
-    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}/accept-invitation?token=${token}`;
+    // Send invitation email
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/accept-invitation?token=${token}`;
+
+    const emailResult = await sendInvitationEmail({
+      email: data.email,
+      organisationName: (currentProfile.organisation as any)?.name || "l'organisation",
+      inviterName: currentProfile.full_name || "Un administrateur",
+      invitationUrl,
+      role: data.role,
+    });
+
+    if (emailResult.error) {
+      console.error("Send invitation email error:", emailResult.error);
+      // Don't fail the invitation if email fails, just log it
+    }
 
     revalidatePath("/settings");
 

@@ -127,7 +127,7 @@ export default function OrganisationSettings({ organisation }: Props) {
                 <img
                   src={logoUrl}
                   alt={name}
-                  className="h-full w-full object-contain p-2"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <Building2 className="h-12 w-12 text-primary/50" />
