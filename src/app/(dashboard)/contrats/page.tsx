@@ -58,7 +58,7 @@ export default async function ContratsPage({
         <SearchInput placeholder="Rechercher un contrat..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
       </div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

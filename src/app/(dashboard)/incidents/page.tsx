@@ -39,7 +39,7 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes sévérités" />
       </div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader><TableRow><TableHead>Sévérité</TableHead><TableHead>Description</TableHead><TableHead>Logement</TableHead><TableHead>Prestataire</TableHead><TableHead>Ouvert le</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
           <TableBody>

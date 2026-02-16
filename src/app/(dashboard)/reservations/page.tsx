@@ -51,7 +51,7 @@ export default async function ReservationsPage({
         <SearchInput placeholder="Rechercher un voyageur..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
       </div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

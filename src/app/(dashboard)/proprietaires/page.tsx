@@ -41,7 +41,7 @@ export default async function ProprietairesPage({
       <div className="mb-4">
         <SearchInput placeholder="Rechercher un propriétaire..." />
       </div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

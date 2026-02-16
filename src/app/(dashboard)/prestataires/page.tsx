@@ -28,7 +28,7 @@ export default async function PrestatairesPage({ searchParams }: { searchParams:
     <div>
       <PageHeader title="Prestataires" createHref="/prestataires/new" createLabel="Nouveau prestataire" showCreate={admin} />
       <div className="mb-4"><SearchInput placeholder="Rechercher un prestataire..." /></div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

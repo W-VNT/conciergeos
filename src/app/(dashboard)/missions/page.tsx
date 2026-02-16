@@ -50,7 +50,7 @@ export default async function MissionsPage({
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
       </div>
-      <div className="rounded-lg border bg-white">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
