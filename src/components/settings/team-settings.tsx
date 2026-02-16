@@ -53,6 +53,7 @@ interface TeamMember {
 interface Invitation {
   id: string;
   email: string;
+  invited_name: string | null;
   role: "ADMIN" | "OPERATEUR";
   created_at: string;
   expires_at: string;
@@ -68,6 +69,7 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
   const [loading, setLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "OPERATEUR">("OPERATEUR");
   const [inviting, setInviting] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<TeamMember | null>(null);
@@ -98,30 +100,18 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
     e.preventDefault();
     setInviting(true);
 
-    const result = await inviteMember({ email: inviteEmail, role: inviteRole });
+    const result = await inviteMember({
+      email: inviteEmail,
+      role: inviteRole,
+      name: inviteName || undefined
+    });
 
     if (result.error) {
       toast.error(result.error);
     } else {
       toast.success("Invitation envoyée");
-
-      // Copy invitation URL to clipboard
-      if (result.invitationUrl) {
-        try {
-          await navigator.clipboard.writeText(result.invitationUrl);
-          toast.success("Lien d'invitation copié dans le presse-papier", {
-            description: "Envoyez-le par email au nouveau membre",
-          });
-        } catch (err) {
-          // Fallback if clipboard API is not available or permission denied
-          toast.info("Lien d'invitation créé", {
-            description: result.invitationUrl,
-            duration: 10000,
-          });
-        }
-      }
-
       setInviteEmail("");
+      setInviteName("");
       setInviteRole("OPERATEUR");
       setInviteDialogOpen(false);
       loadData();
@@ -192,6 +182,19 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleInvite} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nom et prénom (optionnel)</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder="Jean Dupont"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Personnalise l'email d'invitation
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -289,8 +292,11 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
               className="flex items-center gap-4 p-4 border border-dashed rounded-lg"
             >
               <div className="flex-1">
-                <p className="font-medium">{invitation.email}</p>
+                <p className="font-medium">
+                  {invitation.invited_name || invitation.email}
+                </p>
                 <p className="text-sm text-muted-foreground">
+                  {invitation.invited_name && <>{invitation.email} • </>}
                   Invité le{" "}
                   {new Date(invitation.created_at).toLocaleDateString("fr-FR")} •
                   Expire le{" "}

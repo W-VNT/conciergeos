@@ -107,7 +107,11 @@ export async function getPendingInvitations() {
   }
 }
 
-export async function inviteMember(data: { email: string; role: "ADMIN" | "OPERATEUR" }) {
+export async function inviteMember(data: {
+  email: string;
+  role: "ADMIN" | "OPERATEUR";
+  name?: string;
+}) {
   try {
     const supabase = await createClient();
 
@@ -175,6 +179,7 @@ export async function inviteMember(data: { email: string; role: "ADMIN" | "OPERA
     const { error: insertError } = await supabase.from("invitations").insert({
       organisation_id: currentProfile.organisation_id,
       email: data.email,
+      invited_name: data.name || null,
       role: data.role,
       token,
       invited_by: user.id,
@@ -192,6 +197,7 @@ export async function inviteMember(data: { email: string; role: "ADMIN" | "OPERA
 
     const emailResult = await sendInvitationEmail({
       email: data.email,
+      inviteeName: data.name || null,
       organisationName: (currentProfile.organisation as any)?.name || "l'organisation",
       inviterName: currentProfile.full_name || "Un administrateur",
       invitationUrl,
@@ -422,7 +428,7 @@ export async function acceptInvitation(token: string) {
     const { error: profileError } = await supabase.from("profiles").insert({
       id: user.id,
       organisation_id: invitation.organisation_id,
-      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Nouveau membre",
+      full_name: invitation.invited_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Nouveau membre",
       role: invitation.role,
     });
 

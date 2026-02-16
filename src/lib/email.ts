@@ -4,6 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface InvitationEmailData {
   email: string;
+  inviteeName: string | null;
   organisationName: string;
   inviterName: string;
   invitationUrl: string;
@@ -12,9 +13,10 @@ interface InvitationEmailData {
 
 export async function sendInvitationEmail(data: InvitationEmailData) {
   try {
-    const { email, organisationName, inviterName, invitationUrl, role } = data;
+    const { email, inviteeName, organisationName, inviterName, invitationUrl, role } = data;
 
     const roleLabel = role === "ADMIN" ? "Administrateur" : "Opérateur";
+    const greeting = inviteeName ? `Bonjour ${inviteeName},` : "Bonjour,";
 
     await resend.emails.send({
       from: "ConciergeOS <noreply@classazur.fr>",
@@ -70,6 +72,10 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
                           Rejoignez l'équipe<br>
                           <span style="color: #171717;">${organisationName}</span>
                         </h2>
+
+                        <p style="font-size: 17px; color: #525252; line-height: 1.7; margin: 0 0 10px 0; text-align: center;">
+                          ${greeting}
+                        </p>
 
                         <p style="font-size: 17px; color: #525252; line-height: 1.7; margin: 0 0 30px 0; text-align: center;">
                           <strong style="color: #171717;">${inviterName}</strong> vous a invité(e) à collaborer sur ConciergeOS
