@@ -1,9 +1,9 @@
 -- Seed demo data pour Ma Conciergerie
--- Organisation ID: 890c5502-c4f0-4df9-8577-ce7aa46b1f40
+-- Organisation ID: 120d6708-f264-44e2-a4a6-d2fa40215f57
 
 DO $$
 DECLARE
-  v_org_id UUID := '890c5502-c4f0-4df9-8577-ce7aa46b1f40';
+  v_org_id UUID := '120d6708-f264-44e2-a4a6-d2fa40215f57';
   v_admin_id UUID;
 
   v_proprio1_id UUID;
