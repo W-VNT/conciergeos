@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === '/login';
   const isSignupPage = pathname === '/signup';
+  const isAcceptInvitationPage = pathname === '/accept-invitation';
   const isRootPage = pathname === '/';
-  const isAuthPage = isLoginPage || isSignupPage;
+  const isAuthPage = isLoginPage || isSignupPage || isAcceptInvitationPage;
 
   // Check if email is confirmed
   const isEmailConfirmed = user?.email_confirmed_at != null;
