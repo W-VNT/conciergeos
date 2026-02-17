@@ -1,14 +1,16 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
+import { MISSION_TYPE_LABELS } from "@/types/database";
 
 interface Mission {
   id: string;
   type: string;
   scheduled_at: string;
-  logement?: { name: string };
+  status: string;
+  logement?: {
+    name: string;
+  };
 }
 
 interface CalendarWidgetProps {
@@ -17,79 +19,138 @@ interface CalendarWidgetProps {
 
 export function CalendarWidget({ missions }: CalendarWidgetProps) {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayAfterTomorrow = new Date(tomorrow);
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
 
-  // Count today's and tomorrow's missions
-  const todayMissions = missions.filter(m => {
+  // Filter missions for today and tomorrow
+  const todayMissions = missions.filter((m) => {
     const missionDate = new Date(m.scheduled_at);
-    return missionDate.toDateString() === today.toDateString();
+    return missionDate >= today && missionDate < tomorrow;
   });
 
-  const tomorrowMissions = missions.filter(m => {
+  const tomorrowMissions = missions.filter((m) => {
     const missionDate = new Date(m.scheduled_at);
-    return missionDate.toDateString() === tomorrow.toDateString();
+    return missionDate >= tomorrow && missionDate < dayAfterTomorrow;
   });
 
-  const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const monthNames = [
+    "Janvier",
+    "Février",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Août",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Décembre",
+  ];
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return `${date.getDate()} ${monthNames[date.getMonth()].slice(0, 3)}`;
+  };
 
   return (
-    <Link href="/missions">
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/20">
-        <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-xs font-bold text-primary uppercase tracking-wide">
-                {dayNames[today.getDay()]}
-              </p>
-              <h2 className="text-6xl font-bold text-foreground mt-1">
-                {today.getDate()}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {monthNames[today.getMonth()]} {today.getFullYear()}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
+      {/* Missions List */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Today Section */}
+        {todayMissions.length > 0 && (
+          <div className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Aujourd&apos;hui · {formatDate(today)}
               </p>
             </div>
-            <CalendarIcon className="h-8 w-8 text-primary opacity-50" />
+            <div className="divide-y divide-gray-100">
+              {todayMissions.map((mission) => (
+                <Link
+                  key={mission.id}
+                  href={`/missions/${mission.id}`}
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-1 h-full bg-blue-500 rounded-full mt-1"></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {formatTime(mission.scheduled_at)} ·{" "}
+                      {MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {mission.logement?.name || "Sans logement"}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
+        )}
 
-          <div className="space-y-2 mt-4">
-            {/* Today */}
-            {todayMissions.length > 0 && (
-              <div className="bg-background/80 backdrop-blur-sm rounded-lg p-3 border">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  <span className="text-sm font-medium">
-                    {todayMissions.length} mission{todayMissions.length > 1 ? 's' : ''} aujourd'hui
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Tomorrow */}
-            {tomorrowMissions.length > 0 && (
-              <div className="bg-background/60 backdrop-blur-sm rounded-lg p-3 border">
-                <p className="text-xs text-muted-foreground mb-1">DEMAIN</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-sm font-medium">
-                    {tomorrowMissions.length} mission{tomorrowMissions.length > 1 ? 's' : ''}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* No missions */}
-            {todayMissions.length === 0 && tomorrowMissions.length === 0 && (
-              <div className="bg-background/60 backdrop-blur-sm rounded-lg p-3 border">
-                <p className="text-sm text-muted-foreground text-center">
-                  Aucune mission prévue
-                </p>
-              </div>
-            )}
+        {/* Tomorrow Section */}
+        {tomorrowMissions.length > 0 && (
+          <div className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Demain · {formatDate(tomorrow)}
+              </p>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {tomorrowMissions.map((mission) => (
+                <Link
+                  key={mission.id}
+                  href={`/missions/${mission.id}`}
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-1 h-full bg-gray-400 rounded-full mt-1"></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {formatTime(mission.scheduled_at)} ·{" "}
+                      {MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {mission.logement?.name || "Sans logement"}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </Card>
-    </Link>
+        )}
+
+        {/* Empty State */}
+        {todayMissions.length === 0 && tomorrowMissions.length === 0 && (
+          <div className="flex items-center justify-center h-full px-4 py-8">
+            <div className="text-center">
+              <div className="text-4xl mb-2">📅</div>
+              <p className="text-sm text-gray-500">
+                Aucune mission prévue
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer - View All */}
+      <Link
+        href="/calendrier"
+        className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-center hover:bg-gray-100 transition-colors"
+      >
+        <span className="text-sm font-medium text-blue-600">
+          Voir le calendrier complet →
+        </span>
+      </Link>
+    </div>
   );
 }

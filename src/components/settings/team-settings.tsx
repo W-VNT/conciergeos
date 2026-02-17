@@ -239,7 +239,7 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
         {members.map((member) => (
           <div
             key={member.id}
-            className="flex items-center gap-4 p-4 border rounded-lg"
+            className="flex items-center gap-3 p-4 border rounded-lg"
           >
             <div className="h-10 w-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center flex-shrink-0">
               {member.avatar_url ? (
@@ -255,25 +255,25 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-medium truncate">{member.full_name}</p>
                 {member.id === profile.id && (
-                  <Badge variant="secondary">Vous</Badge>
+                  <Badge variant="secondary" className="flex-shrink-0">Vous</Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground truncate">
-                {member.email}
-              </p>
+              <Badge
+                variant={member.role === "ADMIN" ? "default" : "secondary"}
+                className="mt-1 flex-shrink-0"
+              >
+                {USER_ROLE_LABELS[member.role]}
+              </Badge>
             </div>
-            <Badge variant={member.role === "ADMIN" ? "default" : "secondary"}>
-              {USER_ROLE_LABELS[member.role]}
-            </Badge>
             {member.id !== profile.id && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMemberToRemove(member)}
-                className="text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive flex-shrink-0"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -289,31 +289,32 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
           {invitations.map((invitation) => (
             <div
               key={invitation.id}
-              className="flex items-center gap-4 p-4 border border-dashed rounded-lg"
+              className="p-4 border border-dashed rounded-lg"
             >
-              <div className="flex-1">
-                <p className="font-medium">
-                  {invitation.invited_name || invitation.email}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {invitation.invited_name && <>{invitation.email} • </>}
-                  Invité le{" "}
-                  {new Date(invitation.created_at).toLocaleDateString("fr-FR")} •
-                  Expire le{" "}
-                  {new Date(invitation.expires_at).toLocaleDateString("fr-FR")}
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">
+                    {invitation.invited_name || invitation.email}
+                  </p>
+                  <p className="text-sm text-muted-foreground break-all">
+                    {invitation.invited_name && <>{invitation.email}<br /></>}
+                    Invité le {new Date(invitation.created_at).toLocaleDateString("fr-FR")} • Expire le {new Date(invitation.expires_at).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleCancelInvitation(invitation.id)}
+                  className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Badge variant="secondary">
-                {USER_ROLE_LABELS[invitation.role]}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleCancelInvitation(invitation.id)}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="mt-2">
+                <Badge variant="secondary">
+                  {USER_ROLE_LABELS[invitation.role]}
+                </Badge>
+              </div>
             </div>
           ))}
         </div>

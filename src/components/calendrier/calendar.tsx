@@ -225,10 +225,14 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 key={index}
                 className={`bg-background min-h-[140px] p-2 ${
                   !day.isCurrentMonth ? "opacity-40" : ""
-                } ${isCurrentDay ? "ring-2 ring-primary" : ""}`}
+                }`}
               >
-                <div className="text-sm font-medium mb-1">
-                  {day.date.getDate()}
+                <div className="mb-1">
+                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${
+                    isCurrentDay ? "bg-primary text-primary-foreground font-semibold" : ""
+                  }`}>
+                    {day.date.getDate()}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   {/* Display reservations */}

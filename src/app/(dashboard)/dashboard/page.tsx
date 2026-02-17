@@ -80,85 +80,91 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
-        {/* Calendar Widget */}
-        <div className="lg:row-span-2">
+      {/* Single grid — calendar spans both rows */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-4 lg:grid-rows-[auto_1fr]">
+
+        {/* Calendar Widget — spans 2 rows */}
+        <div className="lg:row-span-2 min-h-[200px]">
           <CalendarWidget missions={upcomingMissions || []} />
         </div>
 
-        {/* Essential KPIs */}
+        {/* KPI row */}
         <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <KpiCard
             title="Missions du jour"
             value={todayMissions?.length ?? 0}
             icon={ClipboardList}
+            href="/missions"
           />
           <KpiCard
             title="Incidents ouverts"
             value={openIncidentsCount ?? 0}
             description={`dont ${criticalCount ?? 0} critique(s)`}
             icon={AlertTriangle}
+            href="/incidents"
           />
           <KpiCard
             title="Contrats expirant (7j)"
             value={expiringContractsCount ?? 0}
             description={expiringContractsCount && expiringContractsCount > 0 ? "À renouveler" : "Aucun"}
             icon={FileText}
+            href="/contrats"
           />
         </div>
-      </div>
 
-      {/* Essential sections only */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Missions du jour</CardTitle></CardHeader>
-          <CardContent>
-            {!todayMissions || todayMissions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucune mission aujourd&apos;hui</p>
-            ) : (
-              <div className="space-y-3">
-                {todayMissions.map((m) => (
-                  <Link key={m.id} href={`/missions/${m.id}`} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type as keyof typeof MISSION_TYPE_LABELS]} />
-                        <span className="text-sm font-medium">{(m.logement as { name: string } | null)?.name}</span>
+        {/* Content row — même ligne que le calendrier */}
+        <div className="lg:col-span-3 grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <Card className="flex flex-col h-full">
+            <CardHeader><CardTitle className="text-lg">Missions du jour</CardTitle></CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              {!todayMissions || todayMissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucune mission aujourd&apos;hui</p>
+              ) : (
+                <div className="space-y-3">
+                  {todayMissions.map((m) => (
+                    <Link key={m.id} href={`/missions/${m.id}`} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type as keyof typeof MISSION_TYPE_LABELS]} />
+                          <span className="text-sm font-medium">{(m.logement as { name: string } | null)?.name}</span>
+                        </div>
+                        {(m.assignee as { full_name: string } | null) && (
+                          <p className="text-xs text-muted-foreground">{(m.assignee as { full_name: string }).full_name}</p>
+                        )}
                       </div>
-                      {(m.assignee as { full_name: string } | null) && (
-                        <p className="text-xs text-muted-foreground">{(m.assignee as { full_name: string }).full_name}</p>
-                      )}
-                    </div>
-                    <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status as keyof typeof MISSION_STATUS_LABELS]} />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status as keyof typeof MISSION_STATUS_LABELS]} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Incidents ouverts</CardTitle></CardHeader>
-          <CardContent>
-            {!openIncidents || openIncidents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun incident ouvert</p>
-            ) : (
-              <div className="space-y-3">
-                {openIncidents.map((i) => (
-                  <Link key={i.id} href={`/incidents/${i.id}`} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
-                        <span className="text-sm">{(i.description as string)?.slice(0, 50)}</span>
+          <Card className="flex flex-col h-full">
+            <CardHeader><CardTitle className="text-lg">Incidents ouverts</CardTitle></CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              {!openIncidents || openIncidents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucun incident ouvert</p>
+              ) : (
+                <div className="space-y-3">
+                  {openIncidents.map((i) => (
+                    <Link key={i.id} href={`/incidents/${i.id}`} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
+                          <span className="text-sm">{(i.description as string)?.slice(0, 50)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{(i.logement as { name: string } | null)?.name}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">{(i.logement as { name: string } | null)?.name}</p>
-                    </div>
-                    <StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      <StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
     </div>
   );
