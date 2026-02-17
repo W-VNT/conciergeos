@@ -9,9 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Contrat, Proprietaire, Logement } from "@/types/database";
 import { CONTRACT_TYPE_LABELS, CONTRACT_STATUS_LABELS } from "@/types/database";
 
@@ -23,6 +27,8 @@ interface Props {
 
 export function ContratForm({ contrat, proprietaires, logements }: Props) {
   const [loading, setLoading] = useState(false);
+  const [proprioOpen, setPropioOpen] = useState(false);
+  const [logementOpen, setLogementOpen] = useState(false);
   const isEdit = !!contrat;
 
   const form = useForm<ContratFormData>({
@@ -39,6 +45,9 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
       conditions: contrat?.conditions ?? "",
     },
   });
+
+  const proprioId = form.watch("proprietaire_id");
+  const logementId = form.watch("logement_id");
 
   async function onSubmit(data: ContratFormData) {
     setLoading(true);
@@ -61,66 +70,118 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
           <h3 className="font-semibold text-lg mb-4">Informations générales</h3>
 
           {/* Propriétaire */}
-          <div>
-            <Label htmlFor="proprietaire_id">
+          <div className="space-y-2">
+            <Label>
               Propriétaire <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={form.watch("proprietaire_id")}
-              onValueChange={(value) => form.setValue("proprietaire_id", value)}
-            >
-              <SelectTrigger id="proprietaire_id">
-                <SelectValue placeholder="Sélectionner un propriétaire" />
-              </SelectTrigger>
-              <SelectContent>
-                {proprietaires.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={proprioOpen} onOpenChange={setPropioOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={proprioOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {proprioId
+                    ? proprietaires.find((p) => p.id === proprioId)?.full_name
+                    : "Sélectionner un propriétaire"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                  <CommandInput placeholder="Rechercher un propriétaire..." />
+                  <CommandList>
+                    <CommandEmpty>Aucun propriétaire trouvé</CommandEmpty>
+                    <CommandGroup>
+                      {proprietaires.map((p) => (
+                        <CommandItem
+                          key={p.id}
+                          value={p.full_name}
+                          onSelect={() => {
+                            form.setValue("proprietaire_id", p.id);
+                            setPropioOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", proprioId === p.id ? "opacity-100" : "opacity-0")} />
+                          {p.full_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             {form.formState.errors.proprietaire_id && (
-              <p className="text-destructive text-sm mt-1">
+              <p className="text-destructive text-sm">
                 {form.formState.errors.proprietaire_id.message}
               </p>
             )}
           </div>
 
           {/* Logement (optionnel) */}
-          <div>
-            <Label htmlFor="logement_id">Logement</Label>
-            <Select
-              value={form.watch("logement_id")}
-              onValueChange={(value) => form.setValue("logement_id", value)}
-            >
-              <SelectTrigger id="logement_id">
-                <SelectValue placeholder="Tous les logements (optionnel)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Tous les logements</SelectItem>
-                {logements.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-muted-foreground text-sm mt-1">
-              Laissez vide si le contrat couvre tous les logements du propriétaire
-            </p>
+          <div className="space-y-2">
+            <Label>Logement <span className="text-muted-foreground text-sm font-normal">(optionnel)</span></Label>
+            <Popover open={logementOpen} onOpenChange={setLogementOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={logementOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {logementId
+                    ? logements.find((l) => l.id === logementId)?.name
+                    : "Tous les logements du propriétaire"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                  <CommandInput placeholder="Rechercher un logement..." />
+                  <CommandList>
+                    <CommandEmpty>Aucun logement trouvé</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="tous"
+                        onSelect={() => {
+                          form.setValue("logement_id", "");
+                          setLogementOpen(false);
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", !logementId ? "opacity-100" : "opacity-0")} />
+                        Tous les logements
+                      </CommandItem>
+                      {logements.map((l) => (
+                        <CommandItem
+                          key={l.id}
+                          value={l.name}
+                          onSelect={() => {
+                            form.setValue("logement_id", l.id);
+                            setLogementOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", logementId === l.id ? "opacity-100" : "opacity-0")} />
+                          {l.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Type de contrat */}
-          <div>
-            <Label htmlFor="type">
+          <div className="space-y-2">
+            <Label>
               Type de contrat <span className="text-destructive">*</span>
             </Label>
             <Select
               value={form.watch("type")}
               onValueChange={(value) => form.setValue("type", value as "EXCLUSIF" | "SIMPLE")}
             >
-              <SelectTrigger id="type">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -135,7 +196,7 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
 
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="start_date">
                 Date de début <span className="text-destructive">*</span>
               </Label>
@@ -145,13 +206,13 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
                 {...form.register("start_date")}
               />
               {form.formState.errors.start_date && (
-                <p className="text-destructive text-sm mt-1">
+                <p className="text-destructive text-sm">
                   {form.formState.errors.start_date.message}
                 </p>
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="end_date">
                 Date de fin <span className="text-destructive">*</span>
               </Label>
@@ -161,7 +222,7 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
                 {...form.register("end_date")}
               />
               {form.formState.errors.end_date && (
-                <p className="text-destructive text-sm mt-1">
+                <p className="text-destructive text-sm">
                   {form.formState.errors.end_date.message}
                 </p>
               )}
@@ -169,7 +230,7 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
           </div>
 
           {/* Commission */}
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="commission_rate">
               Taux de commission (%) <span className="text-destructive">*</span>
             </Label>
@@ -182,20 +243,20 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
               {...form.register("commission_rate")}
             />
             {form.formState.errors.commission_rate && (
-              <p className="text-destructive text-sm mt-1">
+              <p className="text-destructive text-sm">
                 {form.formState.errors.commission_rate.message}
               </p>
             )}
           </div>
 
           {/* Statut */}
-          <div>
-            <Label htmlFor="status">Statut</Label>
+          <div className="space-y-2">
+            <Label>Statut</Label>
             <Select
               value={form.watch("status")}
               onValueChange={(value) => form.setValue("status", value as "ACTIF" | "EXPIRE" | "RESILIE")}
             >
-              <SelectTrigger id="status">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -206,13 +267,13 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-sm mt-1">
+            <p className="text-muted-foreground text-sm">
               Le statut est automatiquement mis à jour en fonction des dates
             </p>
           </div>
 
           {/* Conditions */}
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="conditions">Conditions particulières</Label>
             <Textarea
               id="conditions"

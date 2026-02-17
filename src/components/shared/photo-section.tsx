@@ -12,6 +12,7 @@ interface Props {
   initialAttachments: Attachment[];
   canUpload: boolean;
   canDelete: boolean;
+  title?: string;
 }
 
 export function PhotoSection({
@@ -21,6 +22,7 @@ export function PhotoSection({
   initialAttachments,
   canUpload,
   canDelete,
+  title = "Photos",
 }: Props) {
   const router = useRouter();
 
@@ -31,7 +33,7 @@ export function PhotoSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Photos ({initialAttachments.length})</CardTitle>
+        <CardTitle>{title} ({initialAttachments.length})</CardTitle>
       </CardHeader>
       <CardContent>
         {canUpload ? (

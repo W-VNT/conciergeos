@@ -209,7 +209,7 @@ export async function inviteMember(data: {
       // Don't fail the invitation if email fails, just log it
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/organisation");
 
     return { success: true, invitationUrl };
   } catch (error) {
@@ -241,7 +241,7 @@ export async function cancelInvitation(invitationId: string) {
       return { error: "Erreur lors de l'annulation de l'invitation" };
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/organisation");
 
     return { success: true };
   } catch (error) {
@@ -313,7 +313,7 @@ export async function removeMember(userId: string) {
       return { error: "Erreur lors de la suppression du membre" };
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/organisation");
 
     return { success: true };
   } catch (error) {
@@ -451,7 +451,7 @@ export async function acceptInvitation(token: string) {
       // Don't return error here, profile is already created
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/organisation");
     revalidatePath("/dashboard");
 
     return { success: true };

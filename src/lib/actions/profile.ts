@@ -34,7 +34,7 @@ export async function updateProfile(data: UpdateProfileData) {
     throw new Error("Erreur lors de la mise à jour du profil");
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/account");
   revalidatePath("/dashboard");
 }
 
@@ -109,7 +109,7 @@ export async function uploadAvatar(formData: FormData): Promise<string> {
   // Update profile with avatar URL
   await updateProfile({ avatar_url: publicUrl });
 
-  revalidatePath("/settings");
+  revalidatePath("/account");
   revalidatePath("/dashboard");
 
   return publicUrl;
@@ -159,7 +159,7 @@ export async function deleteAvatar() {
   // Remove avatar URL from profile
   await updateProfile({ avatar_url: null });
 
-  revalidatePath("/settings");
+  revalidatePath("/account");
   revalidatePath("/dashboard");
 }
 

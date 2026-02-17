@@ -96,6 +96,6 @@ export async function upsertOfferConfig(data: {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/settings");
+  revalidatePath("/organisation");
   return {};
 }

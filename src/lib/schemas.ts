@@ -84,7 +84,7 @@ export const contratSchema = z.object({
   start_date: z.string().min(1, 'Date de début requise'),
   end_date: z.string().min(1, 'Date de fin requise'),
   commission_rate: z.coerce.number().min(0, 'La commission doit être positive').max(100, 'La commission ne peut pas dépasser 100%'),
-  status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE']).default('ACTIF'),
+  status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE', 'SIGNE']).default('ACTIF'),
   conditions: z.string().default(''),
 }).refine((data) => new Date(data.start_date) < new Date(data.end_date), {
   message: 'La date de fin doit être après la date de début',

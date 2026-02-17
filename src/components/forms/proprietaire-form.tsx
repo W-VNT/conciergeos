@@ -151,7 +151,7 @@ export function ProprietaireForm({ proprietaire }: Props) {
                     >
                       {siretLoading
                         ? <Loader2 className="h-4 w-4 animate-spin" />
-                        : <><Sparkles className="h-4 w-4 mr-1.5" />Autofill</>}
+                        : <><Sparkles className="h-4 w-4 mr-1.5" />Compléter</>}
                     </Button>
                   </div>
                   {canLookup && (

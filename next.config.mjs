@@ -4,6 +4,7 @@ const nextConfig = {
     // Ignore ESLint errors during build (for MVP development)
     ignoreDuringBuilds: true,
   },
+  transpilePackages: ["@react-pdf/renderer"],
 };
 
 export default nextConfig;

@@ -67,3 +67,20 @@ export async function deleteContrat(id: string) {
   revalidatePath("/contrats");
   redirect("/contrats");
 }
+
+export async function markContratAsSigned(id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("contrats")
+    .update({
+      status: "SIGNE",
+      pdf_downloaded_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .is("pdf_downloaded_at", null); // Only set once (first download)
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/contrats/${id}`);
+  revalidatePath("/contrats");
+}

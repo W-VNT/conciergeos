@@ -6,46 +6,101 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/types/database";
+import type { Proprietaire, Logement } from "@/types/database";
 import { deleteContrat } from "@/lib/actions/contrats";
 import { Pencil, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
+import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
 
 export default async function ContratDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
   const supabase = createClient();
 
-  const { data: contrat } = await supabase
-    .from("contrats")
-    .select("*, proprietaire:proprietaires(*), logement:logements(*)")
-    .eq("id", params.id)
-    .single();
+  const [{ data: contrat }, { data: org }, { data: attachments }] = await Promise.all([
+    supabase
+      .from("contrats")
+      .select("*, proprietaire:proprietaires(*), logement:logements(*)")
+      .eq("id", params.id)
+      .single(),
+    supabase
+      .from("organisations")
+      .select("*")
+      .eq("id", profile.organisation_id)
+      .single(),
+    supabase
+      .from("attachments")
+      .select("*")
+      .eq("entity_type", "CONTRAT")
+      .eq("entity_id", params.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (!contrat) notFound();
 
-  const { data: attachments } = await supabase
-    .from("attachments")
-    .select("*")
-    .eq("entity_type", "CONTRAT")
-    .eq("entity_id", params.id)
-    .order("created_at", { ascending: false });
-
-  const prop = contrat.proprietaire as { id: string; full_name: string } | null;
-  const logement = contrat.logement as { id: string; name: string } | null;
+  const prop = contrat.proprietaire as Proprietaire | null;
+  const logement = contrat.logement as Logement | null;
 
   // Calculate days remaining
   const endDate = new Date(contrat.end_date);
   const today = new Date();
   const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
+  const pdfData = {
+    contrat: {
+      id: contrat.id,
+      type: contrat.type,
+      start_date: contrat.start_date,
+      end_date: contrat.end_date,
+      commission_rate: contrat.commission_rate,
+      status: contrat.status,
+      conditions: contrat.conditions,
+    },
+    proprietaire: prop
+      ? {
+          full_name: prop.full_name,
+          address_line1: prop.address_line1,
+          postal_code: prop.postal_code,
+          city: prop.city,
+          statut_juridique: prop.statut_juridique,
+          siret: prop.siret,
+          email: prop.email,
+          phone: prop.phone,
+        }
+      : null,
+    logement: logement
+      ? {
+          name: logement.name,
+          address_line1: logement.address_line1,
+          postal_code: logement.postal_code,
+          city: logement.city,
+        }
+      : null,
+    organisation: {
+      name: org?.name ?? "Conciergerie",
+      city: org?.city ?? null,
+      address_line1: org?.address_line1 ?? null,
+      postal_code: org?.postal_code ?? null,
+      siret: org?.siret ?? null,
+      phone: org?.phone ?? null,
+      email: org?.email ?? null,
+      statut_juridique: org?.statut_juridique ?? null,
+    },
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Contrat - ${prop?.full_name ?? "Sans propriétaire"}`}
+        title={`Contrat — ${prop?.full_name ?? "Sans propriétaire"}`}
         showCreate={false}
       >
-        {admin && (
+        <ContratPDFButton
+          data={pdfData}
+          contratId={contrat.id}
+          isSigned={contrat.status === "SIGNE"}
+        />
+        {admin && contrat.status !== "SIGNE" && (
           <>
             <Button variant="outline" asChild>
               <Link href={`/contrats/${contrat.id}/edit`}>
@@ -165,6 +220,7 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
         initialAttachments={attachments ?? []}
         canUpload={admin}
         canDelete={admin}
+        title="Documents annexes"
       />
 
       <Card>
@@ -180,6 +236,12 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
             <span>Dernière modification</span>
             <span>{new Date(contrat.updated_at).toLocaleString("fr-FR")}</span>
           </div>
+          {contrat.pdf_downloaded_at && (
+            <div className="flex justify-between">
+              <span>PDF téléchargé le</span>
+              <span>{new Date(contrat.pdf_downloaded_at).toLocaleString("fr-FR")}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

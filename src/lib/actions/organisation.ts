@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 
 interface UpdateOrganisationData {
   name?: string;
-  city?: string;
+  city?: string | null;
+  address_line1?: string | null;
+  postal_code?: string | null;
+  siret?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  statut_juridique?: string | null;
   logo_url?: string | null;
 }
 
@@ -49,7 +55,7 @@ export async function updateOrganisation(data: UpdateOrganisationData) {
       return { error: "Erreur lors de la mise à jour de l'organisation" };
     }
 
-    revalidatePath("/settings");
+    revalidatePath("/organisation");
     revalidatePath("/dashboard");
 
     return { success: true };
@@ -127,7 +133,7 @@ export async function uploadOrganisationLogo(formData: FormData): Promise<string
   // Update organisation with logo URL
   await updateOrganisation({ logo_url: publicUrl });
 
-  revalidatePath("/settings");
+  revalidatePath("/organisation");
   revalidatePath("/dashboard");
 
   return publicUrl;
@@ -179,7 +185,7 @@ export async function deleteOrganisationLogo() {
   // Remove logo URL from organisation
   await updateOrganisation({ logo_url: null });
 
-  revalidatePath("/settings");
+  revalidatePath("/organisation");
   revalidatePath("/dashboard");
 }
 

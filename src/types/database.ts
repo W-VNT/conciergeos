@@ -16,7 +16,7 @@ export type IncidentStatus = 'OUVERT' | 'EN_COURS' | 'RESOLU' | 'CLOS';
 export type EntityType = 'LOGEMENT' | 'MISSION' | 'INCIDENT' | 'CONTRAT';
 export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED';
 export type ContractType = 'EXCLUSIF' | 'SIMPLE';
-export type ContractStatus = 'ACTIF' | 'EXPIRE' | 'RESILIE';
+export type ContractStatus = 'ACTIF' | 'EXPIRE' | 'RESILIE' | 'SIGNE';
 export type BookingPlatform = 'AIRBNB' | 'BOOKING' | 'DIRECT' | 'AUTRE';
 export type ReservationStatus = 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
 export type NotificationType =
@@ -39,6 +39,12 @@ export interface Organisation {
   onboarding_completed: boolean;
   city: string | null;
   logo_url: string | null;
+  address_line1: string | null;
+  postal_code: string | null;
+  siret: string | null;
+  phone: string | null;
+  email: string | null;
+  statut_juridique: string | null;
   created_at: string;
 }
 
@@ -80,6 +86,7 @@ export interface Contrat {
   commission_rate: number;
   status: ContractStatus;
   conditions: string | null;
+  pdf_downloaded_at: string | null;
   created_at: string;
   updated_at: string;
   // Joined
@@ -408,6 +415,7 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   ACTIF: 'Actif',
   EXPIRE: 'Expiré',
   RESILIE: 'Résilié',
+  SIGNE: 'Signé',
 };
 
 export const BOOKING_PLATFORM_LABELS: Record<BookingPlatform, string> = {
