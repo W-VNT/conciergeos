@@ -5,12 +5,17 @@ import ProfileSettings from "@/components/settings/profile-settings";
 import SecuritySettings from "@/components/settings/security-settings";
 import TeamSettings from "@/components/settings/team-settings";
 import OrganisationSettings from "@/components/settings/organisation-settings";
+import OfferSettings from "@/components/settings/offer-settings";
 import { getCurrentOrganisation } from "@/lib/actions/organisation";
+import { getOfferConfigs } from "@/lib/actions/offers";
 
 export default async function SettingsPage() {
   const profile = await requireProfile();
   const isAdmin = profile.role === "ADMIN";
-  const organisation = await getCurrentOrganisation();
+  const [organisation, offerConfigsResult] = await Promise.all([
+    getCurrentOrganisation(),
+    isAdmin ? getOfferConfigs() : Promise.resolve({ configs: [] }),
+  ]);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -23,10 +28,11 @@ export default async function SettingsPage() {
 
       <Card className="p-6">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2"}`}>
+          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2 md:grid-cols-5" : "grid-cols-2"}`}>
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="security">Sécurité</TabsTrigger>
             {isAdmin && <TabsTrigger value="organisation">Organisation</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="offres">Offres</TabsTrigger>}
             {isAdmin && <TabsTrigger value="team">Équipe</TabsTrigger>}
           </TabsList>
 
@@ -41,6 +47,12 @@ export default async function SettingsPage() {
           {isAdmin && organisation && (
             <TabsContent value="organisation" className="mt-6">
               <OrganisationSettings organisation={organisation} />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="offres" className="mt-6">
+              <OfferSettings initialConfigs={offerConfigsResult.configs ?? []} />
             </TabsContent>
           )}
 

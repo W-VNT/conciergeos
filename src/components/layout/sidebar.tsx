@@ -19,18 +19,38 @@ import {
 } from "lucide-react";
 import type { Profile, Organisation } from "@/types/database";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/logements", label: "Logements", icon: Home },
-  { href: "/proprietaires", label: "Propriétaires", icon: Users },
-  { href: "/contrats", label: "Contrats", icon: FileText },
-  { href: "/reservations", label: "Réservations", icon: CalendarCheck },
-  { href: "/finances", label: "Finances", icon: DollarSign },
-  { href: "/missions", label: "Missions", icon: ClipboardList },
-  { href: "/calendrier", label: "Calendrier", icon: Calendar },
-  { href: "/incidents", label: "Incidents", icon: AlertTriangle },
-  { href: "/prestataires", label: "Prestataires", icon: Wrench },
+const navGroups = [
+  {
+    label: null,
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/calendrier", label: "Calendrier", icon: Calendar },
+      { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Patrimoine",
+    items: [
+      { href: "/logements", label: "Logements", icon: Home },
+      { href: "/proprietaires", label: "Propriétaires", icon: Users },
+      { href: "/contrats", label: "Contrats", icon: FileText },
+    ],
+  },
+  {
+    label: "Activité",
+    items: [
+      { href: "/reservations", label: "Réservations", icon: CalendarCheck },
+      { href: "/missions", label: "Missions", icon: ClipboardList },
+      { href: "/incidents", label: "Incidents", icon: AlertTriangle },
+      { href: "/prestataires", label: "Prestataires", icon: Wrench },
+    ],
+  },
+  {
+    label: "Finances",
+    items: [
+      { href: "/finances", label: "Finances", icon: DollarSign },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -74,25 +94,36 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
         </div>
         <span className="font-semibold text-lg">ConciergeOS</span>
       </div>
-      <nav className="flex-1 py-4 px-3 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 py-4 px-3 overflow-y-auto">
+        {navGroups.map((group, groupIndex) => (
+          <div key={groupIndex} className={groupIndex > 0 ? "mt-4" : ""}>
+            {group.label && (
+              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
       {/* Organisation footer */}
       {organisation && (

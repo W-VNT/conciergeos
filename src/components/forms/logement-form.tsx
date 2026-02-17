@@ -46,6 +46,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
       beds: logement?.beds ?? null,
       max_guests: logement?.max_guests ?? null,
       ical_url: logement?.ical_url ?? "",
+      menage_price: logement?.menage_price ?? null,
       notes: logement?.notes ?? "",
       status: logement?.status ?? "ACTIF",
     },
@@ -274,6 +275,20 @@ export function LogementForm({ logement, proprietaires }: Props) {
                 placeholder="Ex: 6"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="menage_price">Prix ménage (€)</Label>
+            <Input
+              id="menage_price"
+              type="number"
+              min="0"
+              step="0.01"
+              {...form.register("menage_price")}
+              placeholder="Ex: 60"
+            />
+            <p className="text-sm text-muted-foreground">
+              Coût du ménage spécifique à ce logement. Laissez vide pour utiliser le tarif par défaut.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="ical_url">URL iCal (Airbnb, Booking.com...)</Label>

@@ -28,6 +28,7 @@ export const logementSchema = z.object({
   beds: z.coerce.number().nullable().default(null),
   max_guests: z.coerce.number().nullable().default(null),
   ical_url: z.string().url('URL invalide').or(z.literal('')).default(''),
+  menage_price: z.coerce.number().min(0).nullable().default(null),
   notes: z.string().default(''),
   status: z.enum(['ACTIF', 'PAUSE', 'ARCHIVE']).default('ACTIF'),
 });

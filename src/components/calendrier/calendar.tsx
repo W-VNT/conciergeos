@@ -300,7 +300,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
         <Card className="p-4 overflow-x-auto">
           <div className="grid grid-cols-7 gap-px bg-border min-w-[600px]">
             {weekDays.map((day, i) => (
-              <div key={i} className={`bg-background p-2 ${isToday(day) ? "bg-primary/5" : ""}`}>
+              <div key={i} className="bg-background p-2">
                 <div className="mb-2 text-center">
                   <p className="text-xs text-muted-foreground">{DAYS[i]}</p>
                   <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${

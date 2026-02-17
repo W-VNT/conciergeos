@@ -166,12 +166,25 @@ export interface Logement {
   max_guests: number | null;
   ical_url: string | null;
   ical_last_synced_at: string | null;
+  menage_price: number | null;
   notes: string | null;
   status: LogementStatus;
   created_at: string;
   updated_at: string;
   // Joined
   proprietaire?: Proprietaire | null;
+}
+
+export interface OfferTierConfig {
+  id: string;
+  organisation_id: string;
+  tier: OfferTier;
+  name: string;
+  description: string;
+  commission_rate: number;
+  services: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Mission {

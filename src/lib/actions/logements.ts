@@ -30,6 +30,7 @@ export async function createLogement(data: LogementFormData) {
     bedrooms: parsed.bedrooms,
     beds: parsed.beds,
     max_guests: parsed.max_guests,
+    menage_price: parsed.menage_price,
     notes: parsed.notes || null,
     status: parsed.status,
   });
@@ -64,6 +65,7 @@ export async function updateLogement(id: string, data: LogementFormData) {
       bedrooms: parsed.bedrooms,
       beds: parsed.beds,
       max_guests: parsed.max_guests,
+      menage_price: parsed.menage_price,
       notes: parsed.notes || null,
       status: parsed.status,
     })
