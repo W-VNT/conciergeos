@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Map, Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import type { Logement } from "@/types/database";
 import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -83,17 +83,25 @@ export function LogementsMap({ logements }: LogementsMapProps) {
             latitude={popupInfo.latitude!}
             longitude={popupInfo.longitude!}
             onClose={() => setPopupInfo(null)}
-            closeButton={true}
+            closeButton={false}
             closeOnClick={false}
             offset={25}
           >
-            <div className="p-2 min-w-[200px]">
-              <Link
-                href={`/logements/${popupInfo.id}`}
-                className="font-semibold text-base hover:underline block mb-2"
-              >
-                {popupInfo.name}
-              </Link>
+            <div className="p-3 min-w-[200px]">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <Link
+                  href={`/logements/${popupInfo.id}`}
+                  className="font-semibold text-base hover:underline leading-tight"
+                >
+                  {popupInfo.name}
+                </Link>
+                <button
+                  onClick={() => setPopupInfo(null)}
+                  className="flex-shrink-0 rounded-md p-0.5 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
               {popupInfo.city && (
                 <p className="text-sm text-muted-foreground mb-2">

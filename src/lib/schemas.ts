@@ -5,7 +5,11 @@ export const proprietaireSchema = z.object({
   full_name: z.string().min(1, 'Nom requis'),
   phone: z.string().default(''),
   email: z.string().default(''),
-  service_level: z.enum(['STANDARD', 'VIP']).default('STANDARD'),
+  address_line1: z.string().default(''),
+  postal_code: z.string().default(''),
+  city: z.string().default(''),
+  statut_juridique: z.enum(['PARTICULIER', 'SCI', 'SARL', 'SAS', 'EURL', 'AUTRE']).default('PARTICULIER'),
+  siret: z.string().default(''),
   notes: z.string().default(''),
 });
 export type ProprietaireFormData = z.infer<typeof proprietaireSchema>;

@@ -22,6 +22,7 @@ type TimelineEvent = {
   title: string;
   description: string;
   status: string;
+  rawStatus: string;
   severity?: string;
   link: string;
 };
@@ -36,6 +37,7 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
       title: MISSION_TYPE_LABELS[m.type],
       description: m.notes || "",
       status: MISSION_STATUS_LABELS[m.status],
+      rawStatus: m.status,
       link: `/missions/${m.id}`,
     })),
     ...incidents.map((i) => ({
@@ -45,6 +47,7 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
       title: "Incident",
       description: i.description,
       status: INCIDENT_SEVERITY_LABELS[i.severity],
+      rawStatus: i.severity,
       severity: i.severity,
       link: `/incidents/${i.id}`,
     })),
@@ -55,6 +58,7 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
       title: `Réservation - ${r.guest_name}`,
       description: `${r.guest_count} voyageur${r.guest_count > 1 ? "s" : ""}`,
       status: RESERVATION_STATUS_LABELS[r.status],
+      rawStatus: r.status,
       link: `/reservations/${r.id}`,
     })),
   ];
@@ -65,16 +69,32 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
   // Limit to last 20 events
   const recentEvents = events.slice(0, 20);
 
-  function getIcon(type: string) {
-    switch (type) {
+  function getColors(event: TimelineEvent): { icon: string; card: string } {
+    if (event.type === "incident") {
+      if (event.severity === "CRITIQUE") return { icon: "bg-red-100 border-red-400 text-red-600", card: "border-red-200 bg-red-50/50" };
+      if (event.severity === "MOYEN") return { icon: "bg-orange-100 border-orange-400 text-orange-600", card: "border-orange-200 bg-orange-50/50" };
+      return { icon: "bg-yellow-100 border-yellow-400 text-yellow-600", card: "border-yellow-200 bg-yellow-50/50" };
+    }
+    if (event.type === "reservation") {
+      return { icon: "bg-blue-100 border-blue-400 text-blue-600", card: "border-blue-200 bg-blue-50/50" };
+    }
+    // mission
+    if (event.rawStatus === "TERMINE") return { icon: "bg-green-100 border-green-400 text-green-600", card: "border-green-200 bg-green-50/50" };
+    if (event.rawStatus === "EN_COURS") return { icon: "bg-blue-100 border-blue-400 text-blue-600", card: "border-blue-200 bg-blue-50/50" };
+    if (event.rawStatus === "ANNULE") return { icon: "bg-gray-100 border-gray-400 text-gray-500", card: "border-gray-200 bg-gray-50/50" };
+    return { icon: "bg-orange-100 border-orange-400 text-orange-600", card: "border-orange-200 bg-orange-50/50" }; // A_FAIRE
+  }
+
+  function getIcon(event: TimelineEvent) {
+    switch (event.type) {
       case "mission":
-        return <CheckCircle2 className="h-5 w-5" />;
+        return <CheckCircle2 className="h-3.5 w-3.5" />;
       case "incident":
-        return <AlertCircle className="h-5 w-5" />;
+        return <AlertCircle className="h-3.5 w-3.5" />;
       case "reservation":
-        return <Home className="h-5 w-5" />;
+        return <Home className="h-3.5 w-3.5" />;
       default:
-        return <Calendar className="h-5 w-5" />;
+        return <Calendar className="h-3.5 w-3.5" />;
     }
   }
 
@@ -90,13 +110,24 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Historique de Maintenance
-        </CardTitle>
-        <CardDescription>
-          {events.length} événement{events.length > 1 ? "s" : ""} enregistré{events.length > 1 ? "s" : ""}
-        </CardDescription>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Historique de Maintenance
+            </CardTitle>
+            <CardDescription>
+              {events.length} événement{events.length > 1 ? "s" : ""} enregistré{events.length > 1 ? "s" : ""}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-green-400 inline-block" />Terminé</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-400 inline-block" />À faire</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-400 inline-block" />En cours / Réservation</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-400 inline-block" />Incident critique</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gray-400 inline-block" />Annulé</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {recentEvents.length === 0 ? (
@@ -118,12 +149,12 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
                   )}
 
                   {/* Icon */}
-                  <div className="absolute left-0 top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-border bg-background">
-                    {getIcon(event.type)}
+                  <div className={`absolute left-0 top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 ${getColors(event).icon}`}>
+                    {getIcon(event)}
                   </div>
 
                   {/* Content */}
-                  <div className="rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                  <div className={`rounded-lg border p-3 transition-colors hover:brightness-95 ${getColors(event).card}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

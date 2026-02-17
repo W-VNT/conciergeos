@@ -94,28 +94,6 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         reservations={reservations ?? []}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle>Dernières missions</CardTitle></CardHeader>
-          <CardContent>
-            {missions && missions.length > 0 ? (
-              <div className="space-y-2">{missions.map((m) => (
-                <Link key={m.id} href={`/missions/${m.id}`} className="block p-2 rounded border hover:bg-gray-50 text-sm">{m.type} — {m.status} — {new Date(m.scheduled_at).toLocaleDateString("fr-FR")}</Link>
-              ))}</div>
-            ) : <p className="text-sm text-muted-foreground">Aucune mission</p>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Derniers incidents</CardTitle></CardHeader>
-          <CardContent>
-            {incidents && incidents.length > 0 ? (
-              <div className="space-y-2">{incidents.map((i) => (
-                <Link key={i.id} href={`/incidents/${i.id}`} className="block p-2 rounded border hover:bg-gray-50 text-sm">{i.severity} — {(i.description as string)?.slice(0, 40)}</Link>
-              ))}</div>
-            ) : <p className="text-sm text-muted-foreground">Aucun incident</p>}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

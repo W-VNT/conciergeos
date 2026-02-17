@@ -18,7 +18,11 @@ export async function createProprietaire(data: ProprietaireFormData) {
     full_name: parsed.full_name,
     phone: parsed.phone || null,
     email: parsed.email || null,
-    service_level: parsed.service_level,
+    address_line1: parsed.address_line1 || null,
+    postal_code: parsed.postal_code || null,
+    city: parsed.city || null,
+    statut_juridique: parsed.statut_juridique,
+    siret: parsed.siret || null,
     notes: parsed.notes || null,
   });
 
@@ -40,7 +44,11 @@ export async function updateProprietaire(id: string, data: ProprietaireFormData)
       full_name: parsed.full_name,
       phone: parsed.phone || null,
       email: parsed.email || null,
-      service_level: parsed.service_level,
+      address_line1: parsed.address_line1 || null,
+      postal_code: parsed.postal_code || null,
+      city: parsed.city || null,
+      statut_juridique: parsed.statut_juridique,
+      siret: parsed.siret || null,
       notes: parsed.notes || null,
     })
     .eq("id", id);

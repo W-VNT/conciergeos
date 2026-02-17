@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SERVICE_LEVEL_LABELS } from "@/types/database";
+import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { deleteProprietaire } from "@/lib/actions/proprietaires";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -35,14 +35,27 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
         )}
       </PageHeader>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
-          <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardHeader><CardTitle>Identité</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Statut juridique</span><StatusBadge value={proprietaire.statut_juridique} label={STATUT_JURIDIQUE_LABELS[proprietaire.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS]} /></div>
+            {proprietaire.siret && <div className="flex justify-between"><span className="text-muted-foreground">SIRET</span><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{proprietaire.siret}</code></div>}
+            {proprietaire.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1 text-sm">{proprietaire.notes}</p></div>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{proprietaire.phone || "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{proprietaire.email || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Niveau</span><StatusBadge value={proprietaire.service_level} label={SERVICE_LEVEL_LABELS[proprietaire.service_level as keyof typeof SERVICE_LEVEL_LABELS]} /></div>
-            {proprietaire.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1 text-sm">{proprietaire.notes}</p></div>}
+            {(proprietaire.address_line1 || proprietaire.city) && (
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground shrink-0">Adresse</span>
+                <span className="text-right">{[proprietaire.address_line1, proprietaire.postal_code, proprietaire.city].filter(Boolean).join(", ")}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -52,7 +65,7 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
             {logements && logements.length > 0 ? (
               <div className="space-y-2">
                 {logements.map((l) => (
-                  <Link key={l.id} href={`/logements/${l.id}`} className="block p-2 rounded border hover:bg-gray-50">{l.name}</Link>
+                  <Link key={l.id} href={`/logements/${l.id}`} className="block p-2 rounded border hover:bg-muted/50 text-sm">{l.name}</Link>
                 ))}
               </div>
             ) : (

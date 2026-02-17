@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { SERVICE_LEVEL_LABELS } from "@/types/database";
+import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
 
@@ -48,7 +48,7 @@ export default async function ProprietairesPage({
               <TableHead>Nom</TableHead>
               <TableHead>Téléphone</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Niveau</TableHead>
+              <TableHead>Statut juridique</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -60,7 +60,7 @@ export default async function ProprietairesPage({
                 <TableCell>{p.phone ?? "—"}</TableCell>
                 <TableCell>{p.email ?? "—"}</TableCell>
                 <TableCell>
-                  <StatusBadge value={p.service_level} label={SERVICE_LEVEL_LABELS[p.service_level as keyof typeof SERVICE_LEVEL_LABELS]} />
+                  <StatusBadge value={p.statut_juridique} label={STATUT_JURIDIQUE_LABELS[p.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS]} />
                 </TableCell>
               </TableRow>
             ))}

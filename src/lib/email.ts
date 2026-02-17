@@ -1,6 +1,11 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not set");
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 interface InvitationEmailData {
   email: string;
@@ -18,7 +23,7 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
     const roleLabel = role === "ADMIN" ? "Administrateur" : "Opérateur";
     const greeting = inviteeName ? `Bonjour ${inviteeName},` : "Bonjour,";
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "ConciergeOS <noreply@classazur.fr>",
       to: email,
       subject: `🏠 ${inviterName} vous invite à rejoindre ${organisationName}`,

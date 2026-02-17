@@ -12,7 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import type { Logement, Proprietaire } from "@/types/database";
 import { geocodeAddress, buildAddressString } from "@/lib/geocoding";
 
@@ -24,6 +27,7 @@ interface Props {
 export function LogementForm({ logement, proprietaires }: Props) {
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [proprioOpen, setPropioOpen] = useState(false);
   const isEdit = !!logement;
 
   const form = useForm<LogementFormData>({
@@ -118,18 +122,48 @@ export function LogementForm({ logement, proprietaires }: Props) {
             </div>
             <div className="space-y-2">
               <Label>Propriétaire</Label>
-              <Select
-                defaultValue={form.getValues("owner_id") || "NONE"}
-                onValueChange={(v) => form.setValue("owner_id", v === "NONE" ? "" : v)}
-              >
-                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">— Aucun —</SelectItem>
-                  {proprietaires.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={proprioOpen} onOpenChange={setPropioOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={proprioOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {form.watch("owner_id")
+                      ? proprietaires.find((p) => p.id === form.watch("owner_id"))?.full_name
+                      : "— Aucun —"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Rechercher un propriétaire..." />
+                    <CommandList>
+                      <CommandEmpty>Aucun propriétaire trouvé.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value=""
+                          onSelect={() => { form.setValue("owner_id", ""); setPropioOpen(false); }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", !form.watch("owner_id") ? "opacity-100" : "opacity-0")} />
+                          — Aucun —
+                        </CommandItem>
+                        {proprietaires.map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.full_name}
+                            onSelect={() => { form.setValue("owner_id", p.id); setPropioOpen(false); }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", form.watch("owner_id") === p.id ? "opacity-100" : "opacity-0")} />
+                            {p.full_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address_line1">Adresse</Label>

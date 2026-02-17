@@ -4,7 +4,7 @@
 
 // Enums
 export type UserRole = 'ADMIN' | 'OPERATEUR';
-export type ServiceLevel = 'STANDARD' | 'VIP';
+export type StatutJuridique = 'PARTICULIER' | 'SCI' | 'SARL' | 'SAS' | 'EURL' | 'AUTRE';
 export type OfferTier = 'ESSENTIEL' | 'SERENITE' | 'SIGNATURE';
 export type LogementStatus = 'ACTIF' | 'PAUSE' | 'ARCHIVE';
 export type MissionType = 'CHECKIN' | 'CHECKOUT' | 'MENAGE' | 'INTERVENTION' | 'URGENCE';
@@ -59,7 +59,11 @@ export interface Proprietaire {
   full_name: string;
   phone: string | null;
   email: string | null;
-  service_level: ServiceLevel;
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
+  statut_juridique: StatutJuridique;
+  siret: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -332,9 +336,13 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   OPERATEUR: 'Opérateur',
 };
 
-export const SERVICE_LEVEL_LABELS: Record<ServiceLevel, string> = {
-  STANDARD: 'Standard',
-  VIP: 'VIP',
+export const STATUT_JURIDIQUE_LABELS: Record<StatutJuridique, string> = {
+  PARTICULIER: 'Particulier',
+  SCI: 'SCI',
+  SARL: 'SARL',
+  SAS: 'SAS',
+  EURL: 'EURL',
+  AUTRE: 'Autre',
 };
 
 export const OFFER_TIER_LABELS: Record<OfferTier, string> = {
