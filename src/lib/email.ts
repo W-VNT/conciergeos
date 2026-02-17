@@ -40,14 +40,25 @@ export async function sendInvitationEmail(data: InvitationEmailData) {
 
                     <!-- Header avec logo -->
                     <tr>
-                      <td style="background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%); padding: 40px 30px; text-align: center; position: relative;">
+                      <td style="background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%); padding: 40px 30px; text-align: center;">
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
                             <td align="center">
-                              <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 32px; display: inline-block; margin-bottom: 20px;">
-                                <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">ConciergeOS</h1>
+                              <!-- Logo icon SVG -->
+                              <div style="margin-bottom: 16px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 32 32" style="display: inline-block;">
+                                  <rect width="32" height="32" rx="7" fill="#ffffff" fill-opacity="0.12"/>
+                                  <g transform="translate(4, 4)" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                                    <path d="M10 12h4"/>
+                                    <path d="M10 8h4"/>
+                                    <path d="M14 21v-3a2 2 0 0 0-4 0v3"/>
+                                    <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/>
+                                    <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+                                  </g>
+                                </svg>
                               </div>
-                              <p style="color: rgba(255, 255, 255, 0.7); margin: 10px 0 0 0; font-size: 16px; font-weight: 500;">Gestion de conciergerie nouvelle génération</p>
+                              <h1 style="color: white; margin: 0 0 8px 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">ConciergeOS</h1>
+                              <p style="color: rgba(255, 255, 255, 0.6); margin: 0; font-size: 14px; font-weight: 400;">Gestion de conciergerie nouvelle génération</p>
                             </td>
                           </tr>
                         </table>
