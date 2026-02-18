@@ -44,7 +44,7 @@ export function StatusFilter({
       defaultValue={searchParams.get(paramName) ?? "ALL"}
       onValueChange={handleFilter}
     >
-      <SelectTrigger className="w-full sm:w-44">
+      <SelectTrigger className="w-full sm:w-auto sm:min-w-36">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
