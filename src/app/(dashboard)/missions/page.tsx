@@ -7,7 +7,6 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, MISSION_PRIORITY_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ExportCSVButton } from "@/components/shared/export-csv-button";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
 import Link from "next/link";
 
@@ -42,9 +41,7 @@ export default async function MissionsPage({
 
   return (
     <div>
-      <PageHeader title="Missions" createHref="/missions/new" createLabel="Nouvelle mission">
-        <ExportCSVButton type="missions" filters={{ status: searchParams.status, type: searchParams.type }} />
-      </PageHeader>
+      <PageHeader title="Missions" createHref="/missions/new" createLabel="Nouvelle mission" />
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans les notes..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />

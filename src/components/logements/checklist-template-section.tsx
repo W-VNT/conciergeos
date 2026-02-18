@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, ClipboardList, Camera, Sparkles, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, ClipboardList, Camera, Sparkles, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   getLogementTemplatesWithItems,
@@ -170,6 +170,19 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   const [activeType, setActiveType] = useState<MissionType>("MENAGE");
   const [selectedSuggestions, setSelectedSuggestions] = useState<Suggestion[]>([]);
   const [addingSuggestions, setAddingSuggestions] = useState(false);
+  const [collapsedCats, setCollapsedCats] = useState<Record<string, Set<string>>>({});
+
+  function toggleCat(type: string, cat: string) {
+    setCollapsedCats((prev) => {
+      const set = new Set(prev[type] ?? []);
+      set.has(cat) ? set.delete(cat) : set.add(cat);
+      return { ...prev, [type]: set };
+    });
+  }
+
+  function isCatCollapsed(type: string, cat: string) {
+    return collapsedCats[type]?.has(cat) ?? false;
+  }
 
   // Form state
   const [titre, setTitre] = useState("");
@@ -183,7 +196,17 @@ export function ChecklistTemplateSection({ logementId }: Props) {
       getLogementTemplatesWithItems(logementId),
       getEquipements(logementId),
     ]);
-    if (templateResult.templates) setTemplates(templateResult.templates as Template[]);
+    if (templateResult.templates) {
+      const tpls = templateResult.templates as Template[];
+      setTemplates(tpls);
+      // Initialiser collapse : première catégorie ouverte, autres fermées
+      const initial: Record<string, Set<string>> = {};
+      for (const tpl of tpls) {
+        const cats = Array.from(new Set(tpl.items.map((i: TemplateItem) => i.categorie ?? "Sans catégorie")));
+        initial[tpl.type_mission] = new Set(cats.slice(1));
+      }
+      setCollapsedCats(initial);
+    }
     if (equipResult.equipements) setEquipements(equipResult.equipements);
     setLoading(false);
   }, [logementId]);
@@ -317,7 +340,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="MENAGE" onValueChange={() => setSelectedSuggestions([])}>
-          <TabsList className="h-11 mb-4">
+          <TabsList className="mb-4">
             {MISSION_TYPES.map((type) => {
               const template = getTemplateForType(type);
               const count = template?.items.length ?? 0;
@@ -426,7 +449,18 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                       <div className="space-y-4">
                         {Object.entries(grouped).map(([cat, catItems]) => (
                           <div key={cat}>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">{cat}</p>
+                            <button
+                              type="button"
+                              onClick={() => toggleCat(type, cat)}
+                              className="w-full flex items-center justify-between mb-2"
+                            >
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                                {cat}
+                                <span className="normal-case font-normal">({catItems.length})</span>
+                              </p>
+                              <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isCatCollapsed(type, cat) ? "-rotate-90" : ""}`} />
+                            </button>
+                            {!isCatCollapsed(type, cat) && (
                             <div className="space-y-1.5">
                               {catItems.map((item) => (
                                 <div
@@ -450,6 +484,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                                 </div>
                               ))}
                             </div>
+                            )}
                           </div>
                         ))}
                       </div>

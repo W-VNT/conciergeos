@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS, EQUIPEMENT_ETAT_LABELS } from "@/types/database";
 import { deleteMission } from "@/lib/actions/missions";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
-import { Pencil, Trash2, AlertTriangle, KeyRound, MapPin, Users, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
 
@@ -33,10 +33,11 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     { data: lingeEquipements },
     { data: checkinMission },
     { data: menageMission },
+    { data: checkInMenageMission },
   ] = await Promise.all([
     // Voyageur (check-in et check-out)
     mission.reservation_id && (mission.type === "CHECKIN" || mission.type === "CHECKOUT")
-      ? supabase.from("reservations").select("id, guest_name, guest_phone, guest_count, access_instructions, check_out_date, check_out_time").eq("id", mission.reservation_id).single()
+      ? supabase.from("reservations").select("id, guest_name, guest_phone, guest_count, access_instructions, check_in_date, check_in_time, check_out_date, check_out_time").eq("id", mission.reservation_id).single()
       : Promise.resolve({ data: null }),
     // Prochain check-in (ménage)
     mission.type === "MENAGE" && mission.logement_id
@@ -80,6 +81,10 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     // Mission ménage liée (checkout) — urgence après départ
     mission.reservation_id && mission.type === "CHECKOUT"
       ? supabase.from("missions").select("id, scheduled_at, status").eq("reservation_id", mission.reservation_id).eq("type", "MENAGE").maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Ménage précédent (check-in) — logement prêt ?
+    mission.reservation_id && mission.type === "CHECKIN"
+      ? supabase.from("missions").select("id, status").eq("reservation_id", mission.reservation_id).eq("type", "MENAGE").maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -301,6 +306,170 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
             </Card>
           </details>
         </>
+      ) : mission.type === "CHECKIN" ? (
+        <>
+          {/* ── 1. ACCÈS ─────────────────────────────────────── */}
+          <Card>
+            <CardContent className="pt-5 space-y-4">
+              {logement && (
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <Link href={`/logements/${logement.id}`} className="font-semibold text-lg hover:underline leading-tight">
+                      {logement.name}
+                    </Link>
+                    {(logement.address_line1 || logement.city) && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                        {[logement.address_line1, logement.city].filter(Boolean).join(", ")}
+                      </p>
+                    )}
+                  </div>
+                  {reservation?.check_in_date && (
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-medium">
+                        {new Date(reservation.check_in_date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })}
+                      </p>
+                      {reservation.check_in_time && (
+                        <p className="text-xs text-muted-foreground">{String(reservation.check_in_time).slice(0, 5)}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Code boîte à clés */}
+              {logement?.lockbox_code && (
+                <div className="flex items-center gap-2 text-sm">
+                  <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <span className="text-muted-foreground">Boîte à clés</span>
+                  <code className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold text-amber-900 ml-1">{logement.lockbox_code}</code>
+                </div>
+              )}
+
+              {/* WiFi — à communiquer au voyageur */}
+              {logement?.wifi_name && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Wifi className="h-4 w-4 flex-shrink-0" />
+                  <span>{logement.wifi_name}</span>
+                  {logement.wifi_password && (
+                    <code className="bg-gray-100 px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
+                  )}
+                </div>
+              )}
+
+              {/* Voyageur */}
+              {reservation && (
+                <div className="border-t pt-3 text-sm space-y-1.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <Link href={`/reservations/${reservation.id}`} className="font-medium hover:underline">
+                        {reservation.guest_name}
+                      </Link>
+                      <p className="text-muted-foreground">{reservation.guest_count} voyageur{(reservation.guest_count ?? 1) > 1 ? "s" : ""}</p>
+                    </div>
+                    {reservation.guest_phone && (
+                      <a href={`tel:${reservation.guest_phone}`} className="text-primary font-medium tabular-nums hover:underline flex-shrink-0">
+                        {reservation.guest_phone}
+                      </a>
+                    )}
+                  </div>
+                  {reservation.check_in_date && reservation.check_out_date && (() => {
+                    const nights = Math.round((new Date(reservation.check_out_date).getTime() - new Date(reservation.check_in_date).getTime()) / 86400000);
+                    return (
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {"Départ "}
+                        {new Date(reservation.check_out_date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" })}
+                        {reservation.check_out_time ? ` ${String(reservation.check_out_time).slice(0, 5)}` : ""}
+                        {" · "}{nights} nuit{nights > 1 ? "s" : ""}
+                      </p>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Instructions spécifiques */}
+              {reservation?.access_instructions && (
+                <div className="border-t pt-3 text-sm">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Instructions spécifiques</p>
+                  <p className="whitespace-pre-wrap">{reservation.access_instructions}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Notes logement */}
+
+          {logement?.notes && (
+            <details className="group">
+              <summary className="cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 list-none py-1">
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                Notes logement
+              </summary>
+              <Card className="mt-3">
+                <CardContent className="pt-4 text-sm">
+                  <p className="whitespace-pre-wrap">{logement.notes}</p>
+                </CardContent>
+              </Card>
+            </details>
+          )}
+
+          {/* ── 2. TIMING ────────────────────────────────────── */}
+          <div className="space-y-2">
+            {checkInMenageMission && checkInMenageMission.status !== "TERMINE" && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span>Ménage pas encore effectué — vérifiez l'état du logement avant d'accueillir</span>
+              </div>
+            )}
+            {checkInMenageMission?.status === "TERMINE" && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                <span>Ménage effectué — le logement est prêt</span>
+              </div>
+            )}
+          </div>
+
+          {/* ── 3. CHECKLIST ─────────────────────────────────── */}
+          <ChecklistManager missionId={params.id} />
+
+          {/* ── 4. DÉTAILS ADMIN (collapsible) ───────────────── */}
+          <details className="group">
+            <summary className="cursor-pointer select-none text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 list-none py-1">
+              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+              Informations de la mission
+            </summary>
+            <Card className="mt-3">
+              <CardContent className="pt-4 space-y-3 text-sm">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <StatusBadge value={mission.status} label={MISSION_STATUS_LABELS[mission.status as keyof typeof MISSION_STATUS_LABELS]} />
+                  <StatusBadge value={mission.priority} label={MISSION_PRIORITY_LABELS[mission.priority as keyof typeof MISSION_PRIORITY_LABELS]} />
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <span className="text-muted-foreground">Assigné à</span>
+                  <span className="text-right">{assignee?.full_name ?? "Non assigné"}</span>
+                  {mission.completed_at && (
+                    <>
+                      <span className="text-muted-foreground">Terminé le</span>
+                      <span className="text-right">{new Date(mission.completed_at).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </>
+                  )}
+                  {mission.time_spent_minutes && (
+                    <>
+                      <span className="text-muted-foreground">Temps passé</span>
+                      <span className="text-right">{mission.time_spent_minutes} min</span>
+                    </>
+                  )}
+                </div>
+                {mission.notes && (
+                  <div className="border-t pt-3">
+                    <p className="text-muted-foreground mb-1">Notes</p>
+                    <p className="whitespace-pre-wrap">{mission.notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </details>
+        </>
       ) : mission.type === "CHECKOUT" ? (
         <>
           {/* ── 1. ACCÈS ─────────────────────────────────────── */}
@@ -334,13 +503,10 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
 
               {/* Code boîte à clés */}
               {logement?.lockbox_code && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                  <p className="text-xs font-medium text-amber-700 flex items-center gap-1 mb-1.5">
-                    <KeyRound className="h-3.5 w-3.5" /> Code boîte à clés
-                  </p>
-                  <code className="font-mono text-3xl font-bold tracking-widest text-amber-900">
-                    {logement.lockbox_code}
-                  </code>
+                <div className="flex items-center gap-2 text-sm">
+                  <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <span className="text-muted-foreground">Boîte à clés</span>
+                  <code className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold text-amber-900 ml-1">{logement.lockbox_code}</code>
                 </div>
               )}
 
@@ -509,38 +675,6 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
               )}
             </CardContent>
           </Card>
-
-          {/* Voyageur — CHECKIN only */}
-          {mission.type === "CHECKIN" && reservation && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Voyageur
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nom</span>
-                  <Link href={`/reservations/${reservation.id}`} className="font-medium hover:underline text-primary">
-                    {reservation.guest_name}
-                  </Link>
-                </div>
-                {reservation.guest_phone && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Téléphone</span>
-                    <span>{reservation.guest_phone}</span>
-                  </div>
-                )}
-                {reservation.access_instructions && (
-                  <div>
-                    <span className="text-muted-foreground">Instructions spécifiques</span>
-                    <p className="mt-1 whitespace-pre-wrap">{reservation.access_instructions}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           <ChecklistManager missionId={params.id} />
         </>

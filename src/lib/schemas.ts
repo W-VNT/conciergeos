@@ -55,9 +55,13 @@ export type MissionFormData = z.infer<typeof missionSchema>;
 export const prestataireSchema = z.object({
   full_name: z.string().min(1, 'Nom requis'),
   specialty: z.enum(['MENAGE', 'PLOMBERIE', 'ELECTRICITE', 'CLIM', 'AUTRE']).default('AUTRE'),
+  statut_juridique: z.enum(['PARTICULIER', 'SCI', 'SARL', 'SAS', 'EURL', 'AUTRE']).default('AUTRE'),
+  siret: z.string().default(''),
   phone: z.string().default(''),
   email: z.string().default(''),
-  zone: z.string().default(''),
+  address_line1: z.string().default(''),
+  postal_code: z.string().default(''),
+  city: z.string().default(''),
   hourly_rate: z.coerce.number().nullable().default(null),
   reliability_score: z.coerce.number().nullable().default(null),
   notes: z.string().default(''),
@@ -73,6 +77,8 @@ export const incidentSchema = z.object({
   status: z.enum(['OUVERT', 'EN_COURS', 'RESOLU', 'CLOS']).default('OUVERT'),
   description: z.string().min(1, 'Description requise'),
   cost: z.coerce.number().nullable().default(null),
+  notes: z.string().default(''),
+  expected_resolution_date: z.string().default(''),
 });
 export type IncidentFormData = z.infer<typeof incidentSchema>;
 

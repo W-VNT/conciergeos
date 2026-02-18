@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SPECIALTY_LABELS } from "@/types/database";
+import { SPECIALTY_LABELS, STATUT_JURIDIQUE_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { deletePrestataire } from "@/lib/actions/prestataires";
 import { Pencil, Trash2, Star } from "lucide-react";
 import Link from "next/link";
@@ -32,29 +32,46 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
           </>
         )}
       </PageHeader>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
-          <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Identité</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Statut juridique</span><span>{STATUT_JURIDIQUE_LABELS[prestataire.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS] ?? "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Spécialité</span><StatusBadge value={prestataire.specialty} label={SPECIALTY_LABELS[prestataire.specialty as keyof typeof SPECIALTY_LABELS]} /></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{prestataire.phone || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{prestataire.email || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Zone</span><span>{prestataire.zone || "—"}</span></div>
+            {prestataire.siret && <div className="flex justify-between"><span className="text-muted-foreground">SIRET</span><code className="bg-gray-100 px-2 py-0.5 rounded">{prestataire.siret}</code></div>}
             <div className="flex justify-between"><span className="text-muted-foreground">Taux horaire</span><span>{prestataire.hourly_rate ? `${prestataire.hourly_rate}€/h` : "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Fiabilité</span>
+            <div className="flex justify-between items-center"><span className="text-muted-foreground">Fiabilité</span>
               {prestataire.reliability_score ? (
                 <div className="flex items-center gap-1">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-4 w-4 ${i < prestataire.reliability_score! ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />))}</div>
               ) : <span>—</span>}
             </div>
-            {prestataire.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1">{prestataire.notes}</p></div>}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Contact & Adresse</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{prestataire.phone || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{prestataire.email || "—"}</span></div>
+            {(prestataire.address_line1 || prestataire.city) && (
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground shrink-0">Adresse</span>
+                <span className="text-right">{[prestataire.address_line1, prestataire.postal_code, prestataire.city].filter(Boolean).join(", ")}</span>
+              </div>
+            )}
+            {prestataire.notes && <div><span className="text-muted-foreground block mb-1">Notes</span><p>{prestataire.notes}</p></div>}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle>Incidents assignés</CardTitle></CardHeader>
           <CardContent>
             {incidents && incidents.length > 0 ? (
               <div className="space-y-2">{incidents.map((i) => (
-                <Link key={i.id} href={`/incidents/${i.id}`} className="block p-2 rounded border hover:bg-gray-50 text-sm">{i.severity} — {(i.description as string)?.slice(0, 40)}</Link>
+                <Link key={i.id} href={`/incidents/${i.id}`} className="flex items-center gap-2 p-2 rounded border hover:bg-gray-50 text-sm">
+                  <StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
+                  <span className="truncate">{(i.description as string)?.slice(0, 40)}</span>
+                </Link>
               ))}</div>
             ) : <p className="text-sm text-muted-foreground">Aucun incident</p>}
           </CardContent>

@@ -21,9 +21,10 @@ interface Props {
   prestataires: Prestataire[];
   defaultLogementId?: string;
   defaultMissionId?: string;
+  preGeneratedId?: string;
 }
 
-export function IncidentForm({ incident, logements, prestataires, defaultLogementId, defaultMissionId }: Props) {
+export function IncidentForm({ incident, logements, prestataires, defaultLogementId, defaultMissionId, preGeneratedId }: Props) {
   const [loading, setLoading] = useState(false);
   const isEdit = !!incident;
 
@@ -38,6 +39,8 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
       status: incident?.status ?? "OUVERT",
       description: incident?.description ?? "",
       cost: incident?.cost ?? null,
+      notes: incident?.notes ?? "",
+      expected_resolution_date: incident?.expected_resolution_date ?? "",
     },
   });
 
@@ -45,7 +48,7 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
     setLoading(true);
     try {
       if (isEdit) { await updateIncident(incident!.id, data); }
-      else { await createIncident(data); }
+      else { await createIncident(data, preGeneratedId); }
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);
@@ -94,7 +97,18 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
               <Textarea id="description" rows={3} {...form.register("description")} />
               {form.formState.errors.description && <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>}
             </div>
-            <div className="space-y-2"><Label htmlFor="cost">Coût (EUR)</Label><Input id="cost" type="number" step="0.01" {...form.register("cost")} /></div>
+            <div className="space-y-2">
+              <Label htmlFor="cost">Coût (EUR)</Label>
+              <Input id="cost" type="number" step="0.01" {...form.register("cost")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expected_resolution_date">Résolution prévue</Label>
+              <Input id="expected_resolution_date" type="date" {...form.register("expected_resolution_date")} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="notes">Notes / Suivi</Label>
+              <Textarea id="notes" rows={3} placeholder="Ajoutez des informations de suivi, contacts, actions effectuées..." {...form.register("notes")} />
+            </div>
           </div>
           <Button type="submit" disabled={loading}>{loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}</Button>
         </form>

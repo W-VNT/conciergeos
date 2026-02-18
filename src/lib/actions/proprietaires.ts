@@ -5,6 +5,7 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { proprietaireSchema, type ProprietaireFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { toTitleCase } from "@/lib/utils";
 
 export async function createProprietaire(data: ProprietaireFormData) {
   const profile = await requireProfile();
@@ -15,7 +16,7 @@ export async function createProprietaire(data: ProprietaireFormData) {
 
   const { error } = await supabase.from("proprietaires").insert({
     organisation_id: profile.organisation_id,
-    full_name: parsed.full_name,
+    full_name: toTitleCase(parsed.full_name),
     phone: parsed.phone || null,
     email: parsed.email || null,
     address_line1: parsed.address_line1 || null,
@@ -41,7 +42,7 @@ export async function updateProprietaire(id: string, data: ProprietaireFormData)
   const { error } = await supabase
     .from("proprietaires")
     .update({
-      full_name: parsed.full_name,
+      full_name: toTitleCase(parsed.full_name),
       phone: parsed.phone || null,
       email: parsed.email || null,
       address_line1: parsed.address_line1 || null,

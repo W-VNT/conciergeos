@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ExportCSVButton } from "@/components/shared/export-csv-button";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 export const revalidate = 30;
@@ -31,9 +31,7 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
 
   return (
     <div>
-      <PageHeader title="Incidents" createHref="/incidents/new" createLabel="Nouvel incident">
-        <ExportCSVButton type="incidents" filters={{ status: searchParams.status, severity: searchParams.severity }} />
-      </PageHeader>
+      <PageHeader title="Incidents" createHref="/incidents/new" createLabel="Nouvel incident" />
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans description..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
@@ -43,16 +41,25 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
         <Table>
           <TableHeader><TableRow><TableHead>Sévérité</TableHead><TableHead>Description</TableHead><TableHead>Logement</TableHead><TableHead>Prestataire</TableHead><TableHead>Ouvert le</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
           <TableBody>
-            {data?.map((i) => (
-              <TableRow key={i.id}>
-                <TableCell><StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} /></TableCell>
-                <TableCell><Link href={`/incidents/${i.id}`} className="font-medium hover:underline">{(i.description as string)?.slice(0, 50)}</Link></TableCell>
-                <TableCell>{(i.logement as { name: string } | null)?.name ?? "—"}</TableCell>
-                <TableCell>{(i.prestataire as { full_name: string } | null)?.full_name ?? "—"}</TableCell>
-                <TableCell className="text-sm">{new Date(i.opened_at).toLocaleDateString("fr-FR")}</TableCell>
-                <TableCell><StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} /></TableCell>
-              </TableRow>
-            ))}
+            {data?.map((i) => {
+              const isLate = !["RESOLU", "CLOS"].includes(i.status) &&
+                (Date.now() - new Date(i.opened_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+              return (
+                <TableRow key={i.id}>
+                  <TableCell><StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} /></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/incidents/${i.id}`} className="font-medium hover:underline">{(i.description as string)?.slice(0, 50)}</Link>
+                      {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
+                    </div>
+                  </TableCell>
+                  <TableCell>{(i.logement as { name: string } | null)?.name ?? "—"}</TableCell>
+                  <TableCell>{(i.prestataire as { full_name: string } | null)?.full_name ?? "—"}</TableCell>
+                  <TableCell className="text-sm">{new Date(i.opened_at).toLocaleDateString("fr-FR")}</TableCell>
+                  <TableCell><StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} /></TableCell>
+                </TableRow>
+              );
+            })}
             {(!data || data.length === 0) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Aucun incident trouvé</TableCell></TableRow>}
           </TableBody>
         </Table>

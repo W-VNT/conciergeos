@@ -6,12 +6,13 @@ import { incidentSchema, type IncidentFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-export async function createIncident(data: IncidentFormData) {
+export async function createIncident(data: IncidentFormData, preGeneratedId?: string) {
   const profile = await requireProfile();
   const parsed = incidentSchema.parse(data);
   const supabase = createClient();
 
-  const { error } = await supabase.from("incidents").insert({
+  const { data: created, error } = await supabase.from("incidents").insert({
+    ...(preGeneratedId ? { id: preGeneratedId } : {}),
     organisation_id: profile.organisation_id,
     logement_id: parsed.logement_id,
     mission_id: parsed.mission_id || null,
@@ -20,11 +21,13 @@ export async function createIncident(data: IncidentFormData) {
     status: parsed.status,
     description: parsed.description,
     cost: parsed.cost || null,
-  });
+    notes: parsed.notes || null,
+    expected_resolution_date: parsed.expected_resolution_date || null,
+  }).select("id").single();
 
   if (error) throw new Error(error.message);
   revalidatePath("/incidents");
-  redirect("/incidents");
+  redirect(`/incidents/${created.id}`);
 }
 
 export async function updateIncident(id: string, data: IncidentFormData) {
@@ -40,6 +43,8 @@ export async function updateIncident(id: string, data: IncidentFormData) {
     status: parsed.status,
     description: parsed.description,
     cost: parsed.cost || null,
+    notes: parsed.notes || null,
+    expected_resolution_date: parsed.expected_resolution_date || null,
   };
 
   if (parsed.status === "RESOLU" || parsed.status === "CLOS") {
@@ -54,6 +59,25 @@ export async function updateIncident(id: string, data: IncidentFormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/incidents");
   redirect(`/incidents/${id}`);
+}
+
+export async function updateIncidentStatus(id: string, status: string) {
+  await requireProfile();
+  const supabase = createClient();
+
+  const updateData: Record<string, unknown> = { status };
+  if (status === "RESOLU" || status === "CLOS") {
+    updateData.resolved_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from("incidents")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/incidents");
+  revalidatePath(`/incidents/${id}`);
 }
 
 export async function deleteIncident(id: string) {

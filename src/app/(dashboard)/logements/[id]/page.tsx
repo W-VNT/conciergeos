@@ -5,9 +5,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
+import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
 import { deleteLogement } from "@/lib/actions/logements";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
@@ -15,6 +15,8 @@ import { InventaireSection } from "@/components/logements/inventaire-section";
 import { ChecklistTemplateSection } from "@/components/logements/checklist-template-section";
 import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -89,11 +91,21 @@ export default async function LogementDetailPage({ params }: { params: { id: str
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
 
       <Tabs defaultValue="inventaire">
-        <TabsList className="h-11">
-          <TabsTrigger value="inventaire" className="px-5">Inventaire</TabsTrigger>
-          <TabsTrigger value="checklists" className="px-5">Checklists</TabsTrigger>
-          <TabsTrigger value="historique" className="px-5">Historique</TabsTrigger>
-        </TabsList>
+        <Card className="p-2 mb-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="inventaire">Inventaire</TabsTrigger>
+            <TabsTrigger value="checklists">Checklists</TabsTrigger>
+            <TabsTrigger value="incidents" className="flex items-center gap-2">
+              Incidents
+              {(incidents ?? []).filter(i => !["RESOLU", "CLOS"].includes(i.status)).length > 0 && (
+                <Badge variant="destructive" className="text-xs px-1.5 py-0 min-w-[1.25rem] h-5">
+                  {(incidents ?? []).filter(i => !["RESOLU", "CLOS"].includes(i.status)).length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="historique">Historique</TabsTrigger>
+          </TabsList>
+        </Card>
 
         <TabsContent value="inventaire" className="mt-4">
           <InventaireSection logementId={params.id} />
@@ -101,6 +113,65 @@ export default async function LogementDetailPage({ params }: { params: { id: str
 
         <TabsContent value="checklists" className="mt-4">
           <ChecklistTemplateSection logementId={params.id} />
+        </TabsContent>
+
+        <TabsContent value="incidents" className="mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Incidents</CardTitle>
+              <Button size="sm" asChild>
+                <Link href={`/incidents/new?logement_id=${logement.id}`}>
+                  <AlertTriangle className="h-4 w-4 mr-2" /> Nouvel incident
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Sévérité</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Ouvert le</TableHead>
+                    <TableHead>Statut</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(incidents ?? []).map((inc) => {
+                    const isLate = !["RESOLU", "CLOS"].includes(inc.status) &&
+                      (Date.now() - new Date(inc.opened_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+                    return (
+                      <TableRow key={inc.id}>
+                        <TableCell>
+                          <StatusBadge value={inc.severity} label={INCIDENT_SEVERITY_LABELS[inc.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Link href={`/incidents/${inc.id}`} className="hover:underline font-medium">
+                              {(inc.description as string)?.slice(0, 60)}
+                            </Link>
+                            {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(inc.opened_at).toLocaleDateString("fr-FR")}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge value={inc.status} label={INCIDENT_STATUS_LABELS[inc.status as keyof typeof INCIDENT_STATUS_LABELS]} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {(incidents ?? []).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        Aucun incident pour ce logement
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="historique" className="mt-4">

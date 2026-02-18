@@ -4,6 +4,7 @@
 
 -- Drop the old restrictive policy
 DROP POLICY IF EXISTS "Anyone can view invitation by token" ON invitations;
+DROP POLICY IF EXISTS "Public can view invitations by token" ON invitations;
 
 -- Create new policy that allows both authenticated AND anonymous users
 -- to view invitations (needed for accepting invitations before signup)

@@ -277,7 +277,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           <CardContent>
             <div className="space-y-2">
               {pastReservations.map((r) => {
-                const lg = r.logement as { name: string } | null;
+                const lg = (r.logement as unknown) as { name: string } | null;
                 return (
                   <Link
                     key={r.id}

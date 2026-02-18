@@ -39,6 +39,11 @@ const SUGGESTIONS: Record<EquipementCategorie, string[]> = {
     "Balai & serpillère", "Poubelles", "Cintres", "Boîte à outils",
     "Parasol", "Barbecue", "Vélos", "Table de jardin", "Chaises de jardin",
   ],
+  CONSOMMABLE: [
+    "Papier toilette", "Gel douche", "Shampoing", "Savon",
+    "Liquide vaisselle", "Éponges", "Sacs poubelle", "Capsules café",
+    "Sel & poivre", "Huile d'olive", "Sucre", "Thé & infusions",
+  ],
 };
 
 interface Props {
@@ -84,7 +89,7 @@ export function InventaireSection({ logementId }: Props) {
     if (result.equipements) {
       setEquipements(result.equipements);
       // Fermer toutes les catégories sauf la première
-      const cats = [...new Set(result.equipements.map((e) => e.categorie))];
+      const cats = Array.from(new Set(result.equipements.map((e) => e.categorie)));
       setCollapsedCats(new Set(cats.slice(1)));
     }
     setLoading(false);

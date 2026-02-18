@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) =>
+      word
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("-")
+    )
+    .join(" ");
+}
+
 export function formatPhone(raw: string | null | undefined): string {
   if (!raw) return "—";
   const digits = raw.replace(/\D/g, "");

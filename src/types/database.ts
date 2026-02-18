@@ -227,11 +227,16 @@ export interface Prestataire {
   organisation_id: string;
   full_name: string;
   specialty: Specialty;
+  statut_juridique: StatutJuridique;
   phone: string | null;
   email: string | null;
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
   zone: string | null;
   hourly_rate: number | null;
   reliability_score: number | null;
+  siret: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -247,6 +252,8 @@ export interface Incident {
   status: IncidentStatus;
   description: string;
   cost: number | null;
+  notes: string | null;
+  expected_resolution_date: string | null;
   opened_at: string;
   resolved_at: string | null;
   created_at: string;
