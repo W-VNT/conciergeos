@@ -38,7 +38,7 @@ export function PageHeader({
             <p className="text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {children}
           {showCreate && createHref && (
             <Button asChild>

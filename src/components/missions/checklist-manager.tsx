@@ -240,7 +240,7 @@ export function ChecklistManager({ missionId }: Props) {
 
       {/* Modal photo */}
       <Dialog open={!!photoModalItem} onOpenChange={(open) => { if (!open) closePhotoModal(); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5 text-amber-600" />

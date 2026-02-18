@@ -215,7 +215,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
 
             {view !== "jour" && (
               <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-                <SelectTrigger className="!h-9 text-sm w-[80px] sm:w-[150px]">
+                <SelectTrigger className="!h-9 text-sm w-auto px-3">
                   <span className="truncate">
                     <span className="sm:hidden">
                       {filterStatus === "ALL" ? "Statut" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}

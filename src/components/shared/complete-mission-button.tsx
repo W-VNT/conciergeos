@@ -10,9 +10,10 @@ import { useRouter } from "next/navigation";
 interface Props {
   missionId: string;
   variant?: "default" | "outline" | "ghost";
+  className?: string;
 }
 
-export function CompleteMissionButton({ missionId, variant = "outline" }: Props) {
+export function CompleteMissionButton({ missionId, variant = "outline", className }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -30,7 +31,7 @@ export function CompleteMissionButton({ missionId, variant = "outline" }: Props)
   }
 
   return (
-    <Button variant={variant} size="sm" onClick={handleComplete} disabled={loading}>
+    <Button variant={variant} size="sm" className={className} onClick={handleComplete} disabled={loading}>
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (

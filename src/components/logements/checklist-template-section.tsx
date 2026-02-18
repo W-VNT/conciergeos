@@ -20,7 +20,7 @@ import { getEquipements } from "@/lib/actions/equipements";
 import type { MissionType, Equipement } from "@/types/database";
 import { MISSION_TYPE_LABELS } from "@/types/database";
 
-const MISSION_TYPES: MissionType[] = ["MENAGE", "CHECKIN", "CHECKOUT"];
+const MISSION_TYPES: MissionType[] = ["CHECKIN", "CHECKOUT", "MENAGE"];
 
 const CATEGORIES_SUGGESTIONS = [
   "Cuisine", "Salle de bain", "Chambre", "Salon", "Entrée",
@@ -167,7 +167,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateItem | null>(null);
-  const [activeType, setActiveType] = useState<MissionType>("MENAGE");
+  const [activeType, setActiveType] = useState<MissionType>("CHECKIN");
   const [selectedSuggestions, setSelectedSuggestions] = useState<Suggestion[]>([]);
   const [addingSuggestions, setAddingSuggestions] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Record<string, Set<string>>>({});
@@ -339,7 +339,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="MENAGE" onValueChange={() => setSelectedSuggestions([])}>
+        <Tabs defaultValue="CHECKIN" onValueChange={() => setSelectedSuggestions([])}>
           <TabsList className="mb-4">
             {MISSION_TYPES.map((type) => {
               const template = getTemplateForType(type);

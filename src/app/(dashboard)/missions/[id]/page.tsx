@@ -117,18 +117,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         showCreate={false}
         showBack={true}
         backHref="/missions"
-      >
-        {mission.status !== "TERMINE" && mission.status !== "ANNULE" && <CompleteMissionButton missionId={mission.id} variant="default" />}
-        <Button variant="outline" asChild>
-          <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-2" /> Créer incident</Link>
+      />
+
+      <div className="flex gap-2 -mt-2 mb-2">
+        {mission.status !== "TERMINE" && mission.status !== "ANNULE" && (
+          <CompleteMissionButton missionId={mission.id} variant="default" className="flex-1" />
+        )}
+        <Button variant="outline" size="sm" className="flex-1" asChild>
+          <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-1.5" />Créer incident</Link>
         </Button>
-        <Button variant="outline" asChild><Link href={`/missions/${mission.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link></Button>
+        <Button variant="outline" size="sm" className="flex-1" asChild>
+          <Link href={`/missions/${mission.id}/edit`}><Pencil className="h-4 w-4 mr-1.5" />Modifier</Link>
+        </Button>
         {admin && (
-          <form action={async () => { "use server"; await deleteMission(mission.id); }}>
-            <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 mr-2" /> Supprimer</Button>
+          <form className="flex-1" action={async () => { "use server"; await deleteMission(mission.id); }}>
+            <Button variant="destructive" size="sm" className="w-full" type="submit"><Trash2 className="h-4 w-4 mr-1.5" />Supprimer</Button>
           </form>
         )}
-      </PageHeader>
+      </div>
 
       {mission.type === "MENAGE" ? (
         <>
@@ -155,26 +161,12 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                 </div>
               )}
 
-              {/* Code boîte à clés — très visible */}
+              {/* Code boîte à clés */}
               {logement?.lockbox_code && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                  <p className="text-xs font-medium text-amber-700 flex items-center gap-1 mb-1.5">
-                    <KeyRound className="h-3.5 w-3.5" /> Code boîte à clés
-                  </p>
-                  <code className="font-mono text-3xl font-bold tracking-widest text-amber-900">
-                    {logement.lockbox_code}
-                  </code>
-                </div>
-              )}
-
-              {/* WiFi — discret */}
-              {logement?.wifi_name && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Wifi className="h-4 w-4 flex-shrink-0" />
-                  <span>{logement.wifi_name}</span>
-                  {logement.wifi_password && (
-                    <code className="bg-gray-100 px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
-                  )}
+                <div className="flex items-center gap-2 text-sm">
+                  <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <span className="text-muted-foreground">Boîte à clés</span>
+                  <code className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold text-amber-900 ml-1">{logement.lockbox_code}</code>
                 </div>
               )}
 
