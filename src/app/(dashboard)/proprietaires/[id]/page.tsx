@@ -9,6 +9,7 @@ import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { deleteProprietaire } from "@/lib/actions/proprietaires";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { formatPhone } from "@/lib/utils";
 
 export default async function ProprietaireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -48,7 +49,7 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
         <Card>
           <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{proprietaire.phone || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{formatPhone(proprietaire.phone)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{proprietaire.email || "—"}</span></div>
             {(proprietaire.address_line1 || proprietaire.city) && (
               <div className="flex justify-between gap-4">

@@ -8,6 +8,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
+import { formatPhone } from "@/lib/utils";
 
 export const revalidate = 30;
 
@@ -59,7 +60,7 @@ export default async function ProprietairesPage({
                 <TableCell>
                   <Link href={`/proprietaires/${p.id}`} className="font-medium hover:underline">{p.full_name}</Link>
                 </TableCell>
-                <TableCell>{p.phone ?? "—"}</TableCell>
+                <TableCell>{formatPhone(p.phone)}</TableCell>
                 <TableCell>{p.email ?? "—"}</TableCell>
                 <TableCell>
                   <StatusBadge value={p.statut_juridique} label={STATUT_JURIDIQUE_LABELS[p.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS]} />
