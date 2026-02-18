@@ -323,7 +323,8 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                   {getMissionsForDate(day).map((m) => (
                     <Link key={m.id} href={`/missions/${m.id}`} className="block">
                       <div className={`text-[10px] p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
-                        <div className="font-medium truncate">
+                        <div className="font-medium truncate flex items-center gap-1">
+                          <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
                           {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} {MISSION_TYPE_LABELS[m.type as MissionType]}
                         </div>
                       </div>
