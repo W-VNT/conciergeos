@@ -298,6 +298,7 @@ export interface Notification {
   entity_id: string | null;
   read_at: string | null;
   created_at: string;
+  metadata: { mission_type?: string; [key: string]: string | undefined } | null;
 }
 
 export interface Equipement {

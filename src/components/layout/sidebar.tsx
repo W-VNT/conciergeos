@@ -140,7 +140,7 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
               title="Paramètres de l'organisation"
             >
               <div
-                className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${
+                className={`h-11 w-11 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${
                   organisation.logo_url
                     ? "bg-transparent"
                     : getAvatarColor(organisation.name)
@@ -157,14 +157,14 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{organisation.name}</p>
+                <p className="text-base font-semibold truncate">{organisation.name}</p>
                 <p className="text-xs text-muted-foreground">Organisation</p>
               </div>
             </Link>
           ) : (
             <div className="flex items-center gap-3 px-3 py-2.5">
               <div
-                className={`h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${
+                className={`h-11 w-11 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${
                   organisation.logo_url
                     ? "bg-transparent"
                     : getAvatarColor(organisation.name)
@@ -181,7 +181,7 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-muted-foreground truncate">
+                <p className="text-base font-semibold text-muted-foreground truncate">
                   {organisation.name}
                 </p>
                 <p className="text-xs text-muted-foreground">Organisation</p>

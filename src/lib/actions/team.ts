@@ -35,7 +35,7 @@ export async function getTeamMembers() {
     // Get all members of the organisation
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("id, full_name, role, avatar_url, created_at")
+      .select("id, full_name, role, avatar_url, created_at, email")
       .eq("organisation_id", currentProfile.organisation_id)
       .order("created_at", { ascending: false });
 
@@ -44,20 +44,7 @@ export async function getTeamMembers() {
       return { error: "Erreur lors de la récupération des membres" };
     }
 
-    // Get emails from auth.users for each profile
-    const membersWithEmail = await Promise.all(
-      profiles.map(async (profile) => {
-        const { data: authData } = await supabase.auth.admin.getUserById(
-          profile.id
-        );
-        return {
-          ...profile,
-          email: authData?.user?.email || null,
-        };
-      })
-    );
-
-    return { members: membersWithEmail };
+    return { members: profiles };
   } catch (error) {
     console.error("Get team members error:", error);
     return { error: "Une erreur est survenue" };
@@ -430,6 +417,7 @@ export async function acceptInvitation(token: string) {
       organisation_id: invitation.organisation_id,
       full_name: invitation.invited_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Nouveau membre",
       role: invitation.role,
+      email: user.email || null,
     });
 
     if (profileError) {

@@ -14,6 +14,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { Reservation, Logement } from "@/types/database";
 import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { Info } from "lucide-react";
 
 interface Props {
   reservation?: Reservation;
@@ -196,11 +198,6 @@ export function ReservationForm({ reservation, logements }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-              {form.watch("status") === "CONFIRMEE" && !isEdit && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Les missions CHECKIN, CHECKOUT et MENAGE seront créées automatiquement
-                </p>
-              )}
             </div>
           </div>
 
@@ -208,6 +205,19 @@ export function ReservationForm({ reservation, logements }: Props) {
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" rows={3} {...form.register("notes")} />
           </div>
+
+          {!isEdit && (
+            <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span className="flex items-center gap-1.5 flex-wrap">
+                Les missions
+                <StatusBadge value="CHECKIN" label="Check-in" />
+                <StatusBadge value="CHECKOUT" label="Check-out" />
+                <StatusBadge value="MENAGE" label="Ménage" />
+                seront créées automatiquement
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

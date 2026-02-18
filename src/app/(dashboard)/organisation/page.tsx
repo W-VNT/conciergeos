@@ -37,8 +37,8 @@ export default async function OrganisationPage() {
         <Card className="p-2 mb-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="organisation">Organisation</TabsTrigger>
-            <TabsTrigger value="offres">Offres</TabsTrigger>
             <TabsTrigger value="team">Équipe</TabsTrigger>
+            <TabsTrigger value="offres">Offres</TabsTrigger>
           </TabsList>
         </Card>
 

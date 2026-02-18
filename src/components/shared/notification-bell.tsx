@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getUnreadNotifications, markAsRead } from "@/lib/actions/notifications";
 import type { Notification } from "@/types/database";
+import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { MISSION_TYPE_LABELS } from "@/types/database";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -43,20 +46,25 @@ export function NotificationBell() {
     }
   }
 
-  function getNotificationIcon(type: string) {
-    switch (type) {
-      case "INCIDENT_CRITICAL":
-        return "🚨";
+  function getMissionType(notification: Notification): string | null {
+    if (notification.metadata?.mission_type) return notification.metadata.mission_type;
+    if (notification.type === "MISSION_ASSIGNED" || notification.type === "MISSION_URGENT") {
+      const match = notification.message.match(/de type (\w+)/i);
+      return match ? match[1] : null;
+    }
+    return null;
+  }
+
+  function getCategoryLabel(notification: Notification): string {
+    switch (notification.type) {
       case "MISSION_ASSIGNED":
-        return "📋";
-      case "MISSION_URGENT":
-        return "⚠️";
-      case "CONTRACT_EXPIRING":
-        return "📄";
-      case "RESERVATION_CREATED":
-        return "🏠";
-      default:
-        return "ℹ️";
+      case "MISSION_URGENT": return "Mission";
+      case "INCIDENT_CRITICAL":
+      case "INCIDENT_ASSIGNED": return "Incident";
+      case "CONTRACT_EXPIRING": return "Contrat";
+      case "RESERVATION_CREATED": return "Réservation";
+      case "TEAM_INVITATION": return "Invitation";
+      default: return "Système";
     }
   }
 
@@ -127,10 +135,16 @@ export function NotificationBell() {
                   href={getNotificationLink(notification)}
                   className="flex gap-3 px-4 py-3 w-full hover:bg-gray-50"
                 >
-                  <div className="text-2xl flex-shrink-0">
-                    {getNotificationIcon(notification.type)}
-                  </div>
                   <div className="flex-1 min-w-0">
+                    {/* Category + mission type badges */}
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <Badge variant="secondary" className="text-xs">{getCategoryLabel(notification)}</Badge>
+                      {(() => {
+                        const mType = getMissionType(notification);
+                        const label = mType ? MISSION_TYPE_LABELS[mType as keyof typeof MISSION_TYPE_LABELS] : null;
+                        return label ? <StatusBadge value={mType!} label={label} /> : null;
+                      })()}
+                    </div>
                     <p className="text-sm font-medium truncate">
                       {notification.title}
                     </p>

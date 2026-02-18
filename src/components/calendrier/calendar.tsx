@@ -178,26 +178,25 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
     <div className="space-y-4">
       {/* Controls */}
       <Card className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Navigation */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={goToPrev}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-[220px] text-center">
-              <h2 className="text-lg font-semibold">{getHeaderLabel()}</h2>
+        <div className="space-y-3">
+          {/* Row 1: Navigation */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={goToPrev}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold min-w-[200px] text-center">{getHeaderLabel()}</h2>
+              <Button variant="outline" size="icon" onClick={goToNext}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={goToNext}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
             <Button variant="outline" size="sm" onClick={goToToday}>
               Aujourd&apos;hui
             </Button>
           </div>
 
-          {/* Right: view toggle + filter */}
-          <div className="flex items-center gap-3">
-            {/* View selector — pill style */}
+          {/* Row 2: View toggle + filter */}
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5">
               {views.map(({ key, label }) => (
                 <button
@@ -214,11 +213,17 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
               ))}
             </div>
 
-            {/* Filter (hide on jour) */}
             {view !== "jour" && (
               <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Statut" />
+                <SelectTrigger className="!h-9 text-sm w-[80px] sm:w-[150px]">
+                  <span className="truncate">
+                    <span className="sm:hidden">
+                      {filterStatus === "ALL" ? "Statut" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
+                    </span>
+                    <span className="hidden sm:inline">
+                      {filterStatus === "ALL" ? "Tous les statuts" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
+                    </span>
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Tous les statuts</SelectItem>

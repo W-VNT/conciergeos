@@ -257,6 +257,9 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-medium truncate">{member.full_name}</p>
+                {member.id !== profile.id && member.email && (
+                  <span className="text-sm text-muted-foreground truncate">{member.email}</span>
+                )}
                 {member.id === profile.id && (
                   <Badge variant="secondary" className="flex-shrink-0">Vous</Badge>
                 )}
