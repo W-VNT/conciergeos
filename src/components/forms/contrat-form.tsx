@@ -12,20 +12,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Contrat, Proprietaire, Logement } from "@/types/database";
-import { CONTRACT_TYPE_LABELS, CONTRACT_STATUS_LABELS } from "@/types/database";
+import type { Contrat, Proprietaire, Logement, OfferTier } from "@/types/database";
+import { CONTRACT_TYPE_LABELS, CONTRACT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
+
+interface OfferConfig {
+  tier: OfferTier;
+  commission_rate: number;
+  name: string;
+}
 
 interface Props {
   contrat?: Contrat;
   proprietaires: Proprietaire[];
   logements: Logement[];
+  offerConfigs?: OfferConfig[];
 }
 
-export function ContratForm({ contrat, proprietaires, logements }: Props) {
+export function ContratForm({ contrat, proprietaires, logements, offerConfigs = [] }: Props) {
   const [loading, setLoading] = useState(false);
   const [proprioOpen, setPropioOpen] = useState(false);
   const [logementOpen, setLogementOpen] = useState(false);
@@ -48,6 +55,22 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
 
   const proprioId = form.watch("proprietaire_id");
   const logementId = form.watch("logement_id");
+
+  // Auto-fill commission_rate from logement's offer tier (new contrats only)
+  useEffect(() => {
+    if (isEdit || !logementId) return;
+    const logement = logements.find((l) => l.id === logementId);
+    if (!logement) return;
+    const config = offerConfigs.find((c) => c.tier === logement.offer_tier);
+    if (config) {
+      form.setValue("commission_rate", config.commission_rate);
+    }
+  }, [logementId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectedLogement = logements.find((l) => l.id === logementId);
+  const offerHint = selectedLogement
+    ? offerConfigs.find((c) => c.tier === selectedLogement.offer_tier)
+    : null;
 
   async function onSubmit(data: ContratFormData) {
     setLoading(true);
@@ -242,6 +265,17 @@ export function ContratForm({ contrat, proprietaires, logements }: Props) {
               max="100"
               {...form.register("commission_rate")}
             />
+            {offerHint ? (
+              <p className="text-muted-foreground text-xs">
+                Offre <strong>{offerHint.name}</strong> · taux par défaut {offerHint.commission_rate}% · modifiable
+              </p>
+            ) : (
+              !logementId && (
+                <p className="text-muted-foreground text-xs">
+                  Sélectionnez un logement pour pré-remplir depuis son offre
+                </p>
+              )
+            )}
             {form.formState.errors.commission_rate && (
               <p className="text-destructive text-sm">
                 {form.formState.errors.commission_rate.message}

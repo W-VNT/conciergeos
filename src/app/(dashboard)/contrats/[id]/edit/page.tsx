@@ -25,11 +25,14 @@ export default async function EditContratPage({ params }: { params: { id: string
     .select("*")
     .order("full_name");
 
-  // Fetch logements
-  const { data: logements } = await supabase
-    .from("logements")
-    .select("*")
-    .order("name");
+  // Fetch logements + offer configs
+  const [{ data: logements }, { data: offerConfigs }] = await Promise.all([
+    supabase.from("logements").select("*").order("name"),
+    supabase
+      .from("offer_tier_configs")
+      .select("tier, commission_rate, name")
+      .eq("organisation_id", profile.organisation_id),
+  ]);
 
   return (
     <div>
@@ -38,6 +41,7 @@ export default async function EditContratPage({ params }: { params: { id: string
         contrat={contrat}
         proprietaires={proprietaires ?? []}
         logements={logements ?? []}
+        offerConfigs={offerConfigs ?? []}
       />
     </div>
   );
