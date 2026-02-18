@@ -17,7 +17,7 @@ export const revalidate = 30;
 export default async function ContratsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; page?: string };
+  searchParams: { q?: string; status?: string; type?: string; proprietaire_id?: string; page?: string };
 }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
@@ -31,17 +31,19 @@ export default async function ContratsPage({
     .order("start_date", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  // Search by proprietaire or logement name
-  if (searchParams.q) {
-    // Note: This requires a more complex query - for now we'll search in conditions text
-    // In a real app, you'd want to use a full-text search or join filters
-    query = query.or(`conditions.ilike.%${searchParams.q}%`);
-  }
-
+  if (searchParams.q) query = query.or(`conditions.ilike.%${searchParams.q}%`);
   if (searchParams.status) query = query.eq("status", searchParams.status);
+  if (searchParams.type) query = query.eq("type", searchParams.type);
+  if (searchParams.proprietaire_id) query = query.eq("proprietaire_id", searchParams.proprietaire_id);
 
-  const { data, count } = await query;
+  const [{ data, count }, { data: proprietaires }] = await Promise.all([
+    query,
+    supabase.from("proprietaires").select("id, full_name").order("full_name"),
+  ]);
+
   const statusOptions = Object.entries(CONTRACT_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const typeOptions = Object.entries(CONTRACT_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const proprietaireOptions = (proprietaires ?? []).map((p) => ({ value: p.id, label: p.full_name }));
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -57,6 +59,8 @@ export default async function ContratsPage({
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher un contrat..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
+        <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
+        <StatusFilter paramName="proprietaire_id" options={proprietaireOptions} placeholder="Tous les propriétaires" />
       </div>
       <div className="rounded-lg border bg-card">
         <Table>

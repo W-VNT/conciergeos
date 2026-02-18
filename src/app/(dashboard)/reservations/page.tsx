@@ -16,7 +16,7 @@ export const revalidate = 30;
 export default async function ReservationsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; page?: string };
+  searchParams: { q?: string; status?: string; platform?: string; logement_id?: string; page?: string };
 }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
@@ -30,14 +30,19 @@ export default async function ReservationsPage({
     .order("check_in_date", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) {
-    query = query.or(`guest_name.ilike.%${searchParams.q}%,guest_email.ilike.%${searchParams.q}%`);
-  }
-
+  if (searchParams.q) query = query.or(`guest_name.ilike.%${searchParams.q}%,guest_email.ilike.%${searchParams.q}%`);
   if (searchParams.status) query = query.eq("status", searchParams.status);
+  if (searchParams.platform) query = query.eq("platform", searchParams.platform);
+  if (searchParams.logement_id) query = query.eq("logement_id", searchParams.logement_id);
 
-  const { data, count } = await query;
+  const [{ data, count }, { data: logements }] = await Promise.all([
+    query,
+    supabase.from("logements").select("id, name").eq("status", "ACTIF").order("name"),
+  ]);
+
   const statusOptions = Object.entries(RESERVATION_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const platformOptions = Object.entries(BOOKING_PLATFORM_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const logementOptions = (logements ?? []).map((l) => ({ value: l.id, label: l.name }));
 
   return (
     <div>
@@ -50,6 +55,8 @@ export default async function ReservationsPage({
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher un voyageur..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
+        <StatusFilter paramName="platform" options={platformOptions} placeholder="Toutes les plateformes" />
+        <StatusFilter paramName="logement_id" options={logementOptions} placeholder="Tous les logements" />
       </div>
       <div className="rounded-lg border bg-card">
         <Table>
