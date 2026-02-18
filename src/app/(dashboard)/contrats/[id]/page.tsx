@@ -12,6 +12,7 @@ import { Pencil, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
+import { SignContratButton } from "@/components/contrats/sign-contrat-button";
 
 export default async function ContratDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -95,13 +96,10 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
         title={`Contrat — ${prop?.full_name ?? "Sans propriétaire"}`}
         showCreate={false}
       >
-        <ContratPDFButton
-          data={pdfData}
-          contratId={contrat.id}
-          isSigned={contrat.status === "SIGNE"}
-        />
+        <ContratPDFButton data={pdfData} />
         {admin && contrat.status !== "SIGNE" && (
           <>
+            <SignContratButton contratId={contrat.id} />
             <Button variant="outline" asChild>
               <Link href={`/contrats/${contrat.id}/edit`}>
                 <Pencil className="h-4 w-4 mr-2" /> Modifier
