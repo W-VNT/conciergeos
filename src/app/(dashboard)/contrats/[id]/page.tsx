@@ -5,8 +5,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/types/database";
-import type { Proprietaire, Logement } from "@/types/database";
+import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS, OFFER_TIER_LABELS } from "@/types/database";
+import type { Proprietaire, Logement, OfferTierConfig } from "@/types/database";
 import { deleteContrat } from "@/lib/actions/contrats";
 import { Pencil, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +19,7 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
   const admin = isAdmin(profile);
   const supabase = createClient();
 
-  const [{ data: contrat }, { data: org }, { data: attachments }] = await Promise.all([
+  const [{ data: contrat }, { data: org }, { data: attachments }, { data: offerConfigs }] = await Promise.all([
     supabase
       .from("contrats")
       .select("*, proprietaire:proprietaires(*), logement:logements(*)")
@@ -36,12 +36,19 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
       .eq("entity_type", "CONTRAT")
       .eq("entity_id", params.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("offer_tier_configs")
+      .select("*")
+      .eq("organisation_id", profile.organisation_id),
   ]);
 
   if (!contrat) notFound();
 
   const prop = contrat.proprietaire as Proprietaire | null;
   const logement = contrat.logement as Logement | null;
+  const offerConfig = logement && offerConfigs
+    ? (offerConfigs as OfferTierConfig[]).find((c) => c.tier === logement.offer_tier) ?? null
+    : null;
 
   // Calculate days remaining
   const endDate = new Date(contrat.end_date);
@@ -189,13 +196,61 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
                   : "—"}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-baseline">
               <span className="text-muted-foreground">Commission</span>
-              <span className="font-semibold text-lg">{contrat.commission_rate}%</span>
+              <div className="text-right">
+                <span className="font-semibold text-lg">{contrat.commission_rate}%</span>
+                {offerConfig && offerConfig.commission_rate !== contrat.commission_rate && (
+                  <p className="text-xs text-muted-foreground">
+                    Tarif standard {offerConfig.commission_rate}% · taux négocié
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Offre associée */}
+      {offerConfig && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Offre associée</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Niveau</span>
+              <StatusBadge
+                value={offerConfig.tier}
+                label={OFFER_TIER_LABELS[offerConfig.tier]}
+              />
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Nom</span>
+              <span className="font-medium">{offerConfig.name}</span>
+            </div>
+            {offerConfig.description && (
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground shrink-0">Description</span>
+                <span className="text-right">{offerConfig.description}</span>
+              </div>
+            )}
+            {offerConfig.services && offerConfig.services.length > 0 && (
+              <div>
+                <span className="text-muted-foreground block mb-2">Services inclus</span>
+                <ul className="space-y-1">
+                  {offerConfig.services.map((service: string, i: number) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                      {service}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {contrat.conditions && (
         <Card>
