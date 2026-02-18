@@ -18,7 +18,7 @@ export const revalidate = 30;
 export default async function LogementsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; page?: string };
+  searchParams: { q?: string; status?: string; offer_tier?: string; city?: string; page?: string };
 }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
@@ -34,9 +34,19 @@ export default async function LogementsPage({
 
   if (searchParams.q) query = query.ilike("name", `%${searchParams.q}%`);
   if (searchParams.status) query = query.eq("status", searchParams.status);
+  if (searchParams.offer_tier) query = query.eq("offer_tier", searchParams.offer_tier);
+  if (searchParams.city) query = query.eq("city", searchParams.city);
 
-  const { data, count } = await query;
+  const [{ data, count }, { data: allLogements }] = await Promise.all([
+    query,
+    supabase.from("logements").select("city").not("city", "is", null),
+  ]);
+
+  const cities = Array.from(new Set((allLogements ?? []).map((l) => l.city as string))).sort();
+
   const statusOptions = Object.entries(LOGEMENT_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const offerOptions = Object.entries(OFFER_TIER_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const cityOptions = cities.map((c) => ({ value: c, label: c }));
 
   return (
     <div>
@@ -51,6 +61,8 @@ export default async function LogementsPage({
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher un logement..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
+        <StatusFilter paramName="offer_tier" options={offerOptions} placeholder="Toutes les offres" />
+        <StatusFilter paramName="city" options={cityOptions} placeholder="Toutes les villes" />
       </div>
       <div className="rounded-lg border bg-card">
         <Table>
