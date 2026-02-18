@@ -57,6 +57,15 @@ export function InventaireSection({ logementId }: Props) {
   // Multi-sélection de suggestions
   const [selected, setSelected] = useState<SuggestionItem[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+
+  function toggleCat(cat: string) {
+    setCollapsedCats((prev) => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  }
 
   // Form state (ajout unitaire / édition)
   const [categorie, setCategorie] = useState<EquipementCategorie>("ELECTROMENAGER");
@@ -74,6 +83,9 @@ export function InventaireSection({ logementId }: Props) {
     const result = await getEquipements(logementId);
     if (result.equipements) {
       setEquipements(result.equipements);
+      // Fermer toutes les catégories sauf la première
+      const cats = [...new Set(result.equipements.map((e) => e.categorie))];
+      setCollapsedCats(new Set(cats.slice(1)));
     }
     setLoading(false);
   }
@@ -337,9 +349,18 @@ export function InventaireSection({ logementId }: Props) {
           <div className="space-y-6">
             {Object.entries(groupedEquipements).map(([cat, items]) => (
               <div key={cat}>
-                <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
-                  {EQUIPEMENT_CATEGORIE_LABELS[cat as EquipementCategorie]}
-                </h3>
+                <button
+                  type="button"
+                  onClick={() => toggleCat(cat)}
+                  className="w-full flex items-center justify-between mb-3 group"
+                >
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                    {EQUIPEMENT_CATEGORIE_LABELS[cat as EquipementCategorie]}
+                    <span className="normal-case text-xs font-normal">({items.length})</span>
+                  </h3>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${collapsedCats.has(cat) ? "-rotate-90" : ""}`} />
+                </button>
+                {!collapsedCats.has(cat) && (
                 <div className="space-y-2">
                   {items.map((eq) => (
                     <div key={eq.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
@@ -366,6 +387,7 @@ export function InventaireSection({ logementId }: Props) {
                     </div>
                   ))}
                 </div>
+                )}
               </div>
             ))}
           </div>

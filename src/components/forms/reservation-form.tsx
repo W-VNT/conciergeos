@@ -36,15 +36,22 @@ export function ReservationForm({ reservation, logements }: Props) {
       check_in_date: reservation?.check_in_date
         ? new Date(reservation.check_in_date).toISOString().split("T")[0]
         : "",
+      check_in_time: reservation?.check_in_time ?? "15:00",
       check_out_date: reservation?.check_out_date
         ? new Date(reservation.check_out_date).toISOString().split("T")[0]
         : "",
+      check_out_time: reservation?.check_out_time ?? "11:00",
       platform: reservation?.platform ?? "DIRECT",
       amount: reservation?.amount ?? null,
       status: reservation?.status ?? "CONFIRMEE",
       notes: reservation?.notes ?? "",
+      access_instructions: reservation?.access_instructions ?? "",
     },
   });
+
+  const selectedLogementId = form.watch("logement_id");
+  const selectedLogement = logements.find((l) => l.id === selectedLogementId);
+  const hasLogementAccess = selectedLogement?.lockbox_code || selectedLogement?.wifi_name || selectedLogement?.wifi_password;
 
   async function onSubmit(data: ReservationFormData) {
     setLoading(true);
@@ -125,20 +132,22 @@ export function ReservationForm({ reservation, logements }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="check_in_date">
-                Arrivée <span className="text-destructive">*</span>
-              </Label>
-              <Input id="check_in_date" type="date" {...form.register("check_in_date")} />
+              <Label>Arrivée <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2 mt-1">
+                <Input id="check_in_date" type="date" className="flex-1" {...form.register("check_in_date")} />
+                <Input id="check_in_time" type="time" className="w-28" {...form.register("check_in_time")} />
+              </div>
               {form.formState.errors.check_in_date && (
                 <p className="text-destructive text-sm mt-1">{form.formState.errors.check_in_date.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="check_out_date">
-                Départ <span className="text-destructive">*</span>
-              </Label>
-              <Input id="check_out_date" type="date" {...form.register("check_out_date")} />
+              <Label>Départ <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2 mt-1">
+                <Input id="check_out_date" type="date" className="flex-1" {...form.register("check_out_date")} />
+                <Input id="check_out_time" type="time" className="w-28" {...form.register("check_out_time")} />
+              </div>
               {form.formState.errors.check_out_date && (
                 <p className="text-destructive text-sm mt-1">{form.formState.errors.check_out_date.message}</p>
               )}
@@ -198,6 +207,50 @@ export function ReservationForm({ reservation, logements }: Props) {
           <div>
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" rows={3} {...form.register("notes")} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <h3 className="font-semibold text-lg mb-4">Accès</h3>
+
+          {hasLogementAccess ? (
+            <div className="space-y-3 text-sm pb-2">
+              {selectedLogement?.lockbox_code && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Boîte à clés</span>
+                  <code className="bg-gray-100 px-2 py-0.5 rounded">{selectedLogement.lockbox_code}</code>
+                </div>
+              )}
+              {selectedLogement?.wifi_name && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">WiFi</span>
+                  <span>{selectedLogement.wifi_name}</span>
+                </div>
+              )}
+              {selectedLogement?.wifi_password && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Mot de passe WiFi</span>
+                  <code className="bg-gray-100 px-2 py-0.5 rounded">{selectedLogement.wifi_password}</code>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground pt-1">
+                Ces informations proviennent du logement et ne sont pas modifiables ici.
+              </p>
+            </div>
+          ) : selectedLogementId ? (
+            <p className="text-sm text-muted-foreground pb-2">Aucune info d'accès renseignée sur ce logement.</p>
+          ) : null}
+
+          <div>
+            <Label htmlFor="access_instructions">Instructions complémentaires</Label>
+            <Textarea
+              id="access_instructions"
+              rows={3}
+              placeholder="Parking, code immeuble, consignes spécifiques au voyageur…"
+              {...form.register("access_instructions")}
+            />
           </div>
         </CardContent>
       </Card>

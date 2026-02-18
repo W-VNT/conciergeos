@@ -28,7 +28,7 @@ export type NotificationType =
   | 'TEAM_INVITATION'
   | 'RESERVATION_CREATED'
   | 'SYSTEM';
-export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'AUTRE';
+export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'CONSOMMABLE' | 'AUTRE';
 export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
 export type FactureStatus = 'ATTENTE' | 'VALIDEE' | 'PAYEE' | 'REFUSEE';
 
@@ -104,10 +104,13 @@ export interface Reservation {
   guest_count: number;
   check_in_date: string;
   check_out_date: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
   platform: BookingPlatform;
   amount: number | null;
   status: ReservationStatus;
   notes: string | null;
+  access_instructions: string | null;
   created_at: string;
   updated_at: string;
   // Joined
@@ -202,6 +205,7 @@ export interface Mission {
   id: string;
   organisation_id: string;
   logement_id: string;
+  reservation_id: string | null;
   assigned_to: string | null;
   type: MissionType;
   status: MissionStatus;
@@ -215,6 +219,7 @@ export interface Mission {
   // Joined
   logement?: Logement | null;
   assignee?: Profile | null;
+  reservation?: Reservation | null;
 }
 
 export interface Prestataire {
@@ -435,6 +440,7 @@ export const EQUIPEMENT_CATEGORIE_LABELS: Record<EquipementCategorie, string> = 
   ELECTROMENAGER: 'Électroménager',
   MOBILIER: 'Mobilier',
   LINGE: 'Linge',
+  CONSOMMABLE: 'Consommables',
   AUTRE: 'Autre',
 };
 

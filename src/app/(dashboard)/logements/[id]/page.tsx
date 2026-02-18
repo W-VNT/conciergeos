@@ -12,7 +12,9 @@ import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
 import { InventaireSection } from "@/components/logements/inventaire-section";
+import { ChecklistTemplateSection } from "@/components/logements/checklist-template-section";
 import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -56,7 +58,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         <Card>
           <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Adresse</span><span>{[logement.address_line1, logement.postal_code, logement.city].filter(Boolean).join(", ") || "—"}</span></div>
+            <div className="flex justify-between gap-4"><span className="text-muted-foreground shrink-0">Adresse</span><span className="text-right">{[logement.address_line1, logement.postal_code, logement.city].filter(Boolean).join(", ") || "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Offre</span><StatusBadge value={logement.offer_tier} label={OFFER_TIER_LABELS[logement.offer_tier as keyof typeof OFFER_TIER_LABELS]} /></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><StatusBadge value={logement.status} label={LOGEMENT_STATUS_LABELS[logement.status as keyof typeof LOGEMENT_STATUS_LABELS]} /></div>
             {prop && <div className="flex justify-between"><span className="text-muted-foreground">Propriétaire</span><Link href={`/proprietaires/${prop.id}`} className="hover:underline">{prop.full_name}</Link></div>}
@@ -86,13 +88,29 @@ export default async function LogementDetailPage({ params }: { params: { id: str
 
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
 
-      <InventaireSection logementId={params.id} />
+      <Tabs defaultValue="inventaire">
+        <TabsList className="h-11">
+          <TabsTrigger value="inventaire" className="px-5">Inventaire</TabsTrigger>
+          <TabsTrigger value="checklists" className="px-5">Checklists</TabsTrigger>
+          <TabsTrigger value="historique" className="px-5">Historique</TabsTrigger>
+        </TabsList>
 
-      <HistoriqueMaintenance
-        missions={missions ?? []}
-        incidents={incidents ?? []}
-        reservations={reservations ?? []}
-      />
+        <TabsContent value="inventaire" className="mt-4">
+          <InventaireSection logementId={params.id} />
+        </TabsContent>
+
+        <TabsContent value="checklists" className="mt-4">
+          <ChecklistTemplateSection logementId={params.id} />
+        </TabsContent>
+
+        <TabsContent value="historique" className="mt-4">
+          <HistoriqueMaintenance
+            missions={missions ?? []}
+            incidents={incidents ?? []}
+            reservations={reservations ?? []}
+          />
+        </TabsContent>
+      </Tabs>
 
     </div>
   );

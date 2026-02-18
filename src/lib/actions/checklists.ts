@@ -272,3 +272,193 @@ export async function getTemplateItems(templateId: string) {
     return { error: "Une erreur est survenue" };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Template management per logement
+// ---------------------------------------------------------------------------
+
+/**
+ * Get all checklist templates for a logement, with their items, keyed by type_mission
+ */
+export async function getLogementTemplatesWithItems(logementId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const { data: templates, error } = await supabase
+    .from("checklist_templates")
+    .select("*, items:checklist_template_items(*)")
+    .eq("logement_id", logementId)
+    .eq("actif", true)
+    .order("created_at");
+
+  if (error) return { error: error.message };
+
+  // Sort items by ordre within each template
+  const sorted = (templates ?? []).map((t) => ({
+    ...t,
+    items: (t.items ?? []).sort((a: { ordre: number }, b: { ordre: number }) => a.ordre - b.ordre),
+  }));
+
+  return { templates: sorted };
+}
+
+/**
+ * Get or create the template for a given logement + mission type
+ */
+async function getOrCreateTemplate(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  logementId: string,
+  typeMission: MissionType,
+  organisationId: string,
+  templateName: string
+): Promise<string | null> {
+  const { data: existing } = await supabase
+    .from("checklist_templates")
+    .select("id")
+    .eq("logement_id", logementId)
+    .eq("type_mission", typeMission)
+    .eq("actif", true)
+    .maybeSingle();
+
+  if (existing) return existing.id;
+
+  const { data: created } = await supabase
+    .from("checklist_templates")
+    .insert({
+      organisation_id: organisationId,
+      logement_id: logementId,
+      type_mission: typeMission,
+      nom: templateName,
+      actif: true,
+    })
+    .select("id")
+    .single();
+
+  return created?.id ?? null;
+}
+
+/**
+ * Add an item to a logement checklist template (creates the template if needed)
+ */
+export async function addLogementChecklistItem(
+  logementId: string,
+  typeMission: MissionType,
+  data: { titre: string; categorie: string; photo_requise: boolean }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organisation_id")
+    .eq("id", user.id)
+    .single();
+  if (!profile) return { error: "Profil non trouvé" };
+
+  const LABELS: Record<string, string> = {
+    MENAGE: "Ménage",
+    CHECKIN: "Check-in",
+    CHECKOUT: "Check-out",
+    INTERVENTION: "Intervention",
+    URGENCE: "Urgence",
+  };
+
+  const templateId = await getOrCreateTemplate(
+    supabase,
+    logementId,
+    typeMission,
+    profile.organisation_id,
+    LABELS[typeMission] ?? typeMission
+  );
+  if (!templateId) return { error: "Impossible de créer le template" };
+
+  // Get current max ordre
+  const { data: existing } = await supabase
+    .from("checklist_template_items")
+    .select("ordre")
+    .eq("template_id", templateId)
+    .order("ordre", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrdre = (existing?.ordre ?? 0) + 1;
+
+  const { error } = await supabase.from("checklist_template_items").insert({
+    template_id: templateId,
+    titre: data.titre,
+    categorie: data.categorie || null,
+    photo_requise: data.photo_requise,
+    ordre: nextOrdre,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/logements/${logementId}`);
+  return { success: true };
+}
+
+/**
+ * Update a checklist template item
+ */
+export async function updateLogementChecklistItem(
+  itemId: string,
+  logementId: string,
+  data: { titre: string; categorie: string; photo_requise: boolean }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const { error } = await supabase
+    .from("checklist_template_items")
+    .update({
+      titre: data.titre,
+      categorie: data.categorie || null,
+      photo_requise: data.photo_requise,
+    })
+    .eq("id", itemId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/logements/${logementId}`);
+  return { success: true };
+}
+
+/**
+ * Delete a checklist template item
+ */
+export async function deleteLogementChecklistItem(itemId: string, logementId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const { error } = await supabase
+    .from("checklist_template_items")
+    .delete()
+    .eq("id", itemId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/logements/${logementId}`);
+  return { success: true };
+}
+
+/**
+ * Find active template for a logement + mission type (used for auto-assign)
+ */
+export async function findLogementTemplate(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  logementId: string,
+  typeMission: MissionType
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("checklist_templates")
+    .select("id")
+    .eq("logement_id", logementId)
+    .eq("type_mission", typeMission)
+    .eq("actif", true)
+    .maybeSingle();
+  return data?.id ?? null;
+}
