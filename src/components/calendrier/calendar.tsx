@@ -40,8 +40,8 @@ const MISSION_TYPE_BORDER_COLORS: Record<MissionType, string> = {
 
 const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
   CONFIRMEE: "bg-emerald-100 border-emerald-400 text-emerald-900",
-  ANNULEE: "bg-gray-100 border-gray-400 text-gray-500 line-through",
-  TERMINEE: "bg-slate-100 border-slate-400 text-slate-600",
+  ANNULEE: "bg-red-100 border-red-400 text-red-700 line-through",
+  TERMINEE: "bg-blue-100 border-blue-400 text-blue-800",
 };
 
 const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];

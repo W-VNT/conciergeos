@@ -2,6 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const colorMap: Record<string, string> = {
+  CONFIRMEE: "bg-emerald-100 text-emerald-800",
+  ANNULEE: "bg-red-100 text-red-700",
+  TERMINEE: "bg-blue-100 text-blue-800",
   ACTIF: "bg-green-100 text-green-800",
   PAUSE: "bg-yellow-100 text-yellow-800",
   ARCHIVE: "bg-gray-100 text-gray-800",
