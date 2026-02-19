@@ -365,9 +365,6 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                 }`}
               >
                 {MISSION_TYPE_LABELS[type]}
-                {count > 0 && (
-                  <span className="text-xs font-medium bg-primary/15 text-primary rounded-full px-1.5 py-0.5 leading-none">{count}</span>
-                )}
               </button>
             );
           })}

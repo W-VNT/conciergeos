@@ -203,7 +203,7 @@ export function InventaireSection({ logementId }: Props) {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => openDialog()}>
+              <Button size="sm" variant="outline" onClick={() => openDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter
               </Button>
