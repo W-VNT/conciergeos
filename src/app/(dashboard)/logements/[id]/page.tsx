@@ -60,7 +60,16 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         <Card>
           <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between gap-4"><span className="text-muted-foreground shrink-0">Adresse</span><span className="text-right">{[logement.address_line1, logement.postal_code, logement.city].filter(Boolean).join(", ") || "—"}</span></div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground shrink-0">Adresse</span>
+              <div className="text-right">
+                {logement.address_line1 && <div>{logement.address_line1}</div>}
+                {(logement.postal_code || logement.city) && (
+                  <div>{[logement.postal_code, logement.city].filter(Boolean).join(" ")}</div>
+                )}
+                {!logement.address_line1 && !logement.postal_code && !logement.city && <span>—</span>}
+              </div>
+            </div>
             <div className="flex justify-between"><span className="text-muted-foreground">Offre</span><StatusBadge value={logement.offer_tier} label={OFFER_TIER_LABELS[logement.offer_tier as keyof typeof OFFER_TIER_LABELS]} /></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><StatusBadge value={logement.status} label={LOGEMENT_STATUS_LABELS[logement.status as keyof typeof LOGEMENT_STATUS_LABELS]} /></div>
             {prop && <div className="flex justify-between"><span className="text-muted-foreground">Propriétaire</span><Link href={`/proprietaires/${prop.id}`} className="hover:underline">{prop.full_name}</Link></div>}
