@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
 import { deleteLogement } from "@/lib/actions/logements";
-import { Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Pencil, Trash2, AlertTriangle, KeyRound, Wifi } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
@@ -80,9 +80,18 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         <Card>
           <CardHeader><CardTitle>Accès</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Boîte à clés</span><code className="bg-gray-100 px-2 py-0.5 rounded">{logement.lockbox_code || "—"}</code></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">WiFi</span><span>{logement.wifi_name || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Mot de passe WiFi</span><code className="bg-gray-100 px-2 py-0.5 rounded">{logement.wifi_password || "—"}</code></div>
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
+              <span className="text-muted-foreground">Boîte à clés</span>
+              <code className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold text-amber-900 ml-1">{logement.lockbox_code || "—"}</code>
+            </div>
+            <div className="flex items-center gap-2">
+              <Wifi className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              <span className="text-muted-foreground">{logement.wifi_name || "—"}</span>
+              {logement.wifi_password && (
+                <code className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
+              )}
+            </div>
             {logement.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1">{logement.notes}</p></div>}
           </CardContent>
         </Card>
