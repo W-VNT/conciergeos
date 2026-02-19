@@ -122,17 +122,17 @@ export default async function DashboardPage() {
               ) : (
                 <div className="space-y-3">
                   {todayMissions.map((m) => (
-                    <Link key={m.id} href={`/missions/${m.id}`} className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type as keyof typeof MISSION_TYPE_LABELS]} />
-                          <span className="text-sm font-medium">{(m.logement as { name: string } | null)?.name}</span>
+                    <Link key={m.id} href={`/missions/${m.id}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type as keyof typeof MISSION_TYPE_LABELS]} className="flex-shrink-0" />
+                          <span className="text-sm font-medium truncate">{(m.logement as { name: string } | null)?.name}</span>
                         </div>
                         {(m.assignee as { full_name: string } | null) && (
-                          <p className="text-xs text-muted-foreground">{(m.assignee as { full_name: string }).full_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{(m.assignee as { full_name: string }).full_name}</p>
                         )}
                       </div>
-                      <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status as keyof typeof MISSION_STATUS_LABELS]} />
+                      <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status as keyof typeof MISSION_STATUS_LABELS]} className="flex-shrink-0" />
                     </Link>
                   ))}
                 </div>

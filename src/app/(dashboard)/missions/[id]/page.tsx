@@ -124,7 +124,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           <CompleteMissionButton missionId={mission.id} variant="default" className="flex-1" />
         )}
         <Button variant="outline" size="sm" className="flex-1" asChild>
-          <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-1.5" />Créer incident</Link>
+          <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-1.5" />Incident</Link>
         </Button>
         <Button variant="outline" size="sm" className="flex-1" asChild>
           <Link href={`/missions/${mission.id}/edit`}><Pencil className="h-4 w-4 mr-1.5" />Modifier</Link>
