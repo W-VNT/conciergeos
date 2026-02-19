@@ -148,7 +148,7 @@ export default async function OwnerDashboardPage() {
                           : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                       }`}
                     >
-                      {LOGEMENT_STATUS_LABELS[l.status]}
+                      {LOGEMENT_STATUS_LABELS[l.status as keyof typeof LOGEMENT_STATUS_LABELS]}
                     </span>
                   </div>
                 ))}

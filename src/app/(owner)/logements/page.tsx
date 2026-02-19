@@ -57,7 +57,7 @@ export default async function OwnerLogementsPage() {
                         : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                     }`}
                   >
-                    {LOGEMENT_STATUS_LABELS[l.status]}
+                    {LOGEMENT_STATUS_LABELS[l.status as keyof typeof LOGEMENT_STATUS_LABELS]}
                   </span>
                 </div>
 
@@ -88,7 +88,7 @@ export default async function OwnerLogementsPage() {
                   <span className="text-xs text-muted-foreground">
                     Offre :{" "}
                     <span className="font-medium text-foreground">
-                      {OFFER_TIER_LABELS[l.offer_tier]}
+                      {OFFER_TIER_LABELS[l.offer_tier as keyof typeof OFFER_TIER_LABELS]}
                     </span>
                   </span>
                 </div>

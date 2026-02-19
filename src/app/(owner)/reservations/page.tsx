@@ -33,7 +33,7 @@ export default async function OwnerReservationsPage() {
     return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
   }
 
-  function ReservationRow({ r }: { r: (typeof reservations)[number] }) {
+  function ReservationRow({ r }: { r: NonNullable<typeof reservations>[number] }) {
     return (
       <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-white dark:bg-gray-900">
         <div className="min-w-0 space-y-0.5">
