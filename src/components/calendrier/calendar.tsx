@@ -167,11 +167,11 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
   }, [currentDate]);
 
   // --- View toggle buttons ---
-  const views: { key: ViewType; label: string }[] = [
+  const views: { key: ViewType; label: string; mobileClass?: string }[] = [
     { key: "jour", label: "Jour" },
     { key: "semaine", label: "Semaine" },
-    { key: "mois", label: "Mois" },
-    { key: "annee", label: "Année" },
+    { key: "mois", label: "Mois", mobileClass: "hidden sm:flex" },
+    { key: "annee", label: "Année", mobileClass: "hidden sm:flex" },
   ];
 
   return (
@@ -193,7 +193,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
           {/* Row 2: View tabs + Aujourd'hui + filtre statut (desktop) */}
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5 flex-1">
-              {views.map(({ key, label }) => (
+              {views.map(({ key, label, mobileClass }) => (
                 <button
                   key={key}
                   onClick={() => setView(key)}
@@ -201,7 +201,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                     view === key
                       ? "bg-background shadow-sm text-foreground"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  } ${mobileClass ?? ""}`}
                 >
                   {label}
                 </button>
