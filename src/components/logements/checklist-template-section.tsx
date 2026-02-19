@@ -345,7 +345,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
               const template = getTemplateForType(type);
               const count = template?.items.length ?? 0;
               return (
-                <TabsTrigger key={type} value={type} className="flex-1 gap-2">
+                <TabsTrigger key={type} value={type} className="flex-1 gap-2 data-[state=active]:shadow-none">
                   {MISSION_TYPE_LABELS[type]}
                   {count > 0 && (
                     <span className="text-xs font-medium bg-primary/15 text-primary rounded-full px-1.5 py-0.5 leading-none">{count}</span>
