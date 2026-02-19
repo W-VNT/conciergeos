@@ -270,11 +270,11 @@ export function LogementForm({ logement, proprietaires }: Props) {
               <Input id="lockbox_code" {...form.register("lockbox_code")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wifi_name">WiFi (nom)</Label>
+              <Label htmlFor="wifi_name">Nom du WiFi</Label>
               <Input id="wifi_name" {...form.register("wifi_name")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wifi_password">WiFi (mot de passe)</Label>
+              <Label htmlFor="wifi_password">Mot de passe WiFi</Label>
               <Input id="wifi_password" {...form.register("wifi_password")} />
             </div>
           </div>

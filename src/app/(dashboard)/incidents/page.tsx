@@ -35,7 +35,7 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans description..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
-        <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes sévérités" />
+        <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />
       </div>
       <div className="rounded-lg border bg-card">
         <Table>

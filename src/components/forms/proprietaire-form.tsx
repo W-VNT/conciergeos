@@ -156,7 +156,7 @@ export function ProprietaireForm({ proprietaire }: Props) {
                   </div>
                   {canLookup && (
                     <p className="text-xs text-muted-foreground">
-                      Cliquez sur Autofill pour importer les informations depuis l'annuaire officiel
+                      Cliquez sur Compléter pour importer les informations depuis l'annuaire officiel
                     </p>
                   )}
                 </div>

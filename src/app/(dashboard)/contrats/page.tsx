@@ -99,7 +99,7 @@ export default async function ContratsPage({
                         {(c.logement as { name: string } | null)?.name ?? "—"}
                       </Link>
                     ) : (
-                      <span className="text-muted-foreground">Tous logements</span>
+                      <span className="text-muted-foreground">Tous les logements</span>
                     )}
                   </TableCell>
                   <TableCell>
