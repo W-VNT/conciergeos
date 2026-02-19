@@ -18,7 +18,7 @@ import { toast } from "sonner";
 interface InvitationData {
   id: string;
   email: string;
-  role: "ADMIN" | "OPERATEUR";
+  role: "ADMIN" | "OPERATEUR" | "PROPRIETAIRE";
   expires_at: string;
   organisation: {
     name: string;
@@ -100,7 +100,7 @@ export function AcceptInvitationContent() {
     }
 
     toast.success("Invitation acceptée ! Bienvenue dans l'équipe.");
-    router.push("/dashboard");
+    router.push(invitation.role === "PROPRIETAIRE" ? "/owner/dashboard" : "/dashboard");
     router.refresh();
   }
 
@@ -179,7 +179,7 @@ export function AcceptInvitationContent() {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Rôle</span>
             <span className="font-medium">
-              {invitation.role === "ADMIN" ? "Administrateur" : "Opérateur"}
+              {invitation.role === "ADMIN" ? "Administrateur" : invitation.role === "PROPRIETAIRE" ? "Propriétaire" : "Opérateur"}
             </span>
           </div>
           <div className="flex justify-between text-sm">
@@ -212,7 +212,7 @@ export function AcceptInvitationContent() {
 
             <p className="text-xs text-center text-muted-foreground">
               En acceptant, vous rejoignez {invitation.organisation.name} en
-              tant que {invitation.role === "ADMIN" ? "administrateur" : "opérateur"}
+              tant que {invitation.role === "ADMIN" ? "administrateur" : invitation.role === "PROPRIETAIRE" ? "propriétaire" : "opérateur"}
             </p>
           </>
         ) : (

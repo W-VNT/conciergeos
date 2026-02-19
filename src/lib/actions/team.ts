@@ -418,6 +418,7 @@ export async function acceptInvitation(token: string) {
       full_name: invitation.invited_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Nouveau membre",
       role: invitation.role,
       email: user.email || null,
+      proprietaire_id: invitation.proprietaire_id || null,
     });
 
     if (profileError) {
@@ -445,6 +446,87 @@ export async function acceptInvitation(token: string) {
     return { success: true };
   } catch (error) {
     console.error("Accept invitation error:", error);
+    return { error: "Une erreur est survenue" };
+  }
+}
+
+/**
+ * Invite a proprietaire to access their owner portal
+ */
+export async function inviteProprietaire(data: {
+  proprietaireId: string;
+  email: string;
+  name?: string;
+}) {
+  try {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Non authentifié" };
+
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("organisation_id, role, full_name, organisation:organisations(name)")
+      .eq("id", user.id)
+      .single();
+
+    if (!currentProfile || currentProfile.role !== "ADMIN") {
+      return { error: "Accès refusé - Admin uniquement" };
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) return { error: "Email invalide" };
+
+    // Check no pending invitation already exists for this proprietaire
+    const { data: existingInvitation } = await supabase
+      .from("invitations")
+      .select("id")
+      .eq("organisation_id", currentProfile.organisation_id)
+      .eq("email", data.email)
+      .eq("status", "PENDING")
+      .single();
+
+    if (existingInvitation) {
+      return { error: "Une invitation est déjà en attente pour cet email" };
+    }
+
+    const token = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const { error: insertError } = await supabase.from("invitations").insert({
+      organisation_id: currentProfile.organisation_id,
+      email: data.email,
+      invited_name: data.name || null,
+      role: "PROPRIETAIRE",
+      proprietaire_id: data.proprietaireId,
+      token,
+      invited_by: user.id,
+      expires_at: expiresAt.toISOString(),
+      status: "PENDING",
+    });
+
+    if (insertError) {
+      console.error("Insert proprietaire invitation error:", insertError);
+      return { error: "Erreur lors de la création de l'invitation" };
+    }
+
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/accept-invitation?token=${token}`;
+
+    await sendInvitationEmail({
+      email: data.email,
+      inviteeName: data.name || null,
+      organisationName: (currentProfile.organisation as any)?.name || "l'organisation",
+      inviterName: currentProfile.full_name || "Un administrateur",
+      invitationUrl,
+      role: "PROPRIETAIRE",
+    });
+
+    revalidatePath(`/proprietaires/${data.proprietaireId}`);
+
+    return { success: true, invitationUrl };
+  } catch (error) {
+    console.error("Invite proprietaire error:", error);
     return { error: "Une erreur est survenue" };
   }
 }

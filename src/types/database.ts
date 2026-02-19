@@ -3,7 +3,7 @@
 // ============================================================
 
 // Enums
-export type UserRole = 'ADMIN' | 'OPERATEUR';
+export type UserRole = 'ADMIN' | 'OPERATEUR' | 'PROPRIETAIRE';
 export type StatutJuridique = 'PARTICULIER' | 'SCI' | 'SARL' | 'SAS' | 'EURL' | 'AUTRE';
 export type OfferTier = 'ESSENTIEL' | 'SERENITE' | 'SIGNATURE';
 export type LogementStatus = 'ACTIF' | 'PAUSE' | 'ARCHIVE';
@@ -56,6 +56,7 @@ export interface Profile {
   phone: string | null;
   avatar_url: string | null;
   email?: string | null; // From auth.users, joined in queries
+  proprietaire_id?: string | null;
   created_at: string;
 }
 
@@ -354,6 +355,7 @@ export interface MissionChecklistItem {
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrateur',
   OPERATEUR: 'Opérateur',
+  PROPRIETAIRE: 'Propriétaire',
 };
 
 export const STATUT_JURIDIQUE_LABELS: Record<StatutJuridique, string> = {

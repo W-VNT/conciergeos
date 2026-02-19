@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { deleteProprietaire } from "@/lib/actions/proprietaires";
+import { InviteProprietaireButton } from "@/components/proprietaires/invite-proprietaire-button";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { formatPhone } from "@/lib/utils";
@@ -26,6 +27,13 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
       <PageHeader title={proprietaire.full_name} showCreate={false}>
         {admin && (
           <>
+            {proprietaire.email && (
+              <InviteProprietaireButton
+                proprietaireId={proprietaire.id}
+                email={proprietaire.email}
+                name={proprietaire.full_name}
+              />
+            )}
             <Button variant="outline" asChild>
               <Link href={`/proprietaires/${proprietaire.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link>
             </Button>

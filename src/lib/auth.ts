@@ -59,3 +59,7 @@ export async function requireProfile(): Promise<Profile> {
 export function isAdmin(profile: Profile): boolean {
   return profile.role === 'ADMIN';
 }
+
+export function isProprietaire(profile: Profile): boolean {
+  return profile.role === 'PROPRIETAIRE';
+}

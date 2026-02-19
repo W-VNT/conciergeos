@@ -1,7 +1,8 @@
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isProprietaire } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { getCurrentOrganisation } from "@/lib/actions/organisation";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
@@ -9,6 +10,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireProfile();
+  if (isProprietaire(profile)) redirect("/owner/dashboard");
   const organisation = await getCurrentOrganisation();
 
   return (
