@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, ClipboardList, Camera, Sparkles, Check, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, ClipboardList, Camera, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   getLogementTemplatesWithItems,
@@ -170,6 +170,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   const [activeType, setActiveType] = useState<MissionType>("CHECKIN");
   const [selectedSuggestions, setSelectedSuggestions] = useState<Suggestion[]>([]);
   const [addingSuggestions, setAddingSuggestions] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Record<string, Set<string>>>({});
 
   function toggleCat(type: string, cat: string) {
@@ -245,6 +246,11 @@ export function ChecklistTemplateSection({ logementId }: Props) {
     setTitre("");
     setCategorie("");
     setPhotoRequise(false);
+    setSelectedSuggestions([]);
+    // Show form directly if no suggestions available
+    const currentItems = getTemplateForType(type)?.items ?? [];
+    const suggs = buildSuggestions(currentItems, type);
+    setShowForm(suggs.length === 0);
     setDialogOpen(true);
   }
 
@@ -359,86 +365,12 @@ export function ChecklistTemplateSection({ logementId }: Props) {
             const template = getTemplateForType(type);
             const items = template?.items ?? [];
             const grouped = groupByCategory(items);
-            const suggestions = buildSuggestions(items, type);
-            const inventorySuggestions = suggestions.filter((s) => s.fromInventory);
-            const standardSuggestions = suggestions.filter((s) => !s.fromInventory);
-
             return (
               <TabsContent key={type} value={type}>
                 {loading ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
                 ) : (
                   <div className="space-y-5">
-                    {/* Suggestions intelligentes */}
-                    {suggestions.length > 0 && (
-                      <div className="rounded-lg border border-dashed p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-sm font-medium">Suggestions</p>
-                          <p className="text-xs text-muted-foreground">— basées sur votre inventaire et les standards</p>
-                        </div>
-
-                        {inventorySuggestions.length > 0 && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-2">Depuis votre inventaire</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {inventorySuggestions.map((s) => {
-                                const isSelected = !!selectedSuggestions.find((x) => x.titre === s.titre);
-                                return (
-                                  <button
-                                    key={s.titre}
-                                    type="button"
-                                    onClick={() => toggleSuggestion(s)}
-                                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
-                                      isSelected
-                                        ? "border-primary bg-primary/10 text-primary font-medium"
-                                        : "border-border bg-background hover:border-primary/50 hover:bg-primary/5"
-                                    }`}
-                                  >
-                                    {isSelected && <Check className="h-3 w-3" />}
-                                    {s.titre}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {standardSuggestions.length > 0 && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-2">Standards</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {standardSuggestions.map((s) => {
-                                const isSelected = !!selectedSuggestions.find((x) => x.titre === s.titre);
-                                return (
-                                  <button
-                                    key={s.titre}
-                                    type="button"
-                                    onClick={() => toggleSuggestion(s)}
-                                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
-                                      isSelected
-                                        ? "border-primary bg-primary/10 text-primary font-medium"
-                                        : "border-border bg-background hover:border-primary/50 hover:bg-primary/5"
-                                    }`}
-                                  >
-                                    {isSelected && <Check className="h-3 w-3" />}
-                                    {s.titre}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedSuggestions.length > 0 && (
-                          <Button size="sm" onClick={() => handleAddSuggestions(type)} disabled={addingSuggestions}>
-                            {addingSuggestions
-                              ? "Ajout…"
-                              : `Ajouter ${selectedSuggestions.length} item${selectedSuggestions.length > 1 ? "s" : ""}`}
-                          </Button>
-                        )}
-                      </div>
-                    )}
 
                     {/* Items configurés */}
                     {items.length === 0 ? (
@@ -491,7 +423,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                     )}
 
                     <Button variant="outline" size="sm" onClick={() => openAdd(type)}>
-                      <Plus className="h-4 w-4 mr-2" /> Ajouter manuellement
+                      <Plus className="h-4 w-4 mr-2" /> Ajouter
                     </Button>
                   </div>
                 )}
@@ -501,12 +433,73 @@ export function ChecklistTemplateSection({ logementId }: Props) {
         </Tabs>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-sm rounded-2xl">
+          <DialogContent className="max-w-sm rounded-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editing ? "Modifier l'item" : `Ajouter un item — ${MISSION_TYPE_LABELS[activeType]}`}
+                {editing ? "Modifier l'item" : `Ajouter — ${MISSION_TYPE_LABELS[activeType]}`}
               </DialogTitle>
             </DialogHeader>
+
+            {/* Suggestions (mode ajout uniquement) */}
+            {!editing && (() => {
+              const currentItems = getTemplateForType(activeType)?.items ?? [];
+              const suggs = buildSuggestions(currentItems, activeType);
+              const invSuggs = suggs.filter((s) => s.fromInventory);
+              const stdSuggs = suggs.filter((s) => !s.fromInventory);
+              return suggs.length > 0 ? (
+                <div className="space-y-3">
+                  {invSuggs.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Depuis votre inventaire</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {invSuggs.map((s) => {
+                          const isSelected = !!selectedSuggestions.find((x) => x.titre === s.titre);
+                          return (
+                            <button key={s.titre} type="button" onClick={() => toggleSuggestion(s)}
+                              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                                isSelected ? "border-primary bg-primary/10 text-primary font-medium" : "border-border bg-background hover:border-primary/50 hover:bg-primary/5"
+                              }`}>
+                              {isSelected && <Check className="h-3 w-3" />}{s.titre}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {stdSuggs.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Standards</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {stdSuggs.map((s) => {
+                          const isSelected = !!selectedSuggestions.find((x) => x.titre === s.titre);
+                          return (
+                            <button key={s.titre} type="button" onClick={() => toggleSuggestion(s)}
+                              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                                isSelected ? "border-primary bg-primary/10 text-primary font-medium" : "border-border bg-background hover:border-primary/50 hover:bg-primary/5"
+                              }`}>
+                              {isSelected && <Check className="h-3 w-3" />}{s.titre}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {selectedSuggestions.length > 0 && (
+                    <Button type="button" className="w-full" onClick={() => handleAddSuggestions(activeType)} disabled={addingSuggestions}>
+                      {addingSuggestions ? "Ajout…" : `Ajouter ${selectedSuggestions.length} item${selectedSuggestions.length > 1 ? "s" : ""}`}
+                    </Button>
+                  )}
+                  <button type="button" onClick={() => setShowForm((v) => !v)}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1">
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showForm ? "rotate-180" : ""}`} />
+                    {showForm ? "Masquer le formulaire" : "Ajouter manuellement"}
+                  </button>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Formulaire */}
+            {(editing || showForm) && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="titre">Tâche <span className="text-destructive">*</span></Label>
@@ -553,6 +546,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                 </Button>
               </div>
             </form>
+            )}
           </DialogContent>
         </Dialog>
       </CardContent>
