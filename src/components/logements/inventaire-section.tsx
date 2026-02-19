@@ -207,7 +207,7 @@ export function InventaireSection({ logementId }: Props) {
                 Ajouter
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-sm rounded-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editing ? "Modifier" : "Ajouter"} un équipement</DialogTitle>
                 <DialogDescription>
