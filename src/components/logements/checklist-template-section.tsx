@@ -340,7 +340,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="CHECKIN" onValueChange={() => setSelectedSuggestions([])}>
-          <TabsList className="mb-4 w-full">
+          <TabsList className="mb-4 w-full overflow-hidden">
             {MISSION_TYPES.map((type) => {
               const template = getTemplateForType(type);
               const count = template?.items.length ?? 0;
@@ -501,7 +501,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
         </Tabs>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-sm rounded-2xl">
             <DialogHeader>
               <DialogTitle>
                 {editing ? "Modifier l'item" : `Ajouter un item — ${MISSION_TYPE_LABELS[activeType]}`}
