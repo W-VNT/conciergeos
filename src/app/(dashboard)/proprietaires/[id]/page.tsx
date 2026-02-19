@@ -22,6 +22,21 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
 
   const { data: logements } = await supabase.from("logements").select("id, name, status").eq("owner_id", proprietaire.id);
 
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("proprietaire_id", proprietaire.id)
+    .maybeSingle();
+
+  const { data: pendingInvitation } = await supabase
+    .from("invitations")
+    .select("id")
+    .eq("proprietaire_id", proprietaire.id)
+    .eq("status", "PENDING")
+    .maybeSingle();
+
+  const invitationStatus = existingProfile ? "connected" : pendingInvitation ? "pending" : "none";
+
   return (
     <div className="space-y-6">
       <PageHeader title={proprietaire.full_name} showCreate={false}>
@@ -32,6 +47,7 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
                 proprietaireId={proprietaire.id}
                 email={proprietaire.email}
                 name={proprietaire.full_name}
+                status={invitationStatus}
               />
             )}
             <Button variant="outline" asChild>

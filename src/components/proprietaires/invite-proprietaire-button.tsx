@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -20,9 +20,10 @@ interface Props {
   proprietaireId: string;
   email: string;
   name: string;
+  status: "none" | "pending" | "connected";
 }
 
-export function InviteProprietaireButton({ proprietaireId, email, name }: Props) {
+export function InviteProprietaireButton({ proprietaireId, email, name, status }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -38,11 +39,29 @@ export function InviteProprietaireButton({ proprietaireId, email, name }: Props)
     });
   }
 
+  if (status === "connected") {
+    return (
+      <Button variant="outline" disabled>
+        <CheckCircle2 className="h-4 w-4 mr-2" />
+        Connecté
+      </Button>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <Button variant="outline" disabled>
+        <Clock className="h-4 w-4 mr-2" />
+        Invitation envoyée
+      </Button>
+    );
+  }
+
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
         <Mail className="h-4 w-4 mr-2" />
-        Inviter à se connecter
+        Inviter
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
