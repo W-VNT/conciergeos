@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, ClipboardList, Camera, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -339,45 +338,57 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5" />
-          Checklists missions
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5" />
+            Checklists missions
+          </CardTitle>
+          <Button size="sm" variant="outline" onClick={() => openAdd(activeType)}>
+            <Plus className="h-4 w-4 mr-2" /> Ajouter
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="CHECKIN" onValueChange={() => setSelectedSuggestions([])}>
-          <TabsList className="mb-4 w-full overflow-hidden">
-            {MISSION_TYPES.map((type) => {
-              const template = getTemplateForType(type);
-              const count = template?.items.length ?? 0;
-              return (
-                <TabsTrigger key={type} value={type} className="flex-1 gap-2 data-[state=active]:shadow-none">
-                  {MISSION_TYPE_LABELS[type]}
-                  {count > 0 && (
-                    <span className="text-xs font-medium bg-primary/15 text-primary rounded-full px-1.5 py-0.5 leading-none">{count}</span>
-                  )}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
+        {/* Segment control custom — pas de shadow overflow */}
+        <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5 mb-4">
           {MISSION_TYPES.map((type) => {
-            const template = getTemplateForType(type);
-            const items = template?.items ?? [];
-            const grouped = groupByCategory(items);
+            const count = getTemplateForType(type)?.items.length ?? 0;
             return (
-              <TabsContent key={type} value={type}>
-                {loading ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
-                ) : (
-                  <div className="space-y-5">
+              <button
+                key={type}
+                type="button"
+                onClick={() => { setActiveType(type); setSelectedSuggestions([]); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  activeType === type
+                    ? "bg-background text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {MISSION_TYPE_LABELS[type]}
+                {count > 0 && (
+                  <span className="text-xs font-medium bg-primary/15 text-primary rounded-full px-1.5 py-0.5 leading-none">{count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-                    {/* Items configurés */}
-                    {items.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-2">
-                        Aucun item configuré — sélectionnez des suggestions ou ajoutez manuellement.
-                      </p>
-                    ) : (
+        {MISSION_TYPES.map((type) => {
+          if (activeType !== type) return null;
+          const template = getTemplateForType(type);
+          const items = template?.items ?? [];
+          const grouped = groupByCategory(items);
+          return (
+            <div key={type}>
+              {loading ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
+              ) : (
+                <div className="space-y-4">
+                  {items.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      Aucun item configuré — cliquez sur "Ajouter" pour commencer.
+                    </p>
+                  ) : (
                       <div className="space-y-4">
                         {Object.entries(grouped).map(([cat, catItems]) => (
                           <div key={cat}>
@@ -422,15 +433,11 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                       </div>
                     )}
 
-                    <Button variant="outline" size="sm" onClick={() => openAdd(type)}>
-                      <Plus className="h-4 w-4 mr-2" /> Ajouter
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-            );
-          })}
-        </Tabs>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-sm rounded-2xl max-h-[90vh] overflow-y-auto">
