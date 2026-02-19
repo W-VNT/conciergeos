@@ -149,12 +149,12 @@ export default async function DashboardPage() {
                 <div className="space-y-3">
                   {openIncidents.map((i) => (
                     <Link key={i.id} href={`/incidents/${i.id}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
-                          <span className="text-sm truncate">{(i.description as string)?.slice(0, 50)}</span>
+                      <div className="flex items-start gap-2 min-w-0">
+                        <StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} className="flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-sm truncate">{(i.description as string)?.slice(0, 50)}</p>
+                          <p className="text-xs text-muted-foreground truncate">{(i.logement as { name: string } | null)?.name}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">{(i.logement as { name: string } | null)?.name}</p>
                       </div>
                       <StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} className="flex-shrink-0" />
                     </Link>
