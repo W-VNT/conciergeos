@@ -45,10 +45,10 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         showBack={true}
         backHref="/incidents"
       >
-        <Button variant="outline" asChild><Link href={`/incidents/${incident.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link></Button>
+        <Button variant="outline" asChild><Link href={`/incidents/${incident.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
         {admin && (
           <form action={async () => { "use server"; await deleteIncident(incident.id); }}>
-            <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 mr-2" /> Supprimer</Button>
+            <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
           </form>
         )}
       </PageHeader>

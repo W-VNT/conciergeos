@@ -25,9 +25,9 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
       <PageHeader title={prestataire.full_name} showCreate={false}>
         {admin && (
           <>
-            <Button variant="outline" asChild><Link href={`/prestataires/${prestataire.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link></Button>
+            <Button variant="outline" asChild><Link href={`/prestataires/${prestataire.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
             <form action={async () => { "use server"; await deletePrestataire(prestataire.id); }}>
-              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 mr-2" /> Supprimer</Button>
+              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
             </form>
           </>
         )}

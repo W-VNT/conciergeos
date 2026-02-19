@@ -109,7 +109,7 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
             <SignContratButton contratId={contrat.id} />
             <Button variant="outline" asChild>
               <Link href={`/contrats/${contrat.id}/edit`}>
-                <Pencil className="h-4 w-4 mr-2" /> Modifier
+                <Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span>
               </Link>
             </Button>
             <form
@@ -119,7 +119,7 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
               }}
             >
               <Button variant="destructive" size="sm" type="submit">
-                <Trash2 className="h-4 w-4 mr-2" /> Supprimer
+                <Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span>
               </Button>
             </form>
           </>

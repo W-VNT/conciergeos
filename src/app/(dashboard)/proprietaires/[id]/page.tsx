@@ -51,10 +51,10 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
               />
             )}
             <Button variant="outline" asChild>
-              <Link href={`/proprietaires/${proprietaire.id}/edit`}><Pencil className="h-4 w-4 mr-2" /> Modifier</Link>
+              <Link href={`/proprietaires/${proprietaire.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link>
             </Button>
             <form action={async () => { "use server"; await deleteProprietaire(proprietaire.id); }}>
-              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 mr-2" /> Supprimer</Button>
+              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
             </form>
           </>
         )}
