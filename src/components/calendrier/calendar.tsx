@@ -179,30 +179,25 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
       {/* Controls */}
       <Card className="p-4">
         <div className="space-y-3">
-          {/* Row 1: Navigation */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrev}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-lg font-semibold min-w-[200px] text-center">{getHeaderLabel()}</h2>
-              <Button variant="outline" size="icon" onClick={goToNext}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Aujourd&apos;hui
+          {/* Row 1: Navigation centrée */}
+          <div className="flex items-center justify-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPrev}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-base font-semibold text-center">{getHeaderLabel()}</h2>
+            <Button variant="outline" size="icon" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Row 2: View toggle + filter */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5">
+          {/* Row 2: View tabs + Aujourd'hui + filtre statut (desktop) */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5 flex-1">
               {views.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setView(key)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
                     view === key
                       ? "bg-background shadow-sm text-foreground"
                       : "text-muted-foreground hover:text-foreground"
@@ -212,17 +207,14 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 </button>
               ))}
             </div>
-
+            <Button variant="outline" size="sm" onClick={goToToday}>
+              Aujourd&apos;hui
+            </Button>
             {view !== "jour" && (
               <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-                <SelectTrigger className="!h-9 text-sm w-auto px-3">
+                <SelectTrigger className="!h-9 text-sm hidden sm:flex w-auto px-3">
                   <span className="truncate">
-                    <span className="sm:hidden">
-                      {filterStatus === "ALL" ? "Statut" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
-                    </span>
-                    <span className="hidden sm:inline">
-                      {filterStatus === "ALL" ? "Tous les statuts" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
-                    </span>
+                    {filterStatus === "ALL" ? "Statut" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
                   </span>
                 </SelectTrigger>
                 <SelectContent>
