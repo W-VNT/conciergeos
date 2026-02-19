@@ -196,7 +196,8 @@ export function InventaireSection({ logementId }: Props) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Inventaire & Équipements
+              <span className="sm:hidden">Inventaire</span>
+              <span className="hidden sm:inline">Inventaire & Équipements</span>
             </CardTitle>
             <CardDescription>{equipements.length} équipement{equipements.length > 1 ? "s" : ""}</CardDescription>
           </div>
