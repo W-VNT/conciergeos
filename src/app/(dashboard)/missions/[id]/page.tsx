@@ -126,12 +126,12 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         <Button variant="outline" size="sm" className="flex-1" asChild>
           <Link href={`/incidents/new?logement_id=${mission.logement_id}&mission_id=${mission.id}`}><AlertTriangle className="h-4 w-4 mr-1.5" />Incident</Link>
         </Button>
-        <Button variant="outline" size="sm" className="flex-1" asChild>
-          <Link href={`/missions/${mission.id}/edit`}><Pencil className="h-4 w-4 mr-1.5" />Modifier</Link>
+        <Button variant="outline" size="sm" className="px-3" asChild>
+          <Link href={`/missions/${mission.id}/edit`} title="Modifier"><Pencil className="h-4 w-4" /></Link>
         </Button>
         {admin && (
-          <form className="flex-1" action={async () => { "use server"; await deleteMission(mission.id); }}>
-            <Button variant="destructive" size="sm" className="w-full" type="submit"><Trash2 className="h-4 w-4 mr-1.5" />Supprimer</Button>
+          <form action={async () => { "use server"; await deleteMission(mission.id); }}>
+            <Button variant="destructive" size="sm" className="px-3" type="submit" title="Supprimer"><Trash2 className="h-4 w-4" /></Button>
           </form>
         )}
       </div>
