@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MISSION_TYPE_LABELS } from "@/types/database";
+import { StatusBadge } from "@/components/shared/status-badge";
 
 interface Mission {
   id: string;
@@ -82,12 +83,11 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
                   href={`/missions/${mission.id}`}
                   className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex-shrink-0 w-1 h-full bg-blue-500 rounded-full mt-1"></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {formatTime(mission.scheduled_at)} ·{" "}
-                      {MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
-                    </p>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
+                      <span className="text-xs text-gray-500">{formatTime(mission.scheduled_at)}</span>
+                    </div>
                     <p className="text-xs text-gray-500 truncate">
                       {mission.logement?.name || "Sans logement"}
                     </p>
@@ -115,12 +115,11 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
                   href={`/missions/${mission.id}`}
                   className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex-shrink-0 w-1 h-full bg-gray-400 rounded-full mt-1"></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {formatTime(mission.scheduled_at)} ·{" "}
-                      {MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
-                    </p>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
+                      <span className="text-xs text-gray-500">{formatTime(mission.scheduled_at)}</span>
+                    </div>
                     <p className="text-xs text-gray-500 truncate">
                       {mission.logement?.name || "Sans logement"}
                     </p>
