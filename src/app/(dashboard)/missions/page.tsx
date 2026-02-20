@@ -34,14 +34,23 @@ export default async function MissionsPage({
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.type) query = query.eq("type", searchParams.type);
 
-  const { data, count } = await query;
+  const { data, count, error } = await query;
+
+  if (error) {
+    console.error("Error fetching missions:", error);
+  }
+
   const rawMissions = data || [];
 
   // Normalize joined data (Supabase can return arrays instead of objects for joins)
   const missions = rawMissions.map(mission => ({
     ...mission,
-    logement: Array.isArray(mission.logement) ? mission.logement[0] : mission.logement,
-    assignee: Array.isArray(mission.assignee) ? mission.assignee[0] : mission.assignee,
+    logement: Array.isArray(mission.logement)
+      ? (mission.logement[0] || null)
+      : mission.logement,
+    assignee: Array.isArray(mission.assignee)
+      ? (mission.assignee[0] || null)
+      : mission.assignee,
   }));
 
   const statusOptions = Object.entries(MISSION_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
@@ -64,10 +73,15 @@ export default async function MissionsPage({
           />
         </div>
       ) : (
-        <MissionsTableWithSelection
-          missions={missions}
-          organisationId={profile.organisation_id}
-        />
+        <div className="border rounded-lg p-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            {missions.length} mission(s) trouvée(s)
+          </p>
+          <MissionsTableWithSelection
+            missions={missions}
+            organisationId={profile.organisation_id}
+          />
+        </div>
       )}
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
