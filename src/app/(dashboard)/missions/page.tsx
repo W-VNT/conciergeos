@@ -6,8 +6,10 @@ import { StatusFilter } from "@/components/shared/status-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
-import { MissionsTableWithSelection } from "@/components/missions/missions-table-with-selection";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { ClipboardList } from "lucide-react";
+import Link from "next/link";
 
 const PAGE_SIZE = 20;
 
@@ -26,7 +28,7 @@ export default async function MissionsPage({
 
   let query = supabase
     .from("missions")
-    .select("*, logement:logements(name, code_postal), assignee:profiles(full_name)", { count: "exact" })
+    .select("*, logement:logements(name), assignee:profiles(full_name)", { count: "exact" })
     .order("scheduled_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
@@ -34,24 +36,8 @@ export default async function MissionsPage({
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.type) query = query.eq("type", searchParams.type);
 
-  const { data, count, error } = await query;
-
-  if (error) {
-    console.error("Error fetching missions:", error);
-  }
-
-  const rawMissions = data || [];
-
-  // Normalize joined data (Supabase can return arrays instead of objects for joins)
-  const missions = rawMissions.map(mission => ({
-    ...mission,
-    logement: Array.isArray(mission.logement)
-      ? (mission.logement[0] || null)
-      : mission.logement,
-    assignee: Array.isArray(mission.assignee)
-      ? (mission.assignee[0] || null)
-      : mission.assignee,
-  }));
+  const { data, count } = await query;
+  const missions = data || [];
 
   const statusOptions = Object.entries(MISSION_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
   const typeOptions = Object.entries(MISSION_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
@@ -73,14 +59,44 @@ export default async function MissionsPage({
           />
         </div>
       ) : (
-        <div className="border rounded-lg p-4">
-          <p className="text-sm text-muted-foreground mb-4">
-            {missions.length} mission(s) trouvée(s)
-          </p>
-          <MissionsTableWithSelection
-            missions={missions}
-            organisationId={profile.organisation_id}
-          />
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Logement</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Assigné à</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {missions.map((mission) => {
+                const logement = Array.isArray(mission.logement) ? mission.logement[0] : mission.logement;
+                const assignee = Array.isArray(mission.assignee) ? mission.assignee[0] : mission.assignee;
+
+                return (
+                  <TableRow key={mission.id}>
+                    <TableCell>
+                      <Badge variant="outline">{MISSION_TYPE_LABELS[mission.type]}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/missions/${mission.id}`} className="hover:underline">
+                        {logement?.name || "—"}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(mission.scheduled_at).toLocaleDateString("fr-FR")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge>{MISSION_STATUS_LABELS[mission.status]}</Badge>
+                    </TableCell>
+                    <TableCell>{assignee?.full_name || "—"}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
