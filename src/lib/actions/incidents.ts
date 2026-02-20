@@ -26,12 +26,12 @@ export async function createIncident(data: IncidentFormData, preGeneratedId?: st
       expected_resolution_date: parsed.expected_resolution_date || null,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/incidents");
     return successResponse("Incident créé avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création de l'incident");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création de l'incident") as ActionResponse<{ id: string }>;
   }
 }
 
@@ -62,13 +62,13 @@ export async function updateIncident(id: string, data: IncidentFormData): Promis
       .update(updateData)
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/incidents");
     revalidatePath(`/incidents/${id}`);
     return successResponse("Incident mis à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de l'incident");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de l'incident") as ActionResponse<{ id: string }>;
   }
 }
 

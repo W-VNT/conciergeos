@@ -9,7 +9,7 @@ import { type ActionResponse, successResponse, errorResponse } from "@/lib/actio
 export async function createContrat(data: ContratFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = contratSchema.parse(data);
     const supabase = createClient();
@@ -26,19 +26,19 @@ export async function createContrat(data: ContratFormData): Promise<ActionRespon
       conditions: parsed.conditions || null,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/contrats");
     return successResponse("Contrat créé avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création du contrat");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création du contrat") as ActionResponse<{ id: string }>;
   }
 }
 
 export async function updateContrat(id: string, data: ContratFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = contratSchema.parse(data);
     const supabase = createClient();
@@ -57,13 +57,13 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
       })
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/contrats");
     revalidatePath(`/contrats/${id}`);
     return successResponse("Contrat mis à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du contrat");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du contrat") as ActionResponse<{ id: string }>;
   }
 }
 

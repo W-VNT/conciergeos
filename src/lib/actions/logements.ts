@@ -9,7 +9,7 @@ import { type ActionResponse, successResponse, errorResponse } from "@/lib/actio
 export async function createLogement(data: LogementFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = logementSchema.parse(data);
     const supabase = createClient();
@@ -36,19 +36,19 @@ export async function createLogement(data: LogementFormData): Promise<ActionResp
       status: parsed.status,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/logements");
     return successResponse("Logement créé avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création du logement");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création du logement") as ActionResponse<{ id: string }>;
   }
 }
 
 export async function updateLogement(id: string, data: LogementFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = logementSchema.parse(data);
     const supabase = createClient();
@@ -77,13 +77,13 @@ export async function updateLogement(id: string, data: LogementFormData): Promis
       })
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/logements");
     revalidatePath(`/logements/${id}`);
     return successResponse("Logement mis à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du logement");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du logement") as ActionResponse<{ id: string }>;
   }
 }
 

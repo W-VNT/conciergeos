@@ -4,7 +4,7 @@ import { DetailCardSkeleton } from "@/components/skeletons/detail-card-skeleton"
 export default function PrestataireDetailLoading() {
   return (
     <div className="space-y-6">
-      <PageHeaderSkeleton actionCount={2} />
+      <PageHeaderSkeleton showButtons={2} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <DetailCardSkeleton />

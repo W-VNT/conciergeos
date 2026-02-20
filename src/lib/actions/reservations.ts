@@ -31,7 +31,7 @@ async function checkOverlap(
 export async function createReservation(data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = reservationSchema.parse(data);
     const supabase = createClient();
@@ -42,7 +42,7 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
       parsed.check_in_date,
       parsed.check_out_date
     );
-    if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.");
+    if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.") as ActionResponse<{ id: string }>;
 
     const { data: reservation, error } = await supabase
       .from("reservations")
@@ -66,7 +66,7 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
       .select()
       .single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     if (reservation && parsed.status === "CONFIRMEE") {
       await createMissionsForReservation(
@@ -90,14 +90,14 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
     revalidatePath("/reservations");
     return successResponse("Réservation créée avec succès", { id: reservation.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création de la réservation");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création de la réservation") as ActionResponse<{ id: string }>;
   }
 }
 
 export async function updateReservation(id: string, data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = reservationSchema.parse(data);
     const supabase = createClient();
@@ -116,7 +116,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         parsed.check_out_date,
         id
       );
-      if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.");
+      if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.") as ActionResponse<{ id: string }>;
     }
 
     const { error } = await supabase
@@ -139,7 +139,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
       })
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     // Status changed to CONFIRMEE → create missions + revenu
     if (currentReservation?.status !== "CONFIRMEE" && parsed.status === "CONFIRMEE") {
@@ -170,7 +170,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
     revalidatePath(`/reservations/${id}`);
     return successResponse("Réservation mise à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la réservation");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la réservation") as ActionResponse<{ id: string }>;
   }
 }
 

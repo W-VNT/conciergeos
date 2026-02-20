@@ -27,12 +27,12 @@ export async function createMission(data: MissionFormData): Promise<ActionRespon
       notes: parsed.notes || null,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/missions");
     return successResponse("Mission créée avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création de la mission");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création de la mission") as ActionResponse<{ id: string }>;
   }
 }
 
@@ -65,13 +65,13 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
       .update(updateData)
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/missions");
     revalidatePath(`/missions/${id}`);
     return successResponse("Mission mise à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la mission");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la mission") as ActionResponse<{ id: string }>;
   }
 }
 

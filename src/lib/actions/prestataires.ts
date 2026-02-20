@@ -9,7 +9,7 @@ import { type ActionResponse, successResponse, errorResponse } from "@/lib/actio
 export async function createPrestataire(data: PrestataireFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = prestataireSchema.parse(data);
     const supabase = createClient();
@@ -30,19 +30,19 @@ export async function createPrestataire(data: PrestataireFormData): Promise<Acti
       notes: parsed.notes || null,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/prestataires");
     return successResponse("Prestataire créé avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création du prestataire");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création du prestataire") as ActionResponse<{ id: string }>;
   }
 }
 
 export async function updatePrestataire(id: string, data: PrestataireFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = prestataireSchema.parse(data);
     const supabase = createClient();
@@ -65,13 +65,13 @@ export async function updatePrestataire(id: string, data: PrestataireFormData): 
       })
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/prestataires");
     revalidatePath(`/prestataires/${id}`);
     return successResponse("Prestataire mis à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du prestataire");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du prestataire") as ActionResponse<{ id: string }>;
   }
 }
 

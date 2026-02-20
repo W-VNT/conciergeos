@@ -10,7 +10,7 @@ import { toTitleCase } from "@/lib/utils";
 export async function createProprietaire(data: ProprietaireFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = proprietaireSchema.parse(data);
     const supabase = createClient();
@@ -28,19 +28,19 @@ export async function createProprietaire(data: ProprietaireFormData): Promise<Ac
       notes: parsed.notes || null,
     }).select("id").single();
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/proprietaires");
     return successResponse("Propriétaire créé avec succès", { id: created.id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la création du propriétaire");
+    return errorResponse((err as Error).message ?? "Erreur lors de la création du propriétaire") as ActionResponse<{ id: string }>;
   }
 }
 
 export async function updateProprietaire(id: string, data: ProprietaireFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = proprietaireSchema.parse(data);
     const supabase = createClient();
@@ -60,13 +60,13 @@ export async function updateProprietaire(id: string, data: ProprietaireFormData)
       })
       .eq("id", id);
 
-    if (error) return errorResponse(error.message);
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
     revalidatePath("/proprietaires");
     revalidatePath(`/proprietaires/${id}`);
     return successResponse("Propriétaire mis à jour avec succès", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du propriétaire");
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du propriétaire") as ActionResponse<{ id: string }>;
   }
 }
 
