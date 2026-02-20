@@ -2,9 +2,21 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { missionSchema, type MissionFormData } from "@/lib/schemas";
+import {
+  missionSchema,
+  type MissionFormData,
+  bulkAssignmentSchema,
+  autoAssignmentSchema,
+  operatorCapabilitiesSchema
+} from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
+import type {
+  MissionType,
+  Profile,
+  AutoAssignmentResult,
+  OperatorCapabilities
+} from "@/types/database";
 
 export async function createMission(data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
@@ -105,5 +117,228 @@ export async function deleteMission(id: string): Promise<ActionResponse> {
     return successResponse("Mission supprimée avec succès");
   } catch (err) {
     return errorResponse((err as Error).message ?? "Erreur lors de la suppression de la mission");
+  }
+}
+
+// ============================================================
+// Bulk Assignment & Auto-Assignment Actions
+// ============================================================
+
+/**
+ * Assign multiple missions to a single operator
+ */
+export async function bulkAssignMissions(data: {
+  mission_ids: string[];
+  operator_id: string;
+  organisation_id: string;
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    await requireProfile();
+    const validated = bulkAssignmentSchema.parse(data);
+    const supabase = createClient();
+
+    // Verify operator exists and belongs to organisation
+    const { data: operator, error: opError } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("id", validated.operator_id)
+      .eq("organisation_id", validated.organisation_id)
+      .eq("role", "OPERATEUR")
+      .single();
+
+    if (opError || !operator) {
+      return errorResponse("Opérateur non trouvé") as ActionResponse<{ count: number }>;
+    }
+
+    // Bulk update missions
+    const { error: updateError } = await supabase
+      .from("missions")
+      .update({
+        assigned_to: validated.operator_id,
+        status: "A_FAIRE",
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", validated.mission_ids)
+      .eq("organisation_id", validated.organisation_id);
+
+    if (updateError) {
+      return errorResponse(updateError.message) as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/missions");
+    return successResponse(
+      `${validated.mission_ids.length} mission(s) assignée(s) à ${operator.full_name}`,
+      { count: validated.mission_ids.length }
+    );
+  } catch (err) {
+    return errorResponse(
+      (err as Error).message ?? "Erreur lors de l'assignation en masse"
+    ) as ActionResponse<{ count: number }>;
+  }
+}
+
+/**
+ * Get operators matching specific mission type and zone
+ */
+export async function getMatchingOperators(params: {
+  mission_type: MissionType;
+  zone?: string;
+  organisation_id: string;
+}): Promise<Profile[]> {
+  try {
+    const supabase = createClient();
+
+    let query = supabase
+      .from("profiles")
+      .select("id, full_name, email, operator_capabilities")
+      .eq("role", "OPERATEUR")
+      .eq("organisation_id", params.organisation_id);
+
+    // Filter by mission type using JSONB contains
+    if (params.mission_type) {
+      query = query.contains("operator_capabilities", {
+        mission_types: [params.mission_type]
+      });
+    }
+
+    // Filter by zone if specified
+    if (params.zone) {
+      query = query.contains("operator_capabilities", {
+        zones: [params.zone]
+      });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching matching operators:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Error in getMatchingOperators:", err);
+    return [];
+  }
+}
+
+/**
+ * Auto-assign missions based on operator capabilities
+ */
+export async function autoAssignMissions(data: {
+  mission_ids: string[];
+  organisation_id: string;
+}): Promise<AutoAssignmentResult> {
+  try {
+    await requireProfile();
+    const validated = autoAssignmentSchema.parse(data);
+    const supabase = createClient();
+
+    const result: AutoAssignmentResult = {
+      assigned: [],
+      unassigned: [],
+    };
+
+    // Fetch all missions to assign
+    const { data: missions, error: missionsError } = await supabase
+      .from("missions")
+      .select("id, type, logement:logements(code_postal)")
+      .in("id", validated.mission_ids)
+      .eq("organisation_id", validated.organisation_id);
+
+    if (missionsError || !missions) {
+      console.error("Error fetching missions:", missionsError);
+      return result;
+    }
+
+    // For each mission, find a compatible operator
+    for (const mission of missions) {
+      const zone = mission.logement?.code_postal?.substring(0, 5);
+
+      // Get compatible operators
+      const compatibleOperators = await getMatchingOperators({
+        mission_type: mission.type,
+        zone: zone,
+        organisation_id: validated.organisation_id,
+      });
+
+      if (compatibleOperators.length === 0) {
+        result.unassigned.push({
+          mission_id: mission.id,
+          reason: zone
+            ? `Aucun opérateur disponible pour ${mission.type} dans la zone ${zone}`
+            : `Aucun opérateur disponible pour ${mission.type}`,
+        });
+        continue;
+      }
+
+      // Simple algorithm: take the first available operator
+      // (Future: implement load balancing)
+      const selectedOperator = compatibleOperators[0];
+
+      // Assign the mission
+      const { error: assignError } = await supabase
+        .from("missions")
+        .update({
+          assigned_to: selectedOperator.id,
+          status: "A_FAIRE",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", mission.id);
+
+      if (assignError) {
+        result.unassigned.push({
+          mission_id: mission.id,
+          reason: "Erreur technique lors de l'assignation",
+        });
+      } else {
+        result.assigned.push({
+          mission_id: mission.id,
+          operator_id: selectedOperator.id,
+          operator_name: selectedOperator.full_name,
+        });
+      }
+    }
+
+    revalidatePath("/missions");
+    return result;
+  } catch (err) {
+    console.error("Error in autoAssignMissions:", err);
+    return {
+      assigned: [],
+      unassigned: [],
+    };
+  }
+}
+
+/**
+ * Update operator capabilities for auto-assignment
+ */
+export async function updateOperatorCapabilities(
+  operatorId: string,
+  capabilities: OperatorCapabilities
+): Promise<ActionResponse> {
+  try {
+    await requireProfile();
+    const validated = operatorCapabilitiesSchema.parse(capabilities);
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ operator_capabilities: validated })
+      .eq("id", operatorId)
+      .eq("role", "OPERATEUR");
+
+    if (error) {
+      return errorResponse(error.message);
+    }
+
+    revalidatePath("/team");
+    revalidatePath(`/team/${operatorId}`);
+    return successResponse("Compétences mises à jour avec succès");
+  } catch (err) {
+    return errorResponse(
+      (err as Error).message ?? "Erreur lors de la mise à jour des compétences"
+    );
   }
 }

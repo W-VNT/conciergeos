@@ -120,3 +120,21 @@ export const reservationSchema = z.object({
   path: ['check_out_date'],
 });
 export type ReservationFormData = z.infer<typeof reservationSchema>;
+
+// Operator Capabilities (for auto-assignment)
+export const operatorCapabilitiesSchema = z.object({
+  mission_types: z.array(z.enum(['CHECKIN', 'CHECKOUT', 'MENAGE', 'INTERVENTION', 'URGENCE'])),
+  zones: z.array(z.string()),
+});
+
+// Bulk Assignment
+export const bulkAssignmentSchema = z.object({
+  mission_ids: z.array(z.string().uuid()).min(1, 'Au moins une mission doit être sélectionnée'),
+  operator_id: z.string().uuid('Opérateur invalide'),
+  organisation_id: z.string().uuid('Organisation invalide'),
+});
+
+export const autoAssignmentSchema = z.object({
+  mission_ids: z.array(z.string().uuid()).min(1, 'Au moins une mission doit être sélectionnée'),
+  organisation_id: z.string().uuid('Organisation invalide'),
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Profile, USER_ROLE_LABELS } from "@/types/database";
+import { Profile, USER_ROLE_LABELS, type OperatorCapabilities } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +39,8 @@ import {
   cancelInvitation,
   removeMember,
 } from "@/lib/actions/team";
-import { UserPlus, Trash2, X, Copy } from "lucide-react";
+import { UserPlus, Trash2, X, Copy, Settings } from "lucide-react";
+import { OperatorCapabilitiesForm } from "@/components/team/operator-capabilities-form";
 
 interface TeamMember {
   id: string;
@@ -48,6 +49,7 @@ interface TeamMember {
   avatar_url: string | null;
   created_at: string;
   email: string | null;
+  operator_capabilities?: OperatorCapabilities | null;
 }
 
 interface Invitation {
@@ -73,6 +75,8 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "OPERATEUR">("OPERATEUR");
   const [inviting, setInviting] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<TeamMember | null>(null);
+  const [capabilitiesDialogOpen, setCapabilitiesDialogOpen] = useState(false);
+  const [selectedOperator, setSelectedOperator] = useState<TeamMember | null>(null);
 
   async function loadData() {
     setLoading(true);
@@ -271,16 +275,32 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
                 {USER_ROLE_LABELS[member.role]}
               </Badge>
             </div>
-            {member.id !== profile.id && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMemberToRemove(member)}
-                className="text-destructive hover:text-destructive flex-shrink-0"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex gap-2 flex-shrink-0">
+              {member.role === "OPERATEUR" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedOperator(member);
+                    setCapabilitiesDialogOpen(true);
+                  }}
+                  title="Gérer les compétences"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              )}
+              {member.id !== profile.id && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMemberToRemove(member)}
+                  className="text-destructive hover:text-destructive"
+                  title="Retirer du membre"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -347,6 +367,30 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Operator capabilities dialog */}
+      <Dialog
+        open={capabilitiesDialogOpen}
+        onOpenChange={(open) => {
+          setCapabilitiesDialogOpen(open);
+          if (!open) setSelectedOperator(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Compétences de {selectedOperator?.full_name}</DialogTitle>
+            <DialogDescription>
+              Définir les types de missions et zones géographiques pour l'auto-assignation
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOperator && (
+            <OperatorCapabilitiesForm
+              operatorId={selectedOperator.id}
+              initialCapabilities={selectedOperator.operator_capabilities || undefined}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

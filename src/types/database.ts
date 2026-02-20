@@ -57,6 +57,7 @@ export interface Profile {
   avatar_url: string | null;
   email?: string | null; // From auth.users, joined in queries
   proprietaire_id?: string | null;
+  operator_capabilities?: OperatorCapabilities | null;
   created_at: string;
 }
 
@@ -349,6 +350,31 @@ export interface MissionChecklistItem {
   created_at: string;
   // Joined
   item?: ChecklistTemplateItem;
+}
+
+// Operator Capabilities for Auto-Assignment
+export interface OperatorCapabilities {
+  mission_types: MissionType[];
+  zones: string[];
+}
+
+// Bulk Assignment Types
+export interface BulkAssignmentRequest {
+  mission_ids: string[];
+  operator_id: string;
+  organisation_id: string;
+}
+
+export interface AutoAssignmentResult {
+  assigned: Array<{
+    mission_id: string;
+    operator_id: string;
+    operator_name: string;
+  }>;
+  unassigned: Array<{
+    mission_id: string;
+    reason: string;
+  }>;
 }
 
 // Enum label maps for UI display

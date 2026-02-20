@@ -35,7 +35,7 @@ export async function getTeamMembers() {
     // Get all members of the organisation
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("id, full_name, role, avatar_url, created_at, email")
+      .select("id, full_name, role, avatar_url, created_at, email, operator_capabilities")
       .eq("organisation_id", currentProfile.organisation_id)
       .order("created_at", { ascending: false });
 
