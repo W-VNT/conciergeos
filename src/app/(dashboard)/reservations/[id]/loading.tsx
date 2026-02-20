@@ -1,15 +1,11 @@
-import { PageHeaderSkeleton } from "@/components/skeletons/page-header-skeleton";
-import { DetailCardSkeleton } from "@/components/skeletons/detail-card-skeleton";
+import { Loader2 } from "lucide-react";
 
 export default function ReservationDetailLoading() {
   return (
-    <div className="space-y-6">
-      <PageHeaderSkeleton showButtons={2} />
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <DetailCardSkeleton />
-        <DetailCardSkeleton />
-        <DetailCardSkeleton />
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       </div>
     </div>
   );
