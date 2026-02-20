@@ -117,6 +117,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         showCreate={false}
         showBack={true}
         backHref="/missions"
+        entityName={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
       />
 
       <div className="flex gap-2 -mt-2 mb-2">

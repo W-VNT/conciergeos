@@ -44,6 +44,7 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         showCreate={false}
         showBack={true}
         backHref="/incidents"
+        entityName={incident.description?.slice(0, 50)}
       >
         <Button variant="outline" asChild><Link href={`/incidents/${incident.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
         {admin && (

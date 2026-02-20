@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { BackButton } from "./back-button";
+import { Breadcrumbs } from "./breadcrumbs";
 
 interface PageHeaderProps {
   title: string;
@@ -12,6 +13,8 @@ interface PageHeaderProps {
   showBack?: boolean;
   backHref?: string;
   children?: React.ReactNode;
+  showBreadcrumbs?: boolean;
+  entityName?: string;
 }
 
 export function PageHeader({
@@ -23,14 +26,25 @@ export function PageHeader({
   showBack = false,
   backHref,
   children,
+  showBreadcrumbs = true,
+  entityName,
 }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-4 mb-6">
+      {/* Breadcrumbs - Desktop seulement */}
+      {showBreadcrumbs && (
+        <div className="hidden md:block">
+          <Breadcrumbs entityName={entityName} />
+        </div>
+      )}
+
+      {/* BackButton - Mobile seulement */}
       {showBack && (
-        <div>
+        <div className="md:hidden">
           <BackButton href={backHref} />
         </div>
       )}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>

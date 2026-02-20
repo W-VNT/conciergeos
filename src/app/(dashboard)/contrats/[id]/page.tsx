@@ -102,6 +102,9 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
       <PageHeader
         title={`Contrat — ${prop?.full_name ?? "Sans propriétaire"}`}
         showCreate={false}
+        showBack={true}
+        backHref="/contrats"
+        entityName={`Contrat ${CONTRACT_TYPE_LABELS[contrat.type as keyof typeof CONTRACT_TYPE_LABELS]}`}
       >
         <ContratPDFButton data={pdfData} />
         {admin && contrat.status !== "SIGNE" && (

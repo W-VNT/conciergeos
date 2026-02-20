@@ -22,7 +22,13 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
 
   return (
     <div className="space-y-6">
-      <PageHeader title={prestataire.full_name} showCreate={false}>
+      <PageHeader
+        title={prestataire.full_name}
+        showCreate={false}
+        showBack={true}
+        backHref="/prestataires"
+        entityName={prestataire.full_name}
+      >
         {admin && (
           <>
             <Button variant="outline" asChild><Link href={`/prestataires/${prestataire.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>

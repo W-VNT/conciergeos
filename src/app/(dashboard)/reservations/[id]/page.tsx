@@ -48,7 +48,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Réservation - ${reservation.guest_name}`} showCreate={false}>
+      <PageHeader
+        title={`Réservation - ${reservation.guest_name}`}
+        showCreate={false}
+        showBack={true}
+        backHref="/reservations"
+        entityName={reservation.guest_name}
+      >
         {admin && (
           <>
             {reservation.status === "CONFIRMEE" && (

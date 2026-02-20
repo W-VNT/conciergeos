@@ -39,7 +39,13 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
 
   return (
     <div className="space-y-6">
-      <PageHeader title={proprietaire.full_name} showCreate={false}>
+      <PageHeader
+        title={proprietaire.full_name}
+        showCreate={false}
+        showBack={true}
+        backHref="/proprietaires"
+        entityName={proprietaire.full_name}
+      >
         {admin && (
           <>
             {proprietaire.email && (

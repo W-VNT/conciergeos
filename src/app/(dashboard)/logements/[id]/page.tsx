@@ -40,6 +40,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         showCreate={false}
         showBack={true}
         backHref="/logements"
+        entityName={logement.name}
       >
         <SyncIcalButton
           logementId={logement.id}
