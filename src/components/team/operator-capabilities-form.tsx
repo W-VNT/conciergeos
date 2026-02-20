@@ -52,10 +52,16 @@ export function OperatorCapabilitiesForm({
   const handleSave = async () => {
     setLoading(true);
 
-    const result = await updateOperatorCapabilities(operatorId, {
+    const capabilitiesToSave = {
       mission_types: missionTypes,
       zones,
-    });
+    };
+
+    console.log("Saving capabilities:", capabilitiesToSave);
+
+    const result = await updateOperatorCapabilities(operatorId, capabilitiesToSave);
+
+    console.log("Save result:", result);
 
     setLoading(false);
 
