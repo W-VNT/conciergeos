@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { missionSchema, type MissionFormData } from "@/lib/schemas";
 import { createMission, updateMission } from "@/lib/actions/missions";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface Props {
 
 export function MissionForm({ mission, logements, profiles, isAdmin: admin, currentUserId }: Props) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const isEdit = !!mission;
 
   const form = useForm<MissionFormData>({
@@ -36,7 +38,12 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
       type: mission?.type ?? "CHECKIN",
       status: mission?.status ?? "A_FAIRE",
       priority: mission?.priority ?? "NORMALE",
-      scheduled_at: mission?.scheduled_at ? new Date(mission.scheduled_at).toISOString().slice(0, 16) : "",
+      scheduled_date: mission?.scheduled_at
+        ? new Date(mission.scheduled_at).toISOString().split("T")[0]
+        : "",
+      scheduled_time: mission?.scheduled_at
+        ? new Date(mission.scheduled_at).toISOString().split("T")[1].slice(0, 5)
+        : "09:00",
       time_spent_minutes: mission?.time_spent_minutes ?? undefined,
       notes: mission?.notes ?? "",
     },
@@ -45,8 +52,18 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
   async function onSubmit(data: MissionFormData) {
     setLoading(true);
     try {
-      if (isEdit) { await updateMission(mission!.id, data); }
-      else { await createMission(data); }
+      const result = isEdit
+        ? await updateMission(mission!.id, data)
+        : await createMission(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
+      }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/missions/${mission!.id}` : "/missions");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);
@@ -98,9 +115,12 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="scheduled_at">Date planifiée *</Label>
-              <Input id="scheduled_at" type="datetime-local" {...form.register("scheduled_at")} />
-              {form.formState.errors.scheduled_at && <p className="text-sm text-destructive">{form.formState.errors.scheduled_at.message}</p>}
+              <Label>Date et heure planifiées *</Label>
+              <div className="flex gap-2">
+                <Input id="scheduled_date" type="date" className="flex-1" {...form.register("scheduled_date")} />
+                <Input id="scheduled_time" type="time" className="w-28" {...form.register("scheduled_time")} />
+              </div>
+              {form.formState.errors.scheduled_date && <p className="text-sm text-destructive">{form.formState.errors.scheduled_date.message}</p>}
             </div>
             {isEdit && (
               <div className="space-y-2">

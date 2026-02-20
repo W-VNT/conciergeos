@@ -45,7 +45,8 @@ export const missionSchema = z.object({
   type: z.enum(['CHECKIN', 'CHECKOUT', 'MENAGE', 'INTERVENTION', 'URGENCE']),
   status: z.enum(['A_FAIRE', 'EN_COURS', 'TERMINE', 'ANNULE']).default('A_FAIRE'),
   priority: z.enum(['NORMALE', 'HAUTE', 'CRITIQUE']).default('NORMALE'),
-  scheduled_at: z.string().min(1, 'Date requise'),
+  scheduled_date: z.string().min(1, 'Date requise'),
+  scheduled_time: z.string().default('09:00'),
   time_spent_minutes: z.coerce.number().optional(),
   notes: z.string().default(''),
 });

@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { logementSchema, type LogementFormData } from "@/lib/schemas";
 import { createLogement, updateLogement } from "@/lib/actions/logements";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
   const [loading, setLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [proprioOpen, setPropioOpen] = useState(false);
+  const router = useRouter();
   const isEdit = !!logement;
 
   const form = useForm<LogementFormData>({
@@ -59,11 +61,18 @@ export function LogementForm({ logement, proprietaires }: Props) {
   async function onSubmit(data: LogementFormData) {
     setLoading(true);
     try {
-      if (isEdit) {
-        await updateLogement(logement!.id, data);
-      } else {
-        await createLogement(data);
+      const result = isEdit
+        ? await updateLogement(logement!.id, data)
+        : await createLogement(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
       }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/logements/${logement!.id}` : "/logements");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);
