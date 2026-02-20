@@ -3,12 +3,9 @@ import { requireProfile } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, MISSION_PRIORITY_LABELS } from "@/types/database";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
-import Link from "next/link";
+import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
+import { MissionsTableWithSelection } from "@/components/missions/missions-table-with-selection";
 
 const PAGE_SIZE = 20;
 
@@ -49,65 +46,10 @@ export default async function MissionsPage({
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
       </div>
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Logement</TableHead>
-              <TableHead>Assigné</TableHead>
-              <TableHead>Planifié</TableHead>
-              <TableHead>Priorité</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {missions.map((m) => {
-              const logement = Array.isArray(m.logement) ? m.logement[0] : m.logement;
-              const assignee = Array.isArray(m.assignee) ? m.assignee[0] : m.assignee;
-
-              return (
-                <TableRow key={m.id}>
-                  <TableCell>
-                    <Link href={`/missions/${m.id}`} className="hover:underline">
-                      <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type]} />
-                    </Link>
-                  </TableCell>
-                  <TableCell>{logement?.name ?? "—"}</TableCell>
-                  <TableCell>{assignee?.full_name ?? "—"}</TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge value={m.priority} label={MISSION_PRIORITY_LABELS[m.priority]} />
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
-                  </TableCell>
-                  <TableCell>
-                    {m.status !== "TERMINE" && m.status !== "ANNULE" && (
-                      <CompleteMissionButton missionId={m.id} />
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {missions.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Aucune mission trouvée
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <MissionsTableWithSelection
+        missions={missions}
+        organisationId={profile.organisation_id}
+      />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );
