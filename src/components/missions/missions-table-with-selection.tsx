@@ -84,7 +84,8 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                   <TableCell className="text-sm">
                     {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {
                       day: "2-digit",
-                      month: "short",
+                      month: "short"
+                    })} à {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", {
                       hour: "2-digit",
                       minute: "2-digit"
                     })}
