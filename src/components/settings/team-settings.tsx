@@ -86,6 +86,11 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
     ]);
 
     if (membersResult.members) {
+      console.log("Team members loaded:", membersResult.members.map(m => ({
+        name: m.full_name,
+        role: m.role,
+        capabilities: m.operator_capabilities
+      })));
       setMembers(membersResult.members);
     }
 
@@ -277,14 +282,20 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
                 </Badge>
                 {member.role === "OPERATEUR" && member.operator_capabilities && (
                   <>
-                    {member.operator_capabilities.mission_types?.length > 0 && (
+                    {(member.operator_capabilities.mission_types?.length ?? 0) > 0 && (
                       <Badge variant="outline" className="flex-shrink-0 text-xs">
                         {member.operator_capabilities.mission_types.length} type{member.operator_capabilities.mission_types.length > 1 ? "s" : ""}
                       </Badge>
                     )}
-                    {member.operator_capabilities.zones?.length > 0 && (
+                    {(member.operator_capabilities.zones?.length ?? 0) > 0 && (
                       <Badge variant="outline" className="flex-shrink-0 text-xs">
                         {member.operator_capabilities.zones.length} zone{member.operator_capabilities.zones.length > 1 ? "s" : ""}
+                      </Badge>
+                    )}
+                    {(member.operator_capabilities.mission_types?.length ?? 0) === 0 &&
+                     (member.operator_capabilities.zones?.length ?? 0) === 0 && (
+                      <Badge variant="outline" className="flex-shrink-0 text-xs text-muted-foreground">
+                        Non configuré
                       </Badge>
                     )}
                   </>
