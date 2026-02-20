@@ -184,7 +184,7 @@ export async function getMatchingOperators(params: {
   mission_type: MissionType;
   zone?: string;
   organisation_id: string;
-}): Promise<Profile[]> {
+}): Promise<Array<{ id: string; full_name: string; email: string; operator_capabilities: OperatorCapabilities | null }>> {
   try {
     const supabase = createClient();
 
@@ -253,7 +253,9 @@ export async function autoAssignMissions(data: {
 
     // For each mission, find a compatible operator
     for (const mission of missions) {
-      const zone = mission.logement?.code_postal?.substring(0, 5);
+      // Handle both array and object responses from Supabase join
+      const logement = Array.isArray(mission.logement) ? mission.logement[0] : mission.logement;
+      const zone = logement?.code_postal?.substring(0, 5);
 
       // Get compatible operators
       const compatibleOperators = await getMatchingOperators({

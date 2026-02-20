@@ -13,7 +13,12 @@ import { Label } from "@/components/ui/label";
 import { bulkAssignMissions } from "@/lib/actions/missions";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import type { Profile } from "@/types/database";
+
+interface Operator {
+  id: string;
+  full_name: string;
+  email: string;
+}
 
 interface Props {
   open: boolean;
@@ -30,7 +35,7 @@ export function BulkAssignDialog({
   organisationId,
   onSuccess,
 }: Props) {
-  const [operators, setOperators] = useState<Profile[]>([]);
+  const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
