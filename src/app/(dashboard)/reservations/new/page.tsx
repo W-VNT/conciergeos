@@ -10,11 +10,16 @@ export default async function NewReservationPage() {
 
   const supabase = createClient();
 
-  const { data: logements } = await supabase
+  const { data: logements, error } = await supabase
     .from("logements")
     .select("*")
     .eq("status", "ACTIF")
     .order("name");
+
+  if (error) {
+    console.error("Error fetching logements:", error);
+    throw new Error(`Failed to fetch logements: ${error.message}`);
+  }
 
   return (
     <div>
