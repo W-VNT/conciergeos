@@ -68,7 +68,7 @@ serve(async (req) => {
       .from("missions")
       .select(`
         *,
-        assignee:profiles!assigned_to(email, full_name),
+        assignee:profiles!missions_assigned_to_fkey(email, full_name),
         logement:logements(name)
       `)
       .eq("id", missionId)
