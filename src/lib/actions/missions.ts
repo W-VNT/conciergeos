@@ -322,22 +322,16 @@ export async function updateOperatorCapabilities(
 ): Promise<ActionResponse> {
   try {
     await requireProfile();
-    console.log("updateOperatorCapabilities called with:", { operatorId, capabilities });
     const validated = operatorCapabilitiesSchema.parse(capabilities);
-    console.log("After validation:", validated);
     const supabase = createClient();
 
-    const { error, data } = await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ operator_capabilities: validated })
       .eq("id", operatorId)
-      .eq("role", "OPERATEUR")
-      .select();
-
-    console.log("Update result:", { error, data });
+      .eq("role", "OPERATEUR");
 
     if (error) {
-      console.error("Update error:", error);
       return errorResponse(error.message);
     }
 
@@ -346,7 +340,6 @@ export async function updateOperatorCapabilities(
     revalidatePath("/organisation");
     return successResponse("Compétences mises à jour avec succès");
   } catch (err) {
-    console.error("updateOperatorCapabilities error:", err);
     return errorResponse(
       (err as Error).message ?? "Erreur lors de la mise à jour des compétences"
     );

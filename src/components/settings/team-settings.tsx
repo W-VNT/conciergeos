@@ -86,11 +86,6 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
     ]);
 
     if (membersResult.members) {
-      console.log("Team members loaded:", membersResult.members.map(m => ({
-        name: m.full_name,
-        role: m.role,
-        capabilities: m.operator_capabilities
-      })));
       setMembers(membersResult.members);
     }
 
