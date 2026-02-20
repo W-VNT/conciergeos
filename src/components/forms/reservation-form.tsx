@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { reservationSchema, type ReservationFormData } from "@/lib/schemas";
 import { createReservation, updateReservation } from "@/lib/actions/reservations";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ interface Props {
 
 export function ReservationForm({ reservation, logements }: Props) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const isEdit = !!reservation;
 
   const form = useForm<ReservationFormData>({
@@ -58,11 +60,18 @@ export function ReservationForm({ reservation, logements }: Props) {
   async function onSubmit(data: ReservationFormData) {
     setLoading(true);
     try {
-      if (isEdit) {
-        await updateReservation(reservation!.id, data);
-      } else {
-        await createReservation(data);
+      const result = isEdit
+        ? await updateReservation(reservation!.id, data)
+        : await createReservation(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
       }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/reservations/${reservation!.id}` : "/reservations");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);

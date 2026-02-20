@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { contratSchema, type ContratFormData } from "@/lib/schemas";
 import { createContrat, updateContrat } from "@/lib/actions/contrats";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
   const [loading, setLoading] = useState(false);
   const [proprioOpen, setPropioOpen] = useState(false);
   const [logementOpen, setLogementOpen] = useState(false);
+  const router = useRouter();
   const isEdit = !!contrat;
 
   const form = useForm<ContratFormData>({
@@ -75,11 +77,18 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
   async function onSubmit(data: ContratFormData) {
     setLoading(true);
     try {
-      if (isEdit) {
-        await updateContrat(contrat!.id, data);
-      } else {
-        await createContrat(data);
+      const result = isEdit
+        ? await updateContrat(contrat!.id, data)
+        : await createContrat(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
       }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/contrats/${contrat!.id}` : "/contrats");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);

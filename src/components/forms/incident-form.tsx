@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { incidentSchema, type IncidentFormData } from "@/lib/schemas";
 import { createIncident, updateIncident } from "@/lib/actions/incidents";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface Props {
 
 export function IncidentForm({ incident, logements, prestataires, defaultLogementId, defaultMissionId, preGeneratedId }: Props) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const isEdit = !!incident;
 
   const form = useForm<IncidentFormData>({
@@ -47,8 +49,18 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
   async function onSubmit(data: IncidentFormData) {
     setLoading(true);
     try {
-      if (isEdit) { await updateIncident(incident!.id, data); }
-      else { await createIncident(data, preGeneratedId); }
+      const result = isEdit
+        ? await updateIncident(incident!.id, data)
+        : await createIncident(data, preGeneratedId);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
+      }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/incidents/${incident!.id}` : "/incidents");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);

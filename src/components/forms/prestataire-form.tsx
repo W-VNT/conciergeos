@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { prestataireSchema, type PrestataireFormData } from "@/lib/schemas";
 import { createPrestataire, updatePrestataire } from "@/lib/actions/prestataires";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ function codeToStatutJuridique(code: string): StatutJuridique {
 export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) {
   const [loading, setLoading] = useState(false);
   const [siretLoading, setSiretLoading] = useState(false);
+  const router = useRouter();
   const isEdit = !!prestataire;
 
   const form = useForm<PrestataireFormData>({
@@ -87,8 +89,18 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
   async function onSubmit(data: PrestataireFormData) {
     setLoading(true);
     try {
-      if (isEdit) { await updatePrestataire(prestataire!.id, data); }
-      else { await createPrestataire(data); }
+      const result = isEdit
+        ? await updatePrestataire(prestataire!.id, data)
+        : await createPrestataire(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
+      }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/prestataires/${prestataire!.id}` : "/prestataires");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);

@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { proprietaireSchema, type ProprietaireFormData } from "@/lib/schemas";
 import { createProprietaire, updateProprietaire } from "@/lib/actions/proprietaires";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ interface Props {
 export function ProprietaireForm({ proprietaire }: Props) {
   const [loading, setLoading] = useState(false);
   const [siretLoading, setSiretLoading] = useState(false);
+  const router = useRouter();
   const isEdit = !!proprietaire;
 
   const form = useForm<ProprietaireFormData>({
@@ -89,11 +91,18 @@ export function ProprietaireForm({ proprietaire }: Props) {
   async function onSubmit(data: ProprietaireFormData) {
     setLoading(true);
     try {
-      if (isEdit) {
-        await updateProprietaire(proprietaire!.id, data);
-      } else {
-        await createProprietaire(data);
+      const result = isEdit
+        ? await updateProprietaire(proprietaire!.id, data)
+        : await createProprietaire(data);
+
+      if (!result.success) {
+        toast.error(result.error ?? "Erreur");
+        setLoading(false);
+        return;
       }
+
+      toast.success(result.message ?? "Enregistré avec succès");
+      router.push(isEdit ? `/proprietaires/${proprietaire!.id}` : "/proprietaires");
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Erreur");
       setLoading(false);

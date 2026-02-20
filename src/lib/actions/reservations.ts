@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { reservationSchema, type ReservationFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
 import { findLogementTemplate } from "@/lib/actions/checklists";
 
 async function checkOverlap(
@@ -28,141 +28,150 @@ async function checkOverlap(
   return (data ?? []).length > 0;
 }
 
-export async function createReservation(data: ReservationFormData) {
-  const profile = await requireProfile();
-  if (!isAdmin(profile)) throw new Error("Non autorisé");
+export async function createReservation(data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
-  const parsed = reservationSchema.parse(data);
-  const supabase = createClient();
+    const parsed = reservationSchema.parse(data);
+    const supabase = createClient();
 
-  const hasOverlap = await checkOverlap(
-    supabase,
-    parsed.logement_id,
-    parsed.check_in_date,
-    parsed.check_out_date
-  );
-  if (hasOverlap) throw new Error("Ce logement est déjà réservé sur cette période.");
-
-  const { data: reservation, error } = await supabase
-    .from("reservations")
-    .insert({
-      organisation_id: profile.organisation_id,
-      logement_id: parsed.logement_id,
-      guest_name: parsed.guest_name,
-      guest_email: parsed.guest_email || null,
-      guest_phone: parsed.guest_phone || null,
-      guest_count: parsed.guest_count,
-      check_in_date: parsed.check_in_date,
-      check_in_time: parsed.check_in_time || null,
-      check_out_date: parsed.check_out_date,
-      check_out_time: parsed.check_out_time || null,
-      platform: parsed.platform,
-      amount: parsed.amount,
-      status: parsed.status,
-      notes: parsed.notes || null,
-      access_instructions: parsed.access_instructions || null,
-    })
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-
-  if (reservation && parsed.status === "CONFIRMEE") {
-    await createMissionsForReservation(
-      reservation.id,
-      reservation.logement_id,
-      parsed.check_in_date,
-      parsed.check_out_date,
-      profile.organisation_id
-    );
-    // TODO: Uncomment when Finance section is implemented
-    // await createRevenuForReservation(
-    //   reservation.id,
-    //   reservation.logement_id,
-    //   parsed.check_in_date,
-    //   parsed.check_out_date,
-    //   parsed.amount,
-    //   profile.organisation_id
-    // );
-  }
-
-  revalidatePath("/reservations");
-  redirect("/reservations");
-}
-
-export async function updateReservation(id: string, data: ReservationFormData) {
-  const profile = await requireProfile();
-  if (!isAdmin(profile)) throw new Error("Non autorisé");
-
-  const parsed = reservationSchema.parse(data);
-  const supabase = createClient();
-
-  const { data: currentReservation } = await supabase
-    .from("reservations")
-    .select("status")
-    .eq("id", id)
-    .single();
-
-  if (parsed.status !== "ANNULEE") {
     const hasOverlap = await checkOverlap(
       supabase,
       parsed.logement_id,
       parsed.check_in_date,
-      parsed.check_out_date,
-      id
+      parsed.check_out_date
     );
-    if (hasOverlap) throw new Error("Ce logement est déjà réservé sur cette période.");
+    if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.");
+
+    const { data: reservation, error } = await supabase
+      .from("reservations")
+      .insert({
+        organisation_id: profile.organisation_id,
+        logement_id: parsed.logement_id,
+        guest_name: parsed.guest_name,
+        guest_email: parsed.guest_email || null,
+        guest_phone: parsed.guest_phone || null,
+        guest_count: parsed.guest_count,
+        check_in_date: parsed.check_in_date,
+        check_in_time: parsed.check_in_time || null,
+        check_out_date: parsed.check_out_date,
+        check_out_time: parsed.check_out_time || null,
+        platform: parsed.platform,
+        amount: parsed.amount,
+        status: parsed.status,
+        notes: parsed.notes || null,
+        access_instructions: parsed.access_instructions || null,
+      })
+      .select()
+      .single();
+
+    if (error) return errorResponse(error.message);
+
+    if (reservation && parsed.status === "CONFIRMEE") {
+      await createMissionsForReservation(
+        reservation.id,
+        reservation.logement_id,
+        parsed.check_in_date,
+        parsed.check_out_date,
+        profile.organisation_id
+      );
+      // TODO: Uncomment when Finance section is implemented
+      // await createRevenuForReservation(
+      //   reservation.id,
+      //   reservation.logement_id,
+      //   parsed.check_in_date,
+      //   parsed.check_out_date,
+      //   parsed.amount,
+      //   profile.organisation_id
+      // );
+    }
+
+    revalidatePath("/reservations");
+    return successResponse("Réservation créée avec succès", { id: reservation.id });
+  } catch (err) {
+    return errorResponse((err as Error).message ?? "Erreur lors de la création de la réservation");
   }
+}
 
-  const { error } = await supabase
-    .from("reservations")
-    .update({
-      logement_id: parsed.logement_id,
-      guest_name: parsed.guest_name,
-      guest_email: parsed.guest_email || null,
-      guest_phone: parsed.guest_phone || null,
-      guest_count: parsed.guest_count,
-      check_in_date: parsed.check_in_date,
-      check_in_time: parsed.check_in_time || null,
-      check_out_date: parsed.check_out_date,
-      check_out_time: parsed.check_out_time || null,
-      platform: parsed.platform,
-      amount: parsed.amount,
-      status: parsed.status,
-      notes: parsed.notes || null,
-      access_instructions: parsed.access_instructions || null,
-    })
-    .eq("id", id);
+export async function updateReservation(id: string, data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
-  if (error) throw new Error(error.message);
+    const parsed = reservationSchema.parse(data);
+    const supabase = createClient();
 
-  // Status changed to CONFIRMEE → create missions + revenu
-  if (currentReservation?.status !== "CONFIRMEE" && parsed.status === "CONFIRMEE") {
-    await createMissionsForReservation(
-      id,
-      parsed.logement_id,
-      parsed.check_in_date,
-      parsed.check_out_date,
-      profile.organisation_id
-    );
-    // TODO: Uncomment when Finance section is implemented
-    // await createRevenuForReservation(
-    //   id,
-    //   parsed.logement_id,
-    //   parsed.check_in_date,
-    //   parsed.check_out_date,
-    //   parsed.amount,
-    //   profile.organisation_id
-    // );
+    const { data: currentReservation } = await supabase
+      .from("reservations")
+      .select("status")
+      .eq("id", id)
+      .single();
+
+    if (parsed.status !== "ANNULEE") {
+      const hasOverlap = await checkOverlap(
+        supabase,
+        parsed.logement_id,
+        parsed.check_in_date,
+        parsed.check_out_date,
+        id
+      );
+      if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.");
+    }
+
+    const { error } = await supabase
+      .from("reservations")
+      .update({
+        logement_id: parsed.logement_id,
+        guest_name: parsed.guest_name,
+        guest_email: parsed.guest_email || null,
+        guest_phone: parsed.guest_phone || null,
+        guest_count: parsed.guest_count,
+        check_in_date: parsed.check_in_date,
+        check_in_time: parsed.check_in_time || null,
+        check_out_date: parsed.check_out_date,
+        check_out_time: parsed.check_out_time || null,
+        platform: parsed.platform,
+        amount: parsed.amount,
+        status: parsed.status,
+        notes: parsed.notes || null,
+        access_instructions: parsed.access_instructions || null,
+      })
+      .eq("id", id);
+
+    if (error) return errorResponse(error.message);
+
+    // Status changed to CONFIRMEE → create missions + revenu
+    if (currentReservation?.status !== "CONFIRMEE" && parsed.status === "CONFIRMEE") {
+      await createMissionsForReservation(
+        id,
+        parsed.logement_id,
+        parsed.check_in_date,
+        parsed.check_out_date,
+        profile.organisation_id
+      );
+      // TODO: Uncomment when Finance section is implemented
+      // await createRevenuForReservation(
+      //   id,
+      //   parsed.logement_id,
+      //   parsed.check_in_date,
+      //   parsed.check_out_date,
+      //   parsed.amount,
+      //   profile.organisation_id
+      // );
+    }
+
+    // Status changed to ANNULEE → cancel missions
+    if (currentReservation?.status !== "ANNULEE" && parsed.status === "ANNULEE") {
+      await cancelMissionsForReservation(id);
+    }
+
+    revalidatePath("/reservations");
+    revalidatePath(`/reservations/${id}`);
+    return successResponse("Réservation mise à jour avec succès", { id });
+  } catch (err) {
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la réservation");
   }
-
-  // Status changed to ANNULEE → cancel missions
-  if (currentReservation?.status !== "ANNULEE" && parsed.status === "ANNULEE") {
-    await cancelMissionsForReservation(id);
-  }
-
-  revalidatePath("/reservations");
-  redirect(`/reservations/${id}`);
 }
 
 export async function terminateReservation(id: string) {
@@ -182,17 +191,21 @@ export async function terminateReservation(id: string) {
   revalidatePath("/reservations");
 }
 
-export async function deleteReservation(id: string) {
-  const profile = await requireProfile();
-  if (!isAdmin(profile)) throw new Error("Non autorisé");
+export async function deleteReservation(id: string): Promise<ActionResponse> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
-  const supabase = createClient();
-  await cancelMissionsForReservation(id);
-  const { error } = await supabase.from("reservations").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+    const supabase = createClient();
+    await cancelMissionsForReservation(id);
+    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    if (error) return errorResponse(error.message);
 
-  revalidatePath("/reservations");
-  redirect("/reservations");
+    revalidatePath("/reservations");
+    return successResponse("Réservation supprimée avec succès");
+  } catch (err) {
+    return errorResponse((err as Error).message ?? "Erreur lors de la suppression de la réservation");
+  }
 }
 
 // ---------------------------------------------------------------------------
