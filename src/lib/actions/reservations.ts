@@ -68,23 +68,22 @@ export async function createReservation(data: ReservationFormData) {
   if (error) throw new Error(error.message);
 
   if (reservation && parsed.status === "CONFIRMEE") {
-    await Promise.all([
-      createMissionsForReservation(
-        reservation.id,
-        reservation.logement_id,
-        parsed.check_in_date,
-        parsed.check_out_date,
-        profile.organisation_id
-      ),
-      createRevenuForReservation(
-        reservation.id,
-        reservation.logement_id,
-        parsed.check_in_date,
-        parsed.check_out_date,
-        parsed.amount,
-        profile.organisation_id
-      ),
-    ]);
+    await createMissionsForReservation(
+      reservation.id,
+      reservation.logement_id,
+      parsed.check_in_date,
+      parsed.check_out_date,
+      profile.organisation_id
+    );
+    // TODO: Uncomment when Finance section is implemented
+    // await createRevenuForReservation(
+    //   reservation.id,
+    //   reservation.logement_id,
+    //   parsed.check_in_date,
+    //   parsed.check_out_date,
+    //   parsed.amount,
+    //   profile.organisation_id
+    // );
   }
 
   revalidatePath("/reservations");
@@ -139,23 +138,22 @@ export async function updateReservation(id: string, data: ReservationFormData) {
 
   // Status changed to CONFIRMEE → create missions + revenu
   if (currentReservation?.status !== "CONFIRMEE" && parsed.status === "CONFIRMEE") {
-    await Promise.all([
-      createMissionsForReservation(
-        id,
-        parsed.logement_id,
-        parsed.check_in_date,
-        parsed.check_out_date,
-        profile.organisation_id
-      ),
-      createRevenuForReservation(
-        id,
-        parsed.logement_id,
-        parsed.check_in_date,
-        parsed.check_out_date,
-        parsed.amount,
-        profile.organisation_id
-      ),
-    ]);
+    await createMissionsForReservation(
+      id,
+      parsed.logement_id,
+      parsed.check_in_date,
+      parsed.check_out_date,
+      profile.organisation_id
+    );
+    // TODO: Uncomment when Finance section is implemented
+    // await createRevenuForReservation(
+    //   id,
+    //   parsed.logement_id,
+    //   parsed.check_in_date,
+    //   parsed.check_out_date,
+    //   parsed.amount,
+    //   profile.organisation_id
+    // );
   }
 
   // Status changed to ANNULEE → cancel missions
