@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Moon, Bell, Globe, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
+import { NotificationPreferencesForm } from "./notification-preferences";
 
 export default function ApplicationSettings() {
   const { theme, setTheme } = useTheme();
@@ -64,9 +65,7 @@ export default function ApplicationSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Configuration des notifications bientôt disponible
-          </p>
+          <NotificationPreferencesForm />
         </CardContent>
       </Card>
 

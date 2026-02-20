@@ -201,7 +201,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
                   <Link
                     key={item.logement.id}
                     href={`/logements/${item.logement.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm ${
@@ -233,19 +233,19 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <span className="text-sm text-muted-foreground">Incidents résolus</span>
                 <span className="text-lg font-semibold">{resolvedIncidents?.length ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <span className="text-sm text-muted-foreground">Logements actifs</span>
                 <span className="text-lg font-semibold">{logements?.length ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <span className="text-sm text-muted-foreground">Réservations confirmées</span>
                 <span className="text-lg font-semibold">{reservations?.length ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <span className="text-sm text-muted-foreground">Coût moyen / incident</span>
                 <span className="text-lg font-semibold">
                   {costData && costData.length > 0 ? `${(totalCost / costData.length).toFixed(0)}€` : "0€"}
