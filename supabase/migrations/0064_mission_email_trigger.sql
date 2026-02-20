@@ -22,7 +22,8 @@ BEGIN
       'Nouvelle mission assignée',
       'Une mission de type ' || NEW.type || ' vous a été assignée',
       'MISSION',
-      NEW.id
+      NEW.id,
+      jsonb_build_object('mission_type', NEW.type)
     );
 
     -- Send email via Edge Function (NEW)
