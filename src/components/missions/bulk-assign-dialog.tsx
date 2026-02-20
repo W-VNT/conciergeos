@@ -18,6 +18,7 @@ interface Operator {
   id: string;
   full_name: string;
   email: string;
+  role: "ADMIN" | "OPERATEUR";
 }
 
 interface Props {
@@ -49,8 +50,8 @@ export function BulkAssignDialog({
     const supabase = createClient();
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email")
-      .eq("role", "OPERATEUR")
+      .select("id, full_name, email, role")
+      .in("role", ["OPERATEUR", "ADMIN"])
       .eq("organisation_id", organisationId)
       .order("full_name");
 
@@ -93,8 +94,11 @@ export function BulkAssignDialog({
             {operators.map((operator) => (
               <div key={operator.id} className="flex items-center space-x-2">
                 <RadioGroupItem value={operator.id} id={operator.id} />
-                <Label htmlFor={operator.id} className="flex-1 cursor-pointer">
-                  {operator.full_name}
+                <Label htmlFor={operator.id} className="flex-1 cursor-pointer flex items-center gap-2">
+                  <span>{operator.full_name}</span>
+                  {operator.role === "ADMIN" && (
+                    <span className="text-xs text-muted-foreground">(Admin)</span>
+                  )}
                 </Label>
               </div>
             ))}
@@ -102,7 +106,7 @@ export function BulkAssignDialog({
 
           {operators.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Aucun opérateur disponible
+              Aucun membre disponible
             </p>
           )}
 
