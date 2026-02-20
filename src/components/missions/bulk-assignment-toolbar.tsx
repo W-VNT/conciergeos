@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, UserPlus, Zap } from "lucide-react";
+import { X, UserPlus, Zap, Check, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BulkAssignDialog } from "./bulk-assign-dialog";
-import { autoAssignMissions } from "@/lib/actions/missions";
+import { autoAssignMissions, bulkCompleteMissions, bulkDeleteMissions } from "@/lib/actions/missions";
 import { toast } from "sonner";
 
 interface Props {
@@ -21,6 +31,7 @@ export function BulkAssignmentToolbar({
   onClear,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAutoAssign = async () => {
@@ -46,6 +57,37 @@ export function BulkAssignmentToolbar({
     }
 
     onClear();
+  };
+
+  const handleBulkComplete = async () => {
+    setLoading(true);
+
+    const result = await bulkCompleteMissions(missionIds);
+
+    setLoading(false);
+
+    if (result.success) {
+      toast.success(result.message);
+      onClear();
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setLoading(true);
+
+    const result = await bulkDeleteMissions(missionIds);
+
+    setLoading(false);
+    setDeleteDialogOpen(false);
+
+    if (result.success) {
+      toast.success(result.message);
+      onClear();
+    } else {
+      toast.error(result.error);
+    }
   };
 
   return (
@@ -74,6 +116,26 @@ export function BulkAssignmentToolbar({
           Auto-assigner
         </Button>
 
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBulkComplete}
+          disabled={loading}
+        >
+          <Check className="h-4 w-4 mr-2" />
+          Terminer
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setDeleteDialogOpen(true)}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Supprimer
+        </Button>
+
         <Button variant="ghost" size="sm" onClick={onClear}>
           <X className="h-4 w-4" />
         </Button>
@@ -86,6 +148,26 @@ export function BulkAssignmentToolbar({
         organisationId={organisationId}
         onSuccess={onClear}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer {selectedCount} mission{selectedCount > 1 ? "s" : ""} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les missions seront définitivement supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

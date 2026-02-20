@@ -120,6 +120,73 @@ export async function deleteMission(id: string): Promise<ActionResponse> {
   }
 }
 
+/**
+ * Bulk complete missions
+ */
+export async function bulkCompleteMissions(
+  missionIds: string[]
+): Promise<ActionResponse<{ count: number }>> {
+  try {
+    await requireProfile();
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("missions")
+      .update({
+        status: "TERMINE",
+        completed_at: new Date().toISOString(),
+      })
+      .in("id", missionIds);
+
+    if (error) {
+      return errorResponse(error.message) as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/missions");
+    revalidatePath("/dashboard");
+    return successResponse(
+      `${missionIds.length} mission(s) terminée(s)`,
+      { count: missionIds.length }
+    );
+  } catch (err) {
+    return errorResponse(
+      (err as Error).message ?? "Erreur lors de la complétion des missions"
+    ) as ActionResponse<{ count: number }>;
+  }
+}
+
+/**
+ * Bulk delete missions
+ */
+export async function bulkDeleteMissions(
+  missionIds: string[]
+): Promise<ActionResponse<{ count: number }>> {
+  try {
+    await requireProfile();
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("missions")
+      .delete()
+      .in("id", missionIds);
+
+    if (error) {
+      return errorResponse(error.message) as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/missions");
+    revalidatePath("/dashboard");
+    return successResponse(
+      `${missionIds.length} mission(s) supprimée(s)`,
+      { count: missionIds.length }
+    );
+  } catch (err) {
+    return errorResponse(
+      (err as Error).message ?? "Erreur lors de la suppression des missions"
+    ) as ActionResponse<{ count: number }>;
+  }
+}
+
 // ============================================================
 // Bulk Assignment & Auto-Assignment Actions
 // ============================================================
