@@ -35,7 +35,15 @@ export default async function MissionsPage({
   if (searchParams.type) query = query.eq("type", searchParams.type);
 
   const { data, count } = await query;
-  const missions = data || [];
+  const rawMissions = data || [];
+
+  // Normalize joined data (Supabase can return arrays instead of objects for joins)
+  const missions = rawMissions.map(mission => ({
+    ...mission,
+    logement: Array.isArray(mission.logement) ? mission.logement[0] : mission.logement,
+    assignee: Array.isArray(mission.assignee) ? mission.assignee[0] : mission.assignee,
+  }));
+
   const statusOptions = Object.entries(MISSION_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
   const typeOptions = Object.entries(MISSION_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
 
