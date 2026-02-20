@@ -15,11 +15,13 @@ interface Props {
     mission_types: MissionType[];
     zones: string[];
   };
+  onSuccess?: () => void;
 }
 
 export function OperatorCapabilitiesForm({
   operatorId,
   initialCapabilities,
+  onSuccess,
 }: Props) {
   const [missionTypes, setMissionTypes] = useState<MissionType[]>(
     initialCapabilities?.mission_types || []
@@ -59,6 +61,7 @@ export function OperatorCapabilitiesForm({
 
     if (result.success) {
       toast.success(result.message);
+      onSuccess?.();
     } else {
       toast.error(result.error);
     }

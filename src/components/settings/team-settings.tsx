@@ -268,12 +268,28 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
                   <Badge variant="secondary" className="flex-shrink-0">Vous</Badge>
                 )}
               </div>
-              <Badge
-                variant={member.role === "ADMIN" ? "default" : "secondary"}
-                className="mt-1 flex-shrink-0"
-              >
-                {USER_ROLE_LABELS[member.role]}
-              </Badge>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <Badge
+                  variant={member.role === "ADMIN" ? "default" : "secondary"}
+                  className="flex-shrink-0"
+                >
+                  {USER_ROLE_LABELS[member.role]}
+                </Badge>
+                {member.role === "OPERATEUR" && member.operator_capabilities && (
+                  <>
+                    {member.operator_capabilities.mission_types?.length > 0 && (
+                      <Badge variant="outline" className="flex-shrink-0 text-xs">
+                        {member.operator_capabilities.mission_types.length} type{member.operator_capabilities.mission_types.length > 1 ? "s" : ""}
+                      </Badge>
+                    )}
+                    {member.operator_capabilities.zones?.length > 0 && (
+                      <Badge variant="outline" className="flex-shrink-0 text-xs">
+                        {member.operator_capabilities.zones.length} zone{member.operator_capabilities.zones.length > 1 ? "s" : ""}
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
               {member.role === "OPERATEUR" && (
@@ -387,6 +403,11 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
             <OperatorCapabilitiesForm
               operatorId={selectedOperator.id}
               initialCapabilities={selectedOperator.operator_capabilities || undefined}
+              onSuccess={() => {
+                setCapabilitiesDialogOpen(false);
+                setSelectedOperator(null);
+                loadData();
+              }}
             />
           )}
         </DialogContent>
