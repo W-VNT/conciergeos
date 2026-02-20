@@ -7,6 +7,7 @@ import type { Logement } from "@/types/database";
 import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
+import { useTheme } from "next-themes";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 interface LogementsMapProps {
@@ -15,6 +16,10 @@ interface LogementsMapProps {
 
 export function LogementsMap({ logements }: LogementsMapProps) {
   const [popupInfo, setPopupInfo] = useState<Logement | null>(null);
+  const { theme, systemTheme } = useTheme();
+
+  // Determine if dark mode is active
+  const isDark = theme === "dark" || (theme === "system" && systemTheme === "dark");
 
   // Filter logements with coordinates
   const logementsWithCoords = useMemo(
@@ -47,7 +52,7 @@ export function LogementsMap({ logements }: LogementsMapProps) {
           longitude: center.longitude,
           zoom: logementsWithCoords.length === 1 ? 14 : 11,
         }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={isDark ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/streets-v12"}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
       >
         <NavigationControl position="top-right" />
@@ -63,15 +68,17 @@ export function LogementsMap({ logements }: LogementsMapProps) {
               setPopupInfo(logement);
             }}
           >
-            <div className="cursor-pointer transform hover:scale-110 transition-transform">
+            <div className="cursor-pointer transform hover:scale-110 transition-transform drop-shadow-lg">
               <MapPin
                 className={`h-8 w-8 ${
                   logement.status === "ACTIF"
-                    ? "text-primary fill-primary/20"
+                    ? "text-blue-600 fill-blue-100 dark:text-blue-400 dark:fill-blue-900/50"
                     : logement.status === "PAUSE"
-                    ? "text-orange-500 fill-orange-500/20"
-                    : "text-gray-400 fill-gray-400/20"
+                    ? "text-orange-600 fill-orange-100 dark:text-orange-400 dark:fill-orange-900/50"
+                    : "text-gray-600 fill-gray-100 dark:text-gray-400 dark:fill-gray-800/50"
                 }`}
+                strokeWidth={1.5}
+                stroke="currentColor"
               />
             </div>
           </Marker>
