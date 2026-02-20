@@ -102,3 +102,33 @@ export async function deleteLogement(id: string): Promise<ActionResponse> {
     return errorResponse((err as Error).message ?? "Erreur lors de la suppression du logement");
   }
 }
+
+export async function bulkDeleteLogements(logementIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+
+    const supabase = createClient();
+
+    const { error, count } = await supabase
+      .from("logements")
+      .delete({ count: "exact" })
+      .in("id", logementIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk delete logements error:", error);
+      return errorResponse("Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/logements");
+
+    return successResponse(
+      `${count} logement${count && count > 1 ? "s" : ""} supprimé${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+  }
+}

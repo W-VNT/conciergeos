@@ -85,3 +85,33 @@ export async function deleteProprietaire(id: string): Promise<ActionResponse> {
     return errorResponse((err as Error).message ?? "Erreur lors de la suppression du propriétaire");
   }
 }
+
+export async function bulkDeleteProprietaires(proprietaireIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+
+    const supabase = createClient();
+
+    const { error, count } = await supabase
+      .from("proprietaires")
+      .delete({ count: "exact" })
+      .in("id", proprietaireIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk delete proprietaires error:", error);
+      return errorResponse("Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/proprietaires");
+
+    return successResponse(
+      `${count} propriétaire${count && count > 1 ? "s" : ""} supprimé${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+  }
+}

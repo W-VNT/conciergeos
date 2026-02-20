@@ -67,7 +67,10 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
               const assignee = Array.isArray(m.assignee) ? m.assignee[0] : m.assignee;
 
               return (
-                <TableRow key={m.id}>
+                <TableRow
+                  key={m.id}
+                  className={selectedIds.includes(m.id) ? "bg-primary/5" : ""}
+                >
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(m.id)}
@@ -75,11 +78,13 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                     />
                   </TableCell>
                   <TableCell>
-                    <Link href={`/missions/${m.id}`} className="hover:underline">
-                      <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type]} />
+                    <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type]} />
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/missions/${m.id}`} className="font-medium hover:underline">
+                      {logement?.name ?? "—"}
                     </Link>
                   </TableCell>
-                  <TableCell>{logement?.name ?? "—"}</TableCell>
                   <TableCell>{assignee?.full_name ?? "—"}</TableCell>
                   <TableCell className="text-sm">
                     {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {

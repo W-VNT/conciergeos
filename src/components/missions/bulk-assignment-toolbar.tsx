@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, UserPlus, Zap, Check, Trash2 } from "lucide-react";
+import { X, UserPlus, Zap, CheckCircle, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,7 +91,7 @@ export function BulkAssignmentToolbar({
   };
 
   return (
-    <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-lg border border-primary/20">
+    <div className="flex items-center gap-3 p-3 border rounded-lg">
       <span className="text-sm font-medium">
         {selectedCount} mission{selectedCount > 1 ? "s" : ""} sélectionnée{selectedCount > 1 ? "s" : ""}
       </span>
@@ -122,15 +122,14 @@ export function BulkAssignmentToolbar({
           onClick={handleBulkComplete}
           disabled={loading}
         >
-          <Check className="h-4 w-4 mr-2" />
+          <CheckCircle className="h-4 w-4 mr-2" />
           Terminer
         </Button>
 
         <Button
-          variant="outline"
+          variant="destructive"
           size="sm"
           onClick={() => setDeleteDialogOpen(true)}
-          className="text-destructive hover:text-destructive"
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Supprimer

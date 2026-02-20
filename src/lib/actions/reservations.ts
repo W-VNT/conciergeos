@@ -208,6 +208,78 @@ export async function deleteReservation(id: string): Promise<ActionResponse> {
   }
 }
 
+export async function bulkCancelReservations(reservationIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+
+    const supabase = createClient();
+
+    // Annuler toutes les missions associées
+    for (const id of reservationIds) {
+      await cancelMissionsForReservation(id);
+    }
+
+    // Mettre à jour le statut des réservations
+    const { error, count } = await supabase
+      .from("reservations")
+      .update({ status: "ANNULEE" })
+      .in("id", reservationIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk cancel reservations error:", error);
+      return errorResponse("Erreur lors de l'annulation") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/reservations");
+
+    return successResponse(
+      `${count} réservation${count && count > 1 ? "s" : ""} annulée${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk cancel error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de l'annulation") as ActionResponse<{ count: number }>;
+  }
+}
+
+export async function bulkDeleteReservations(reservationIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+
+    const supabase = createClient();
+
+    // Annuler toutes les missions associées
+    for (const id of reservationIds) {
+      await cancelMissionsForReservation(id);
+    }
+
+    // Supprimer les réservations
+    const { error, count } = await supabase
+      .from("reservations")
+      .delete({ count: "exact" })
+      .in("id", reservationIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk delete reservations error:", error);
+      return errorResponse("Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/reservations");
+
+    return successResponse(
+      `${count} réservation${count && count > 1 ? "s" : ""} supprimée${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+  }
+}
+
 // ---------------------------------------------------------------------------
 
 async function createMissionsForReservation(

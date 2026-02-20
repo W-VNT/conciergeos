@@ -3,14 +3,12 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { EmptyState } from "@/components/shared/empty-state";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Map, Home } from "lucide-react";
+import { Map } from "lucide-react";
 import Link from "next/link";
+import { LogementsTableWithSelection } from "@/components/logements/logements-table-with-selection";
 
 const PAGE_SIZE = 20;
 
@@ -65,38 +63,7 @@ export default async function LogementsPage({
         <StatusFilter paramName="offer_tier" options={offerOptions} placeholder="Toutes les offres" />
         <StatusFilter paramName="city" options={cityOptions} placeholder="Toutes les villes" />
       </div>
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Ville</TableHead>
-              <TableHead>Propriétaire</TableHead>
-              <TableHead>Offre</TableHead>
-              <TableHead>Statut</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((l) => (
-              <TableRow key={l.id}>
-                <TableCell><Link href={`/logements/${l.id}`} className="font-medium hover:underline">{l.name}</Link></TableCell>
-                <TableCell>{l.city ?? "—"}</TableCell>
-                <TableCell>{(l.proprietaire as { full_name: string } | null)?.full_name ?? "—"}</TableCell>
-                <TableCell><StatusBadge value={l.offer_tier} label={OFFER_TIER_LABELS[l.offer_tier as keyof typeof OFFER_TIER_LABELS]} /></TableCell>
-                <TableCell><StatusBadge value={l.status} label={LOGEMENT_STATUS_LABELS[l.status as keyof typeof LOGEMENT_STATUS_LABELS]} /></TableCell>
-              </TableRow>
-            ))}
-            {(!data || data.length === 0) && (
-              <EmptyState
-                icon={Home}
-                title="Aucun logement trouvé"
-                description="Commencez par ajouter votre premier logement"
-                colSpan={5}
-              />
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <LogementsTableWithSelection logements={data || []} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );

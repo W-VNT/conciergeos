@@ -3,21 +3,16 @@ import { requireProfile } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { EmptyState } from "@/components/shared/empty-state";
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
-import Link from "next/link";
+import { IncidentsTableWithSelection } from "@/components/incidents/incidents-table-with-selection";
 
 export const revalidate = 30;
 
 const PAGE_SIZE = 20;
 
 export default async function IncidentsPage({ searchParams }: { searchParams: { q?: string; status?: string; severity?: string; page?: string } }) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
   const page = Number(searchParams.page ?? "1");
   const from = (page - 1) * PAGE_SIZE;
@@ -39,40 +34,10 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />
       </div>
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader><TableRow><TableHead>Sévérité</TableHead><TableHead>Description</TableHead><TableHead>Logement</TableHead><TableHead>Prestataire</TableHead><TableHead>Ouvert le</TableHead><TableHead>Statut</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {data?.map((i) => {
-              const isLate = !["RESOLU", "CLOS"].includes(i.status) &&
-                (Date.now() - new Date(i.opened_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
-              return (
-                <TableRow key={i.id}>
-                  <TableCell><StatusBadge value={i.severity} label={INCIDENT_SEVERITY_LABELS[i.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} /></TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Link href={`/incidents/${i.id}`} className="font-medium hover:underline">{(i.description as string)?.slice(0, 50)}</Link>
-                      {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
-                    </div>
-                  </TableCell>
-                  <TableCell>{(i.logement as { name: string } | null)?.name ?? "—"}</TableCell>
-                  <TableCell>{(i.prestataire as { full_name: string } | null)?.full_name ?? "—"}</TableCell>
-                  <TableCell className="text-sm">{new Date(i.opened_at).toLocaleDateString("fr-FR")}</TableCell>
-                  <TableCell><StatusBadge value={i.status} label={INCIDENT_STATUS_LABELS[i.status as keyof typeof INCIDENT_STATUS_LABELS]} /></TableCell>
-                </TableRow>
-              );
-            })}
-            {(!data || data.length === 0) && (
-              <EmptyState
-                icon={AlertTriangle}
-                title="Aucun incident trouvé"
-                description="Les incidents seront listés ici"
-                colSpan={6}
-              />
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <IncidentsTableWithSelection
+        incidents={data || []}
+        organisationId={profile.organisation_id}
+      />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );

@@ -3,14 +3,9 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { EmptyState } from "@/components/shared/empty-state";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users } from "lucide-react";
-import Link from "next/link";
-import { formatPhone } from "@/lib/utils";
+import { ProprietairesTableWithSelection } from "@/components/proprietaires/proprietaires-table-with-selection";
 
 export const revalidate = 30;
 
@@ -46,40 +41,7 @@ export default async function ProprietairesPage({
         <SearchInput placeholder="Rechercher un propriétaire..." />
         <StatusFilter paramName="statut_juridique" options={statutOptions} placeholder="Tous les statuts juridiques" />
       </div>
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Statut juridique</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell>
-                  <Link href={`/proprietaires/${p.id}`} className="font-medium hover:underline">{p.full_name}</Link>
-                </TableCell>
-                <TableCell>{formatPhone(p.phone)}</TableCell>
-                <TableCell>{p.email ?? "—"}</TableCell>
-                <TableCell>
-                  <StatusBadge value={p.statut_juridique} label={STATUT_JURIDIQUE_LABELS[p.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS]} />
-                </TableCell>
-              </TableRow>
-            ))}
-            {(!data || data.length === 0) && (
-              <EmptyState
-                icon={Users}
-                title="Aucun propriétaire trouvé"
-                description="Ajoutez vos propriétaires pour commencer"
-                colSpan={4}
-              />
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <ProprietairesTableWithSelection proprietaires={data || []} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );

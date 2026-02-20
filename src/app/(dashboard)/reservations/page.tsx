@@ -3,13 +3,9 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
-import { EmptyState } from "@/components/shared/empty-state";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarDays } from "lucide-react";
-import Link from "next/link";
+import { ReservationsTableWithSelection } from "@/components/reservations/reservations-table-with-selection";
 
 const PAGE_SIZE = 20;
 
@@ -60,82 +56,7 @@ export default async function ReservationsPage({
         <StatusFilter paramName="platform" options={platformOptions} placeholder="Toutes les plateformes" />
         <StatusFilter paramName="logement_id" options={logementOptions} placeholder="Tous les logements" />
       </div>
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Voyageur</TableHead>
-              <TableHead>Logement</TableHead>
-              <TableHead>Arrivée - Départ</TableHead>
-              <TableHead>Voyageurs</TableHead>
-              <TableHead>Plateforme</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((r) => {
-              const nights = Math.ceil(
-                (new Date(r.check_out_date).getTime() - new Date(r.check_in_date).getTime()) /
-                  (1000 * 60 * 60 * 24)
-              );
-
-              return (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Link href={`/reservations/${r.id}`} className="font-medium hover:underline">
-                      {r.guest_name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {r.logement_id ? (
-                      <Link
-                        href={`/logements/${r.logement_id}`}
-                        className="text-primary hover:underline"
-                      >
-                        {(r.logement as { name: string } | null)?.name ?? "—"}
-                      </Link>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div>
-                      {new Date(r.check_in_date).toLocaleDateString("fr-FR")} —{" "}
-                      {new Date(r.check_out_date).toLocaleDateString("fr-FR")}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {nights} nuit{nights > 1 ? "s" : ""}
-                    </div>
-                  </TableCell>
-                  <TableCell>{r.guest_count}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      value={r.platform}
-                      label={BOOKING_PLATFORM_LABELS[r.platform as keyof typeof BOOKING_PLATFORM_LABELS]}
-                    />
-                  </TableCell>
-                  <TableCell>{r.amount ? `${r.amount}€` : "—"}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      value={r.status}
-                      label={RESERVATION_STATUS_LABELS[r.status as keyof typeof RESERVATION_STATUS_LABELS]}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {(!data || data.length === 0) && (
-              <EmptyState
-                icon={CalendarDays}
-                title="Aucune réservation trouvée"
-                description="Les réservations de vos logements apparaîtront ici"
-                colSpan={7}
-              />
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <ReservationsTableWithSelection reservations={data || []} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );

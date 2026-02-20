@@ -105,3 +105,106 @@ export async function deleteIncident(id: string): Promise<ActionResponse> {
     return errorResponse((err as Error).message ?? "Erreur lors de la suppression de l'incident");
   }
 }
+
+export async function bulkCloseIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    const supabase = createClient();
+
+    const { error, count } = await supabase
+      .from("incidents")
+      .update({
+        status: "CLOS",
+        resolved_at: new Date().toISOString()
+      })
+      .in("id", incidentIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk close incidents error:", error);
+      return errorResponse("Erreur lors de la clôture") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/incidents");
+
+    return successResponse(
+      `${count} incident${count && count > 1 ? "s" : ""} clôturé${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk close error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de la clôture") as ActionResponse<{ count: number }>;
+  }
+}
+
+export async function bulkAssignIncidents(data: {
+  incident_ids: string[];
+  prestataire_id: string;
+  organisation_id: string;
+}): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    const supabase = createClient();
+
+    // Vérifier que le prestataire existe et appartient à l'organisation
+    const { data: prestataire, error: prestataireError } = await supabase
+      .from("prestataires")
+      .select("id, full_name")
+      .eq("id", data.prestataire_id)
+      .eq("organisation_id", data.organisation_id)
+      .single();
+
+    if (prestataireError || !prestataire) {
+      return errorResponse("Prestataire non trouvé") as ActionResponse<{ count: number }>;
+    }
+
+    const { error, count } = await supabase
+      .from("incidents")
+      .update({ prestataire_id: data.prestataire_id })
+      .in("id", data.incident_ids)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk assign incidents error:", error);
+      return errorResponse("Erreur lors de l'assignation") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/incidents");
+
+    return successResponse(
+      `${count} incident${count && count > 1 ? "s" : ""} assigné${count && count > 1 ? "s" : ""} à ${prestataire.full_name}`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk assign error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de l'assignation") as ActionResponse<{ count: number }>;
+  }
+}
+
+export async function bulkDeleteIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const profile = await requireProfile();
+    const supabase = createClient();
+
+    const { error, count } = await supabase
+      .from("incidents")
+      .delete({ count: "exact" })
+      .in("id", incidentIds)
+      .eq("organisation_id", profile.organisation_id);
+
+    if (error) {
+      console.error("Bulk delete incidents error:", error);
+      return errorResponse("Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+    }
+
+    revalidatePath("/incidents");
+
+    return successResponse(
+      `${count} incident${count && count > 1 ? "s" : ""} supprimé${count && count > 1 ? "s" : ""} avec succès`,
+      { count: count || 0 }
+    );
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    return errorResponse((err as Error).message ?? "Erreur lors de la suppression") as ActionResponse<{ count: number }>;
+  }
+}

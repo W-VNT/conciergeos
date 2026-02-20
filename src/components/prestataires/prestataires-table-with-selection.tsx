@@ -1,0 +1,179 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SPECIALTY_LABELS } from "@/types/database";
+import { useBulkSelection } from "@/hooks/use-bulk-selection";
+import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
+import { Trash2, Star } from "lucide-react";
+import { bulkDeletePrestataires } from "@/lib/actions/prestataires";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface Prestataire {
+  id: string;
+  full_name: string;
+  specialty: string;
+  phone: string | null;
+  city: string | null;
+  reliability_score: number | null;
+}
+
+interface Props {
+  prestataires: Prestataire[];
+}
+
+export function PrestatairesTableWithSelection({ prestataires }: Props) {
+  const {
+    selectedIds,
+    toggleSelection,
+    toggleAll,
+    clearSelection,
+    isSelected,
+    isAllSelected,
+    selectedCount,
+  } = useBulkSelection({ items: prestataires });
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleBulkDelete = async () => {
+    setLoading(true);
+
+    const result = await bulkDeletePrestataires(selectedIds);
+
+    setLoading(false);
+    setDeleteDialogOpen(false);
+
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  const bulkActions: BulkAction[] = [
+    {
+      label: "Supprimer",
+      icon: <Trash2 className="h-4 w-4 mr-2" />,
+      onClick: () => setDeleteDialogOpen(true),
+      variant: "destructive",
+      disabled: loading,
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {selectedCount > 0 && (
+        <BulkActionsToolbar
+          selectedCount={selectedCount}
+          entityName="prestataire"
+          actions={bulkActions}
+          onClear={clearSelection}
+        />
+      )}
+
+      <div className="rounded-lg border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+              <TableHead>Nom</TableHead>
+              <TableHead>Spécialité</TableHead>
+              <TableHead>Téléphone</TableHead>
+              <TableHead>Ville</TableHead>
+              <TableHead>Fiabilité</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {prestataires.map((prestataire) => (
+              <TableRow
+                key={prestataire.id}
+                className={isSelected(prestataire.id) ? "bg-primary/5" : ""}
+              >
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(prestataire.id)}
+                    onCheckedChange={() => toggleSelection(prestataire.id)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Link href={`/prestataires/${prestataire.id}`} className="font-medium hover:underline">
+                    {prestataire.full_name}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge
+                    value={prestataire.specialty}
+                    label={SPECIALTY_LABELS[prestataire.specialty as keyof typeof SPECIALTY_LABELS]}
+                  />
+                </TableCell>
+                <TableCell>{prestataire.phone ?? "—"}</TableCell>
+                <TableCell>{prestataire.city ?? "—"}</TableCell>
+                <TableCell>
+                  {prestataire.reliability_score ? (
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm">{prestataire.reliability_score}/5</span>
+                    </div>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {prestataires.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  Aucun prestataire trouvé
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Supprimer {selectedCount} prestataire{selectedCount > 1 ? "s" : ""} ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les prestataires seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={loading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
