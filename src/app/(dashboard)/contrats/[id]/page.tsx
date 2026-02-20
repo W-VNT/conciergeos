@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import type { Proprietaire, Logement, OfferTierConfig } from "@/types/database";
 import { deleteContrat } from "@/lib/actions/contrats";
-import { Pencil, Trash2, FileText } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
+import { Pencil, FileText } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
@@ -115,16 +116,15 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
                 <Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span>
               </Link>
             </Button>
-            <form
-              action={async () => {
+            <DeleteConfirmDialog
+              entityType="contrat"
+              entityName={`Contrat ${contrat.type}`}
+              deleteAction={async () => {
                 "use server";
-                await deleteContrat(contrat.id);
+                return await deleteContrat(contrat.id);
               }}
-            >
-              <Button variant="destructive" size="sm" type="submit">
-                <Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span>
-              </Button>
-            </form>
+              redirectPath="/contrats"
+            />
           </>
         )}
       </PageHeader>

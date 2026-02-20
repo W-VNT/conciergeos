@@ -5,10 +5,11 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Map } from "lucide-react";
+import { Map, Home } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -86,7 +87,12 @@ export default async function LogementsPage({
               </TableRow>
             ))}
             {(!data || data.length === 0) && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Aucun logement trouvé</TableCell></TableRow>
+              <EmptyState
+                icon={Home}
+                title="Aucun logement trouvé"
+                description="Commencez par ajouter votre premier logement"
+                colSpan={5}
+              />
             )}
           </TableBody>
         </Table>

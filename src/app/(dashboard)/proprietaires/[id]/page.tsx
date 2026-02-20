@@ -5,10 +5,11 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { deleteProprietaire } from "@/lib/actions/proprietaires";
 import { InviteProprietaireButton } from "@/components/proprietaires/invite-proprietaire-button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { formatPhone } from "@/lib/utils";
 
@@ -59,9 +60,15 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
             <Button variant="outline" asChild>
               <Link href={`/proprietaires/${proprietaire.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link>
             </Button>
-            <form action={async () => { "use server"; await deleteProprietaire(proprietaire.id); }}>
-              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
-            </form>
+            <DeleteConfirmDialog
+              entityType="propriétaire"
+              entityName={proprietaire.full_name}
+              deleteAction={async () => {
+                "use server";
+                return await deleteProprietaire(proprietaire.id);
+              }}
+              redirectPath="/proprietaires"
+            />
           </>
         )}
       </PageHeader>

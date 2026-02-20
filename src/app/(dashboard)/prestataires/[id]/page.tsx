@@ -5,9 +5,10 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { SPECIALTY_LABELS, STATUT_JURIDIQUE_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { deletePrestataire } from "@/lib/actions/prestataires";
-import { Pencil, Trash2, Star } from "lucide-react";
+import { Pencil, Star } from "lucide-react";
 import Link from "next/link";
 
 export default async function PrestataireDetailPage({ params }: { params: { id: string } }) {
@@ -32,9 +33,15 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
         {admin && (
           <>
             <Button variant="outline" asChild><Link href={`/prestataires/${prestataire.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
-            <form action={async () => { "use server"; await deletePrestataire(prestataire.id); }}>
-              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
-            </form>
+            <DeleteConfirmDialog
+              entityType="prestataire"
+              entityName={prestataire.full_name}
+              deleteAction={async () => {
+                "use server";
+                return await deletePrestataire(prestataire.id);
+              }}
+              redirectPath="/prestataires"
+            />
           </>
         )}
       </PageHeader>

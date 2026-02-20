@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS, EQUIPEMENT_ETAT_LABELS } from "@/types/database";
 import { deleteMission } from "@/lib/actions/missions";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
-import { Pencil, Trash2, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown } from "lucide-react";
+import { Pencil, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
 
@@ -131,9 +132,15 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           <Link href={`/missions/${mission.id}/edit`} title="Modifier"><Pencil className="h-4 w-4" /></Link>
         </Button>
         {admin && (
-          <form action={async () => { "use server"; await deleteMission(mission.id); }}>
-            <Button variant="destructive" size="sm" className="px-3" type="submit" title="Supprimer"><Trash2 className="h-4 w-4" /></Button>
-          </form>
+          <DeleteConfirmDialog
+            entityType="mission"
+            entityName={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
+            deleteAction={async () => {
+              "use server";
+              return await deleteMission(mission.id);
+            }}
+            redirectPath="/missions"
+          />
         )}
       </div>
 

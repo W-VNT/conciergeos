@@ -5,8 +5,10 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -124,11 +126,12 @@ export default async function ReservationsPage({
               );
             })}
             {(!data || data.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Aucune réservation trouvée
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                icon={CalendarDays}
+                title="Aucune réservation trouvée"
+                description="Les réservations de vos logements apparaîtront ici"
+                colSpan={7}
+              />
             )}
           </TableBody>
         </Table>

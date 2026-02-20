@@ -5,9 +5,11 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export const revalidate = 30;
@@ -60,7 +62,14 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
                 </TableRow>
               );
             })}
-            {(!data || data.length === 0) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Aucun incident trouvé</TableCell></TableRow>}
+            {(!data || data.length === 0) && (
+              <EmptyState
+                icon={AlertTriangle}
+                title="Aucun incident trouvé"
+                description="Les incidents seront listés ici"
+                colSpan={6}
+              />
+            )}
           </TableBody>
         </Table>
       </div>

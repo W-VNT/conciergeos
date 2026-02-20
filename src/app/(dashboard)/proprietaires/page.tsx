@@ -5,8 +5,10 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Users } from "lucide-react";
 import Link from "next/link";
 import { formatPhone } from "@/lib/utils";
 
@@ -68,9 +70,12 @@ export default async function ProprietairesPage({
               </TableRow>
             ))}
             {(!data || data.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Aucun propriétaire trouvé</TableCell>
-              </TableRow>
+              <EmptyState
+                icon={Users}
+                title="Aucun propriétaire trouvé"
+                description="Ajoutez vos propriétaires pour commencer"
+                colSpan={4}
+              />
             )}
           </TableBody>
         </Table>

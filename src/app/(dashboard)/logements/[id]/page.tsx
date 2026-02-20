@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
 import { deleteLogement } from "@/lib/actions/logements";
-import { Pencil, Trash2, AlertTriangle, KeyRound, Wifi } from "lucide-react";
+import { Pencil, AlertTriangle, KeyRound, Wifi } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
@@ -50,9 +51,15 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         {admin && (
           <>
             <Button variant="outline" asChild><Link href={`/logements/${logement.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
-            <form action={async () => { "use server"; await deleteLogement(logement.id); }}>
-              <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
-            </form>
+            <DeleteConfirmDialog
+              entityType="logement"
+              entityName={logement.name}
+              deleteAction={async () => {
+                "use server";
+                return await deleteLogement(logement.id);
+              }}
+              redirectPath="/logements"
+            />
           </>
         )}
       </PageHeader>

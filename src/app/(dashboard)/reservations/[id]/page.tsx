@@ -5,9 +5,10 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS, MISSION_TYPE_LABELS, MISSION_STATUS_LABELS } from "@/types/database";
 import { deleteReservation, terminateReservation } from "@/lib/actions/reservations";
-import { Pencil, Trash2, Users, Calendar, Coins, KeyRound, History, CheckCircle } from "lucide-react";
+import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
@@ -74,16 +75,15 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 <Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span>
               </Link>
             </Button>
-            <form
-              action={async () => {
+            <DeleteConfirmDialog
+              entityType="réservation"
+              entityName={reservation.guest_name}
+              deleteAction={async () => {
                 "use server";
-                await deleteReservation(reservation.id);
+                return await deleteReservation(reservation.id);
               }}
-            >
-              <Button variant="destructive" size="sm" type="submit">
-                <Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span>
-              </Button>
-            </form>
+              redirectPath="/reservations"
+            />
           </>
         )}
       </PageHeader>

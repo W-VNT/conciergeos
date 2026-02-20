@@ -5,10 +5,11 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { SPECIALTY_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Star, Wrench } from "lucide-react";
 import Link from "next/link";
-import { Star } from "lucide-react";
 
 export const revalidate = 30;
 
@@ -53,7 +54,14 @@ export default async function PrestatairesPage({ searchParams }: { searchParams:
                 <TableCell>{p.reliability_score ? <div className="flex items-center gap-1"><Star className="h-3 w-3 fill-yellow-400 text-yellow-400" /><span className="text-sm">{p.reliability_score}/5</span></div> : "—"}</TableCell>
               </TableRow>
             ))}
-            {(!data || data.length === 0) && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Aucun prestataire trouvé</TableCell></TableRow>}
+            {(!data || data.length === 0) && (
+              <EmptyState
+                icon={Wrench}
+                title="Aucun prestataire trouvé"
+                description="Vos prestataires de confiance apparaîtront ici"
+                colSpan={5}
+              />
+            )}
           </TableBody>
         </Table>
       </div>

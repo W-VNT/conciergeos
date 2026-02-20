@@ -5,9 +5,10 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -132,11 +133,12 @@ export default async function ContratsPage({
               );
             })}
             {(!data || data.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Aucun contrat trouvé
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                icon={FileText}
+                title="Aucun contrat trouvé"
+                description="Les contrats avec vos propriétaires apparaîtront ici"
+                colSpan={6}
+              />
             )}
           </TableBody>
         </Table>

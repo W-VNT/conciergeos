@@ -5,9 +5,11 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, MISSION_PRIORITY_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
+import { ClipboardList } from "lucide-react";
 import Link from "next/link";
 
 const PAGE_SIZE = 20;
@@ -73,7 +75,12 @@ export default async function MissionsPage({
               </TableRow>
             ))}
             {(!data || data.length === 0) && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Aucune mission trouvée</TableCell></TableRow>
+              <EmptyState
+                icon={ClipboardList}
+                title="Aucune mission trouvée"
+                description="Les missions apparaîtront ici"
+                colSpan={7}
+              />
             )}
           </TableBody>
         </Table>

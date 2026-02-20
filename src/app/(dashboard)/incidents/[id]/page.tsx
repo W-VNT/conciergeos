@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
 import { deleteIncident } from "@/lib/actions/incidents";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { UpdateIncidentStatusButton } from "@/components/shared/update-incident-status-button";
+import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -48,9 +49,15 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
       >
         <Button variant="outline" asChild><Link href={`/incidents/${incident.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
         {admin && (
-          <form action={async () => { "use server"; await deleteIncident(incident.id); }}>
-            <Button variant="destructive" size="sm" type="submit"><Trash2 className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Supprimer</span></Button>
-          </form>
+          <DeleteConfirmDialog
+            entityType="incident"
+            entityName={incident.description.slice(0, 50) + (incident.description.length > 50 ? "..." : "")}
+            deleteAction={async () => {
+              "use server";
+              return await deleteIncident(incident.id);
+            }}
+            redirectPath="/incidents"
+          />
         )}
       </PageHeader>
       <Card>
