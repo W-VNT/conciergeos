@@ -197,7 +197,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 <button
                   key={key}
                   onClick={() => setView(key)}
-                  className={`flex-1 px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
                     view === key
                       ? "bg-background shadow-sm text-foreground"
                       : "text-muted-foreground hover:text-foreground"
