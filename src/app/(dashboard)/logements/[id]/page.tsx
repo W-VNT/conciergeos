@@ -137,7 +137,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Incidents</CardTitle>
-              <Button size="sm" asChild>
+              <Button size="sm" variant="outline" asChild>
                 <Link href={`/incidents/new?logement_id=${logement.id}`}>
                   <AlertTriangle className="h-4 w-4 mr-2" /> Nouvel incident
                 </Link>
