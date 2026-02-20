@@ -25,8 +25,8 @@ export function NotificationBell() {
 
   useEffect(() => {
     loadNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(loadNotifications, 30000);
+    // Poll for new notifications every 5 seconds
+    const interval = setInterval(loadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
 

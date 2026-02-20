@@ -47,205 +47,143 @@ serve(async (req) => {
 })
 
 function getWelcomeEmailHTML(fullName: string, orgName: string): string {
-  return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenue sur ConciergeOS</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #fafafa;
-        }
-        .container {
-            max-width: 600px;
-            margin: 40px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e5e5;
-        }
-        .header {
-            background-color: #0a0a0a;
-            padding: 32px 30px;
-            text-align: center;
-            border-bottom: 1px solid #262626;
-        }
-        .logo {
-            width: 48px;
-            height: 48px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-            font-size: 24px;
-        }
-        .header h1 {
-            color: #fafafa;
-            margin: 0;
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
-        .content {
-            padding: 40px 30px;
-        }
-        .content h2 {
-            color: #0a0a0a;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0 0 16px 0;
-            letter-spacing: -0.01em;
-        }
-        .content p {
-            color: #737373;
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 0 0 16px 0;
-        }
-        .button {
-            display: inline-block;
-            background-color: #0a0a0a;
-            color: #fafafa !important;
-            text-decoration: none;
-            padding: 12px 28px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 15px;
-            text-align: center;
-            margin: 24px 0;
-            border: 1px solid #0a0a0a;
-        }
-        .features {
-            background-color: #fafafa;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        .feature {
-            display: flex;
-            align-items: start;
-            margin-bottom: 20px;
-        }
-        .feature:last-child {
-            margin-bottom: 0;
-        }
-        .feature-icon {
-            width: 40px;
-            height: 40px;
-            background-color: #0a0a0a;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 16px;
-            flex-shrink: 0;
-            font-size: 20px;
-        }
-        .feature-content h3 {
-            color: #0a0a0a;
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0 0 4px 0;
-            letter-spacing: -0.01em;
-        }
-        .feature-content p {
-            color: #737373;
-            font-size: 14px;
-            margin: 0;
-        }
-        .footer {
-            background-color: #fafafa;
-            padding: 24px 30px;
-            text-align: center;
-            border-top: 1px solid #e5e5e5;
-        }
-        .footer p {
-            color: #a3a3a3;
-            font-size: 14px;
-            margin: 6px 0;
-        }
-        .footer a {
-            color: #525252;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">🏢</div>
-            <h1>ConciergeOS</h1>
-        </div>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: #f5f5f5; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <table width="480" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); max-width: 480px; border: 1px solid #e5e5e5;">
+            <tr>
+              <td style="background: linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%); padding: 40px 30px; text-align: center;">
+                <div style="margin-bottom: 16px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 32 32" style="display: inline-block;">
+                    <rect width="32" height="32" rx="7" fill="#ffffff" fill-opacity="0.12"/>
+                    <g transform="translate(4, 4)" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                      <path d="M10 12h4"/>
+                      <path d="M10 8h4"/>
+                      <path d="M14 21v-3a2 2 0 0 0-4 0v3"/>
+                      <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/>
+                      <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+                    </g>
+                  </svg>
+                </div>
+                <h1 style="color: white; margin: 0 0 8px 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">ConciergeOS</h1>
+                <p style="color: rgba(255, 255, 255, 0.6); margin: 0; font-size: 14px; font-weight: 400;">Gestion de conciergerie nouvelle génération</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 40px 30px;">
+                <div style="text-align: center; padding-bottom: 30px;">
+                  <div style="background: linear-gradient(135deg, #171717 0%, #262626 100%); color: white; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); display: inline-block;">
+                    🎉 Bienvenue !
+                  </div>
+                </div>
+                <h2 style="color: #0a0a0a; font-size: 28px; font-weight: 700; margin: 0 0 20px 0; text-align: center; line-height: 1.3;">
+                  Bienvenue <span style="color: #171717;">${fullName}</span>
+                </h2>
+                <p style="font-size: 17px; color: #525252; line-height: 1.7; margin: 0 0 30px 0; text-align: center;">
+                  Votre compte <strong>${orgName}</strong> a été créé avec succès. Vous êtes maintenant prêt à gérer votre conciergerie de manière professionnelle et efficace.
+                </p>
 
-        <div class="content">
-            <h2>Bienvenue ${fullName} !</h2>
-
-            <p>Votre compte <strong>${orgName}</strong> a été créé avec succès. Vous êtes maintenant prêt à gérer votre conciergerie de manière professionnelle et efficace.</p>
-
-            <a href="https://conciergeos.vercel.app/dashboard" class="button">Accéder à mon dashboard</a>
-
-            <h3 style="color: #0a0a0a; font-size: 18px; margin: 32px 0 16px 0; font-weight: 600; letter-spacing: -0.01em;">Pour bien démarrer</h3>
-
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">🏠</div>
-                    <div class="feature-content">
-                        <h3>Ajoutez vos logements</h3>
-                        <p>Centralisez tous vos biens en gestion avec leurs informations clés</p>
-                    </div>
+                <div style="text-align: center; padding: 30px 0;">
+                  <a href="https://conciergeos.vercel.app/dashboard" style="display: inline-block; background: linear-gradient(135deg, #171717 0%, #0a0a0a 100%); color: white; padding: 18px 48px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+                    Accéder à mon dashboard →
+                  </a>
                 </div>
 
-                <div class="feature">
-                    <div class="feature-icon">👥</div>
-                    <div class="feature-content">
-                        <h3>Créez vos propriétaires</h3>
-                        <p>Enregistrez les coordonnées de vos clients et le niveau de service</p>
-                    </div>
+                <h3 style="color: #0a0a0a; font-size: 20px; font-weight: 700; margin: 30px 0 20px 0; text-align: center;">Pour bien démarrer</h3>
+
+                <div style="background: #fafafa; border-radius: 12px; padding: 24px; margin: 20px 0;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding: 12px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="40" style="vertical-align: top;">
+                              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #171717 0%, #262626 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 40px; font-size: 20px;">🏠</div>
+                            </td>
+                            <td style="padding-left: 16px;">
+                              <h4 style="margin: 0 0 6px 0; color: #0a0a0a; font-size: 16px; font-weight: 600;">Ajoutez vos logements</h4>
+                              <p style="margin: 0; color: #737373; font-size: 14px; line-height: 1.5;">Centralisez tous vos biens en gestion avec leurs informations clés</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="40" style="vertical-align: top;">
+                              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #171717 0%, #262626 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 40px; font-size: 20px;">👥</div>
+                            </td>
+                            <td style="padding-left: 16px;">
+                              <h4 style="margin: 0 0 6px 0; color: #0a0a0a; font-size: 16px; font-weight: 600;">Créez vos propriétaires</h4>
+                              <p style="margin: 0; color: #737373; font-size: 14px; line-height: 1.5;">Enregistrez les coordonnées de vos clients et le niveau de service</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="40" style="vertical-align: top;">
+                              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #171717 0%, #262626 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 40px; font-size: 20px;">📋</div>
+                            </td>
+                            <td style="padding-left: 16px;">
+                              <h4 style="margin: 0 0 6px 0; color: #0a0a0a; font-size: 16px; font-weight: 600;">Planifiez vos missions</h4>
+                              <p style="margin: 0; color: #737373; font-size: 14px; line-height: 1.5;">Check-in, check-out, ménage... Organisez toutes vos interventions</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="40" style="vertical-align: top;">
+                              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #171717 0%, #262626 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 40px; font-size: 20px;">🔧</div>
+                            </td>
+                            <td style="padding-left: 16px;">
+                              <h4 style="margin: 0 0 6px 0; color: #0a0a0a; font-size: 16px; font-weight: 600;">Gérez les incidents</h4>
+                              <p style="margin: 0; color: #737373; font-size: 14px; line-height: 1.5;">Suivez les problèmes, assignez des prestataires et consultez vos KPIs</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
                 </div>
 
-                <div class="feature">
-                    <div class="feature-icon">📋</div>
-                    <div class="feature-content">
-                        <h3>Planifiez vos missions</h3>
-                        <p>Check-in, check-out, ménage... Organisez toutes vos interventions</p>
-                    </div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-top: 30px;">
+                  <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.6;">
+                    💬 <strong>Besoin d'aide ?</strong> Notre équipe est là pour vous. Contactez-nous à <a href="mailto:support@conciergeos.com" style="color: #1e40af; text-decoration: underline;">support@conciergeos.com</a>
+                  </p>
                 </div>
-
-                <div class="feature">
-                    <div class="feature-icon">🔧</div>
-                    <div class="feature-content">
-                        <h3>Gérez les incidents</h3>
-                        <p>Suivez les problèmes, assignez des prestataires et consultez vos KPIs</p>
-                    </div>
-                </div>
-            </div>
-
-            <p style="margin-top: 32px; color: #0a0a0a;"><strong>Besoin d'aide ?</strong></p>
-            <p style="margin-top: 8px;">
-                Notre équipe est là pour vous. Contactez-nous à
-                <a href="mailto:support@conciergeos.com" style="color: #0a0a0a; text-decoration: underline;">support@conciergeos.com</a>
-            </p>
-        </div>
-
-        <div class="footer">
-            <p><strong>ConciergeOS</strong> — Gérez votre conciergerie en toute simplicité</p>
-            <p>
-                <a href="https://conciergeos.vercel.app">Site web</a> •
-                <a href="mailto:support@conciergeos.com">Support</a>
-            </p>
-            <p style="margin-top: 12px;">© 2026 ConciergeOS. Tous droits réservés.</p>
-        </div>
-    </div>
-</body>
-</html>
-  `
+              </td>
+            </tr>
+            <tr>
+              <td style="background: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #e5e5e5;">
+                <p style="margin: 0 0 16px 0; color: #525252; font-size: 14px; font-weight: 600;">ConciergeOS</p>
+                <p style="margin: 0 0 20px 0; color: #737373; font-size: 13px; line-height: 1.6;">
+                  La plateforme tout-en-un pour gérer votre conciergerie<br>Réservations • Missions • Incidents • Finances
+                </p>
+                <p style="margin: 0; color: #a3a3a3; font-size: 12px;">© 2026 ConciergeOS. Tous droits réservés.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
 }
