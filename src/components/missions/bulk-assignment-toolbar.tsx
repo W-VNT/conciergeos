@@ -91,19 +91,19 @@ export function BulkAssignmentToolbar({
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 border rounded-lg">
-      <span className="text-sm font-medium">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
+      <span className="text-sm font-medium whitespace-nowrap">
         {selectedCount} mission{selectedCount > 1 ? "s" : ""} sélectionnée{selectedCount > 1 ? "s" : ""}
       </span>
 
-      <div className="flex gap-2 ml-auto">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 ml-auto">
         <Button
           variant="outline"
           size="sm"
           onClick={() => setDialogOpen(true)}
         >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Assigner à...
+          <UserPlus className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Assigner à...</span>
         </Button>
 
         <Button
@@ -112,8 +112,8 @@ export function BulkAssignmentToolbar({
           onClick={handleAutoAssign}
           disabled={loading}
         >
-          <Zap className="h-4 w-4 mr-2" />
-          Auto-assigner
+          <Zap className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Auto-assigner</span>
         </Button>
 
         <Button
@@ -122,8 +122,8 @@ export function BulkAssignmentToolbar({
           onClick={handleBulkComplete}
           disabled={loading}
         >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Terminer
+          <CheckCircle className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Terminer</span>
         </Button>
 
         <Button
@@ -131,8 +131,8 @@ export function BulkAssignmentToolbar({
           size="sm"
           onClick={() => setDeleteDialogOpen(true)}
         >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Supprimer
+          <Trash2 className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Supprimer</span>
         </Button>
 
         <Button variant="ghost" size="sm" onClick={onClear}>

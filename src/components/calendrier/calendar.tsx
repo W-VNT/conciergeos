@@ -373,15 +373,21 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                       );
                     })}
                     {dayMissions.length > 0 && (
-                      <div className="flex gap-0.5 flex-wrap mt-1">
-                        {dayMissions.slice(0, 4).map((mission) => (
-                          <Link key={mission.id} href={`/missions/${mission.id}`} title={MISSION_TYPE_LABELS[mission.type]}>
-                            <div className={`w-2 h-2 rounded-full ${MISSION_TYPE_COLORS[mission.type]}`} />
-                          </Link>
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {Object.entries(
+                          dayMissions.reduce<Record<string, number>>((acc, m) => {
+                            acc[m.type] = (acc[m.type] || 0) + 1;
+                            return acc;
+                          }, {})
+                        ).map(([type, count]) => (
+                          <span
+                            key={type}
+                            className={`inline-flex items-center gap-0.5 text-[10px] font-medium text-white px-1.5 py-0.5 rounded-full leading-none ${MISSION_TYPE_COLORS[type as MissionType]}`}
+                            title={`${count} ${MISSION_TYPE_LABELS[type as MissionType]}`}
+                          >
+                            {count}
+                          </span>
                         ))}
-                        {dayMissions.length > 4 && (
-                          <div className="text-[9px] text-muted-foreground">+{dayMissions.length - 4}</div>
-                        )}
                       </div>
                     )}
                   </div>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS, EQUIPEMENT_ETAT_LABELS } from "@/types/database";
 import { deleteMission } from "@/lib/actions/missions";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
-import { Pencil, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown } from "lucide-react";
+import { Pencil, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown, Navigation } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
@@ -20,7 +20,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
 
   const { data: mission } = await supabase
     .from("missions")
-    .select("*, logement:logements(id, name, address_line1, city, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes), assignee:profiles(id, full_name)")
+    .select("*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes), assignee:profiles(id, full_name)")
     .eq("id", params.id)
     .single();
 
@@ -94,6 +94,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     name: string;
     address_line1: string | null;
     city: string | null;
+    postal_code: string | null;
     lockbox_code: string | null;
     wifi_name: string | null;
     wifi_password: string | null;
@@ -102,6 +103,9 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     menage_price: number | null;
     notes: string | null;
   } | null;
+
+  const addressText = logement ? [logement.address_line1, logement.postal_code, logement.city].filter(Boolean).join(", ") : null;
+  const mapsUrl = addressText ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressText)}` : null;
   const assignee = mission.assignee as { id: string; full_name: string } | null;
 
   // Calcul urgence check-in
@@ -155,10 +159,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     <Link href={`/logements/${logement.id}`} className="font-semibold text-lg hover:underline leading-tight">
                       {logement.name}
                     </Link>
-                    {(logement.address_line1 || logement.city) && (
+                    {addressText && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                        {[logement.address_line1, logement.city].filter(Boolean).join(", ")}
+                        {mapsUrl ? (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-primary transition-colors"
+                          >
+                            <Navigation className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </a>
+                        ) : (
+                          <>
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </>
+                        )}
                       </p>
                     )}
                   </div>
@@ -317,10 +335,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     <Link href={`/logements/${logement.id}`} className="font-semibold text-lg hover:underline leading-tight">
                       {logement.name}
                     </Link>
-                    {(logement.address_line1 || logement.city) && (
+                    {addressText && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                        {[logement.address_line1, logement.city].filter(Boolean).join(", ")}
+                        {mapsUrl ? (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-primary transition-colors"
+                          >
+                            <Navigation className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </a>
+                        ) : (
+                          <>
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </>
+                        )}
                       </p>
                     )}
                   </div>
@@ -481,10 +513,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     <Link href={`/logements/${logement.id}`} className="font-semibold text-lg hover:underline leading-tight">
                       {logement.name}
                     </Link>
-                    {(logement.address_line1 || logement.city) && (
+                    {addressText && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                        {[logement.address_line1, logement.city].filter(Boolean).join(", ")}
+                        {mapsUrl ? (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-primary transition-colors"
+                          >
+                            <Navigation className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </a>
+                        ) : (
+                          <>
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                            {addressText}
+                          </>
+                        )}
                       </p>
                     )}
                   </div>
@@ -634,10 +680,16 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     <KeyRound className="h-3.5 w-3.5" /> Accès
                   </p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {(logement.address_line1 || logement.city) && (
+                    {addressText && (
                       <>
-                        <span className="text-muted-foreground flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Adresse</span>
-                        <span className="text-right">{[logement.address_line1, logement.city].filter(Boolean).join(", ")}</span>
+                        <span className="text-muted-foreground flex items-center gap-1"><Navigation className="h-3.5 w-3.5" /> Adresse</span>
+                        {mapsUrl ? (
+                          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-right hover:text-primary transition-colors">
+                            {addressText}
+                          </a>
+                        ) : (
+                          <span className="text-right">{addressText}</span>
+                        )}
                       </>
                     )}
                     {logement.lockbox_code && (

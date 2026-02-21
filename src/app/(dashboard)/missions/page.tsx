@@ -3,6 +3,7 @@ import { requireProfile } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
+import { ChipFilter } from "@/components/shared/chip-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
 import { MissionsTableWithSelection } from "@/components/missions/missions-table-with-selection";
@@ -41,7 +42,14 @@ export default async function MissionsPage({
   return (
     <div>
       <PageHeader title="Missions" createHref="/missions/new" createLabel="Nouvelle mission" />
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      {/* Filtres mobile : chips scrollables */}
+      <div className="md:hidden space-y-2 mb-4">
+        <SearchInput placeholder="Rechercher dans les notes..." />
+        <ChipFilter options={statusOptions} placeholder="Tous les statuts" />
+        <ChipFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
+      </div>
+      {/* Filtres desktop : dropdowns */}
+      <div className="hidden md:flex flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans les notes..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />

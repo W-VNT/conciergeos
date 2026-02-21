@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Mission } from "@/types/database";
 import { BulkAssignmentToolbar } from "./bulk-assignment-toolbar";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { User } from "lucide-react";
 
 interface Props {
   missions: Mission[];
@@ -41,7 +43,78 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Vue mobile : cards */}
+      <div className="md:hidden space-y-3">
+        {missions.map((m) => {
+          const logement = Array.isArray(m.logement) ? m.logement[0] : m.logement;
+          const assignee = Array.isArray(m.assignee) ? m.assignee[0] : m.assignee;
+          const isSelected = selectedIds.includes(m.id);
+
+          return (
+            <div
+              key={m.id}
+              className={cn(
+                "border rounded-lg p-3 bg-card transition-colors",
+                isSelected && "bg-primary/5 border-primary/30"
+              )}
+            >
+              {/* Header : checkbox + type + priorité */}
+              <div className="flex items-center gap-2 mb-2">
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => toggleSelection(m.id)}
+                />
+                <StatusBadge value={m.type} label={MISSION_TYPE_LABELS[m.type]} />
+                {m.priority !== "NORMALE" && (
+                  <StatusBadge
+                    value={m.priority}
+                    label={MISSION_PRIORITY_LABELS[m.priority]}
+                    className="ml-auto"
+                  />
+                )}
+              </div>
+
+              {/* Body : logement, date, assigné */}
+              <Link href={`/missions/${m.id}`} className="block pl-8">
+                <p className="font-medium text-sm">
+                  {logement?.name ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {
+                    day: "2-digit",
+                    month: "short",
+                  })}{" "}
+                  à{" "}
+                  {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                  <User className="h-3 w-3" />
+                  {assignee?.full_name ?? "Non assigné"}
+                </div>
+              </Link>
+
+              {/* Footer : statut + bouton terminé */}
+              <div className="flex items-center justify-between pl-8 mt-2 pt-2 border-t">
+                <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
+                {m.status !== "TERMINE" && m.status !== "ANNULE" && (
+                  <CompleteMissionButton missionId={m.id} />
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {missions.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">
+            Aucune mission trouvée
+          </p>
+        )}
+      </div>
+
+      {/* Vue desktop : table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
