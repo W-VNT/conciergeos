@@ -66,7 +66,9 @@ function isSameDay(a: Date, b: Date) {
 
 export default function Calendar({ missions, reservations }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<ViewType>("semaine");
+  const [view, setView] = useState<ViewType>(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "jour" : "semaine"
+  );
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | "ALL">("ALL");
 
   const year = currentDate.getFullYear();
