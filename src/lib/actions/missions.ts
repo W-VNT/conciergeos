@@ -249,10 +249,41 @@ export async function bulkAssignMissions(data: {
       return errorResponse(updateError.message) as ActionResponse<{ count: number }>;
     }
 
+    // Fetch mission types for push notification content
+    const { data: assignedMissions } = await supabase
+      .from("missions")
+      .select("id, type")
+      .in("id", validated.mission_ids);
+
+    const TYPE_LABELS: Record<string, string> = {
+      CHECKIN: "Check-in",
+      CHECKOUT: "Check-out",
+      MENAGE: "Ménage",
+      INTERVENTION: "Intervention",
+      URGENCE: "Urgence",
+    };
+
+    const typeCounts = (assignedMissions || []).reduce<Record<string, number>>((acc, m) => {
+      acc[m.type] = (acc[m.type] || 0) + 1;
+      return acc;
+    }, {});
+
+    const typeSummary = Object.entries(typeCounts)
+      .map(([type, count]) => `${count} ${TYPE_LABELS[type] || type}`)
+      .join(", ");
+
+    const count = validated.mission_ids.length;
+    const pushTitle = count === 1
+      ? `Mission assignée : ${typeSummary}`
+      : `${count} missions assignées`;
+    const pushBody = count === 1
+      ? "Une nouvelle mission vous a été assignée"
+      : typeSummary;
+
     // Send push notification to assigned operator (non-blocking)
     sendPushToUser(validated.operator_id, {
-      title: "Nouvelle mission assignée",
-      body: `${validated.mission_ids.length} mission(s) vous ont été assignée(s)`,
+      title: pushTitle,
+      body: pushBody,
       url: "/missions",
     }).catch((err) => console.error("[push] Failed to send push:", err));
 
