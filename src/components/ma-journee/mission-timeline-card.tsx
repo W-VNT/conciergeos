@@ -114,7 +114,7 @@ export function MissionTimelineCard({ mission }: Props) {
       <div className="p-3 space-y-1.5">
         {logement && (
           <>
-            <Link href={`/logements/${logement.id}`} className="font-semibold text-sm hover:underline block">
+            <Link href={`/missions/${mission.id}`} className="font-semibold text-sm hover:underline block">
               {logement.name}
             </Link>
             {addressText && (
