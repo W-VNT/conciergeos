@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Topbar } from "./topbar";
 import { BottomTabBar } from "./bottom-tab-bar";
+import { PullToRefresh } from "./pull-to-refresh";
+import { PushPermissionPrompt } from "@/components/shared/push-permission-prompt";
 import type { Profile, Organisation } from "@/types/database";
 
 interface DashboardShellProps {
@@ -41,7 +43,10 @@ export function DashboardShell({
         organisation={organisation}
         visible={topbarVisible}
       />
-      <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
+      <PushPermissionPrompt />
+      <PullToRefresh>
+        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
+      </PullToRefresh>
       <BottomTabBar />
     </>
   );
