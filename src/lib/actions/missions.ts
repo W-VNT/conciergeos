@@ -226,7 +226,7 @@ export async function bulkAssignMissions(data: {
       .select("id, full_name, role")
       .eq("id", validated.operator_id)
       .eq("organisation_id", validated.organisation_id)
-      .eq("role", "OPERATEUR")
+      .in("role", ["OPERATEUR", "ADMIN", "GESTIONNAIRE"])
       .single();
 
     if (opError || !operator) {
