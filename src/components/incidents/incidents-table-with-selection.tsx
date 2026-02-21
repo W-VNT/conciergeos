@@ -13,6 +13,7 @@ import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-ac
 import { CheckCircle, UserPlus, Trash2 } from "lucide-react";
 import { bulkCloseIncidents, bulkAssignIncidents, bulkDeleteIncidents } from "@/lib/actions/incidents";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import {
   AlertDialog,
@@ -178,7 +179,52 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {incidents.map((incident) => {
+          const isLate = !["RESOLU", "CLOS"].includes(incident.status) &&
+            (Date.now() - new Date(incident.opened_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+          const logement = Array.isArray(incident.logement) ? incident.logement[0] : incident.logement;
+          const prestataire = Array.isArray(incident.prestataire) ? incident.prestataire[0] : incident.prestataire;
+
+          return (
+            <div
+              key={incident.id}
+              className={cn(
+                "border rounded-lg p-3 bg-card transition-colors",
+                isSelected(incident.id) && "bg-primary/5 border-primary/30"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Checkbox checked={isSelected(incident.id)} onCheckedChange={() => toggleSelection(incident.id)} />
+                <StatusBadge
+                  value={incident.severity}
+                  label={INCIDENT_SEVERITY_LABELS[incident.severity as keyof typeof INCIDENT_SEVERITY_LABELS]}
+                />
+                {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
+                <StatusBadge
+                  value={incident.status}
+                  label={INCIDENT_STATUS_LABELS[incident.status as keyof typeof INCIDENT_STATUS_LABELS]}
+                  className="ml-auto"
+                />
+              </div>
+              <Link href={`/incidents/${incident.id}`} className="block pl-8">
+                <p className="font-medium text-sm line-clamp-2">{incident.description}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{logement?.name ?? "—"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {prestataire?.full_name ?? "—"} · {new Date(incident.opened_at).toLocaleDateString("fr-FR")}
+                </p>
+              </Link>
+            </div>
+          );
+        })}
+        {incidents.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Aucun incident trouvé</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

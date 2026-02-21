@@ -11,7 +11,7 @@ import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-ac
 import { Trash2 } from "lucide-react";
 import { bulkDeleteProprietaires } from "@/lib/actions/proprietaires";
 import { toast } from "sonner";
-import { formatPhone } from "@/lib/utils";
+import { cn, formatPhone } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,7 +86,37 @@ export function ProprietairesTableWithSelection({ proprietaires }: Props) {
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {proprietaires.map((p) => (
+          <div
+            key={p.id}
+            className={cn(
+              "border rounded-lg p-3 bg-card transition-colors",
+              isSelected(p.id) && "bg-primary/5 border-primary/30"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox checked={isSelected(p.id)} onCheckedChange={() => toggleSelection(p.id)} />
+              <StatusBadge
+                value={p.statut_juridique}
+                label={STATUT_JURIDIQUE_LABELS[p.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS]}
+              />
+            </div>
+            <Link href={`/proprietaires/${p.id}`} className="block pl-8">
+              <p className="font-medium text-sm">{p.full_name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{formatPhone(p.phone)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{p.email ?? "—"}</p>
+            </Link>
+          </div>
+        ))}
+        {proprietaires.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Aucun propriétaire trouvé</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

@@ -11,6 +11,7 @@ import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-ac
 import { Ban, Trash2 } from "lucide-react";
 import { bulkCancelReservations, bulkDeleteReservations } from "@/lib/actions/reservations";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -114,7 +115,57 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {reservations.map((reservation) => {
+          const nights = Math.ceil(
+            (new Date(reservation.check_out_date).getTime() - new Date(reservation.check_in_date).getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
+          const logement = Array.isArray(reservation.logement) ? reservation.logement[0] : reservation.logement;
+
+          return (
+            <div
+              key={reservation.id}
+              className={cn(
+                "border rounded-lg p-3 bg-card transition-colors",
+                isSelected(reservation.id) && "bg-primary/5 border-primary/30"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Checkbox checked={isSelected(reservation.id)} onCheckedChange={() => toggleSelection(reservation.id)} />
+                <StatusBadge
+                  value={reservation.platform}
+                  label={BOOKING_PLATFORM_LABELS[reservation.platform as keyof typeof BOOKING_PLATFORM_LABELS]}
+                />
+                <StatusBadge
+                  value={reservation.status}
+                  label={RESERVATION_STATUS_LABELS[reservation.status as keyof typeof RESERVATION_STATUS_LABELS]}
+                  className="ml-auto"
+                />
+              </div>
+              <Link href={`/reservations/${reservation.id}`} className="block pl-8">
+                <p className="font-medium text-sm">{reservation.guest_name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{logement?.name ?? "—"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {new Date(reservation.check_in_date).toLocaleDateString("fr-FR")} — {new Date(reservation.check_out_date).toLocaleDateString("fr-FR")} · {nights} nuit{nights > 1 ? "s" : ""}
+                </p>
+              </Link>
+              {reservation.amount && (
+                <div className="pl-8 mt-2 pt-2 border-t">
+                  <p className="text-sm font-medium">{reservation.amount}€</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {reservations.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Aucune réservation trouvée</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

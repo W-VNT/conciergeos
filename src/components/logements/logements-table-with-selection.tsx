@@ -11,6 +11,7 @@ import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-ac
 import { Trash2 } from "lucide-react";
 import { bulkDeleteLogements } from "@/lib/actions/logements";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,7 +87,39 @@ export function LogementsTableWithSelection({ logements }: Props) {
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {logements.map((l) => {
+          const proprietaire = Array.isArray(l.proprietaire) ? l.proprietaire[0] : l.proprietaire;
+          return (
+            <div
+              key={l.id}
+              className={cn(
+                "border rounded-lg p-3 bg-card transition-colors",
+                isSelected(l.id) && "bg-primary/5 border-primary/30"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Checkbox checked={isSelected(l.id)} onCheckedChange={() => toggleSelection(l.id)} />
+                <StatusBadge value={l.offer_tier} label={OFFER_TIER_LABELS[l.offer_tier as keyof typeof OFFER_TIER_LABELS]} />
+                <StatusBadge value={l.status} label={LOGEMENT_STATUS_LABELS[l.status as keyof typeof LOGEMENT_STATUS_LABELS]} className="ml-auto" />
+              </div>
+              <Link href={`/logements/${l.id}`} className="block pl-8">
+                <p className="font-medium text-sm">{l.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {l.city ?? "—"} — {proprietaire?.full_name ?? "—"}
+                </p>
+              </Link>
+            </div>
+          );
+        })}
+        {logements.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Aucun logement trouvé</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -105,7 +138,6 @@ export function LogementsTableWithSelection({ logements }: Props) {
           </TableHeader>
           <TableBody>
             {logements.map((logement) => {
-              // Normalize joined data (Supabase can return arrays)
               const proprietaire = Array.isArray(logement.proprietaire)
                 ? logement.proprietaire[0]
                 : logement.proprietaire;

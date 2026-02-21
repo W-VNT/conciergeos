@@ -11,6 +11,7 @@ import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-ac
 import { Trash2, Star } from "lucide-react";
 import { bulkDeletePrestataires } from "@/lib/actions/prestataires";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,7 +87,44 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
         />
       )}
 
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {prestataires.map((p) => (
+          <div
+            key={p.id}
+            className={cn(
+              "border rounded-lg p-3 bg-card transition-colors",
+              isSelected(p.id) && "bg-primary/5 border-primary/30"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox checked={isSelected(p.id)} onCheckedChange={() => toggleSelection(p.id)} />
+              <StatusBadge
+                value={p.specialty}
+                label={SPECIALTY_LABELS[p.specialty as keyof typeof SPECIALTY_LABELS]}
+              />
+              {p.reliability_score && (
+                <div className="flex items-center gap-1 ml-auto text-sm">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span>{p.reliability_score}/5</span>
+                </div>
+              )}
+            </div>
+            <Link href={`/prestataires/${p.id}`} className="block pl-8">
+              <p className="font-medium text-sm">{p.full_name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {p.phone ?? "—"}{p.city && ` · ${p.city}`}
+              </p>
+            </Link>
+          </div>
+        ))}
+        {prestataires.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">Aucun prestataire trouvé</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

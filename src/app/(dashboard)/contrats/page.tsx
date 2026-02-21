@@ -63,7 +63,58 @@ export default async function ContratsPage({
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
         <StatusFilter paramName="proprietaire_id" options={proprietaireOptions} placeholder="Tous les propriétaires" />
       </div>
-      <div className="rounded-lg border bg-card">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {data?.map((c) => {
+          const endDate = new Date(c.end_date);
+          const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const isExpiringSoon = c.status === "ACTIF" && daysRemaining > 0 && daysRemaining <= 30;
+
+          return (
+            <div key={c.id} className="border rounded-lg p-3 bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <StatusBadge
+                  value={c.type}
+                  label={CONTRACT_TYPE_LABELS[c.type as keyof typeof CONTRACT_TYPE_LABELS]}
+                />
+                <StatusBadge
+                  value={c.status}
+                  label={CONTRACT_STATUS_LABELS[c.status as keyof typeof CONTRACT_STATUS_LABELS]}
+                  className="ml-auto"
+                />
+              </div>
+              <Link href={`/contrats/${c.id}`} className="block">
+                <p className="font-medium text-sm">
+                  {(c.proprietaire as { full_name: string } | null)?.full_name ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {c.logement_id
+                    ? (c.logement as { name: string } | null)?.name ?? "—"
+                    : "Tous les logements"}
+                </p>
+              </Link>
+              <div className="mt-2 pt-2 border-t flex items-center gap-2 text-xs text-muted-foreground">
+                <span>
+                  {new Date(c.start_date).toLocaleDateString("fr-FR")} — {new Date(c.end_date).toLocaleDateString("fr-FR")}
+                </span>
+                {isExpiringSoon && (
+                  <span className="flex items-center gap-1 text-orange-600 font-medium">
+                    <AlertCircle className="h-3 w-3" />
+                    {daysRemaining}j
+                  </span>
+                )}
+                <span className="ml-auto font-medium text-foreground">{c.commission_rate}%</span>
+              </div>
+            </div>
+          );
+        })}
+        {(!data || data.length === 0) && (
+          <p className="text-center text-muted-foreground py-8">Aucun contrat trouvé</p>
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
