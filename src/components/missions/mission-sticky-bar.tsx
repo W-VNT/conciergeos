@@ -38,11 +38,11 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
   };
 
   return (
-    <div className="fixed bottom-[4rem] inset-x-0 z-40 md:hidden bg-white dark:bg-gray-900 border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)] px-4 py-2">
-      <div className="flex gap-2">
+    <div className="fixed bottom-[5.5rem] inset-x-0 z-40 md:hidden flex justify-center pointer-events-none">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-lg border pointer-events-auto">
         {/* Primary action: Start or Complete */}
         {missionStatus === "A_FAIRE" ? (
-          <Button size="sm" onClick={handleStart} disabled={loading} className="flex-1">
+          <Button size="sm" onClick={handleStart} disabled={loading} className="rounded-full h-9 px-4 text-sm font-medium">
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -53,12 +53,12 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
             )}
           </Button>
         ) : (
-          <CompleteMissionButton missionId={missionId} variant="default" className="flex-1" />
+          <CompleteMissionButton missionId={missionId} variant="default" className="rounded-full h-9 px-4 text-sm font-medium" />
         )}
 
         {/* Navigate */}
         {mapsUrl && (
-          <Button variant="outline" size="sm" asChild className="flex-1">
+          <Button variant="outline" size="sm" asChild className="rounded-full h-9 px-4 text-sm font-medium">
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
               <Navigation className="h-4 w-4 mr-1.5" />
               Naviguer
@@ -67,7 +67,7 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
         )}
 
         {/* Report incident */}
-        <Button variant="outline" size="sm" asChild className="flex-1">
+        <Button variant="outline" size="sm" asChild className="rounded-full h-9 px-4 text-sm font-medium">
           <Link href={`/incidents/new?logement_id=${logementId}&mission_id=${missionId}`}>
             <AlertTriangle className="h-4 w-4 mr-1.5" />
             Incident
