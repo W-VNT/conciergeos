@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,9 +66,13 @@ function isSameDay(a: Date, b: Date) {
 
 export default function Calendar({ missions, reservations }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<ViewType>(() =>
-    typeof window !== "undefined" && window.innerWidth < 768 ? "jour" : "semaine"
-  );
+  const [view, setView] = useState<ViewType>("semaine");
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setView("jour");
+    }
+  }, []);
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | "ALL">("ALL");
 
   const year = currentDate.getFullYear();
