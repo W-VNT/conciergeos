@@ -64,11 +64,11 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
 
   return (
     <>
-      <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800">
-        <div
-          className="grid grid-cols-5 h-16"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
+      <nav
+        className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="grid grid-cols-5 h-16">
           {tabs.map((tab) => {
             const isActive =
               !tab.isAction && pathname.startsWith(tab.href);
