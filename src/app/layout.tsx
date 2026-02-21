@@ -17,7 +17,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "ConciergeOS",
   description: "Back-office premium pour conciergeries",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -36,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className={`${inter.className} antialiased`}>
