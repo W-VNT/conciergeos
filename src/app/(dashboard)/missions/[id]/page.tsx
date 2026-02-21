@@ -12,6 +12,7 @@ import { Pencil, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, C
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
+import { MissionStickyBar } from "@/components/missions/mission-sticky-bar";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -116,7 +117,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
   const isUrgent = hoursUntilCheckIn !== null && hoursUntilCheckIn < 24;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-16 md:pb-0">
       <PageHeader
         title={`Mission ${MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}`}
         showCreate={false}
@@ -125,7 +126,8 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         entityName={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
       />
 
-      <div className="flex gap-2 -mt-2 mb-2">
+      {/* Desktop: all actions in top bar */}
+      <div className="hidden md:flex gap-2 -mt-2 mb-2">
         {mission.status !== "TERMINE" && mission.status !== "ANNULE" && (
           <CompleteMissionButton missionId={mission.id} variant="default" className="flex-1" />
         )}
@@ -134,6 +136,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         </Button>
         <Button variant="outline" size="sm" className="px-3" asChild>
           <Link href={`/missions/${mission.id}/edit`} title="Modifier"><Pencil className="h-4 w-4" /></Link>
+        </Button>
+        {admin && (
+          <DeleteConfirmDialog
+            entityType="mission"
+            entityName={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
+            deleteAction={async () => {
+              "use server";
+              return await deleteMission(mission.id);
+            }}
+            redirectPath="/missions"
+          />
+        )}
+      </div>
+
+      {/* Mobile: only secondary actions in top bar */}
+      <div className="flex md:hidden gap-2 -mt-2 mb-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/missions/${mission.id}/edit`}><Pencil className="h-4 w-4 mr-1.5" />Modifier</Link>
         </Button>
         {admin && (
           <DeleteConfirmDialog
@@ -731,6 +751,14 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           <ChecklistManager missionId={params.id} />
         </>
       )}
+
+      {/* Mobile sticky action bar */}
+      <MissionStickyBar
+        missionId={mission.id}
+        missionStatus={mission.status}
+        logementId={mission.logement_id}
+        mapsUrl={mapsUrl}
+      />
     </div>
   );
 }
