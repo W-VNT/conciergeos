@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createServerClient } from "@supabase/supabase-js";
 
 if (
   process.env.VAPID_SUBJECT &&
@@ -25,7 +25,11 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     return;
   }
 
-  const supabase = createClient();
+  // Use service role key to bypass RLS (called from webhook without user session)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
