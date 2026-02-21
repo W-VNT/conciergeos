@@ -19,7 +19,7 @@ export function PushPermissionPrompt() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Only show on mobile, only if push is supported
+    // Only show if push is supported
     if (typeof window === "undefined") return;
     if (!("Notification" in window)) return;
     if (!("serviceWorker" in navigator)) return;
@@ -76,7 +76,7 @@ export function PushPermissionPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="md:hidden mx-4 mt-2 flex items-center gap-2 rounded-lg border bg-card p-3 shadow-sm animate-in slide-in-from-top-2 duration-300">
+    <div className="mx-4 mt-2 flex items-center gap-2 rounded-lg border bg-card p-3 shadow-sm animate-in slide-in-from-top-2 duration-300">
       <Bell className="h-4 w-4 text-primary flex-shrink-0" />
       <p className="text-sm flex-1">Activer les notifications push ?</p>
       <Button size="sm" variant="default" onClick={handleAccept} className="h-7 px-3 text-xs">
