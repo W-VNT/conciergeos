@@ -55,7 +55,8 @@ export function PushPermissionPrompt() {
       });
 
       const json = subscription.toJSON();
-      await fetch("/api/push/subscribe", {
+      console.log("[push] Subscription obtained, sending to server...");
+      const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,6 +64,12 @@ export function PushPermissionPrompt() {
           keys: json.keys,
         }),
       });
+      const data = await res.json();
+      if (res.ok) {
+        console.log("[push] Subscription saved successfully");
+      } else {
+        console.error("[push] Subscription save failed:", data);
+      }
     } catch (err) {
       console.error("[push] Subscription failed:", err);
     }

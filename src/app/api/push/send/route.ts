@@ -6,11 +6,18 @@ export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const expectedToken = process.env.PUSH_API_SECRET;
 
+  console.log("[push/send] Received request");
+  console.log("[push/send] Auth header present:", !!authHeader);
+  console.log("[push/send] Expected token present:", !!expectedToken);
+
   if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
+    console.log("[push/send] Auth failed");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
+  console.log("[push/send] Body type:", body.type || "direct");
+  console.log("[push/send] Has record:", !!body.record);
 
   // Support Supabase webhook format (record object) or direct format
   const record = body.record || body;
@@ -20,7 +27,12 @@ export async function POST(request: NextRequest) {
   const entityType = record.entity_type;
   const entityId = record.entity_id;
 
+  console.log("[push/send] userId:", userId);
+  console.log("[push/send] title:", title);
+  console.log("[push/send] message:", message);
+
   if (!userId || !title) {
+    console.log("[push/send] Missing user_id or title");
     return NextResponse.json(
       { error: "Missing user_id or title" },
       { status: 400 }
@@ -43,6 +55,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await sendPushToUser(userId, { title, body: message || "", url });
+    console.log("[push/send] Push sent successfully");
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[push/send] Error:", err);

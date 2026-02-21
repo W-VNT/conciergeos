@@ -25,16 +25,23 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     return;
   }
 
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn("[push] SUPABASE_SERVICE_ROLE_KEY not configured, skipping push");
+    return;
+  }
+
   // Use service role key to bypass RLS (called from webhook without user session)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions, error } = await supabase
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
+
+  console.log("[push] Subscriptions for user", userId, ":", subscriptions?.length ?? 0, error ? `error: ${error.message}` : "");
 
   if (!subscriptions?.length) return;
 
