@@ -18,7 +18,6 @@ import {
   Wrench,
   DollarSign,
   BarChart3,
-  Building2,
 } from "lucide-react";
 import {
   Sheet,
@@ -50,14 +49,9 @@ const menuItems = [
   { href: "/prestataires", label: "Prestataires", icon: Wrench },
   { href: "/finances", label: "Finances", icon: DollarSign },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/organisation", label: "Organisation", icon: Building2, adminOnly: true },
 ];
 
-interface BottomTabBarProps {
-  isAdmin?: boolean;
-}
-
-export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
+export function BottomTabBar() {
   const pathname = usePathname();
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -150,7 +144,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
           <div className="grid grid-cols-3 gap-3 py-4">
-            {menuItems.filter((item) => !item.adminOnly || isAdmin).map((item) => {
+            {menuItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
                 <Link
