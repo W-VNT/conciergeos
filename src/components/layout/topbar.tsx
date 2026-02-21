@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,11 +11,10 @@ import type { Profile, Organisation } from "@/types/database";
 interface TopbarProps {
   profile: Profile;
   organisation: Organisation | null;
-  onOpenMenu?: () => void;
   visible?: boolean;
 }
 
-export function Topbar({ profile, organisation, onOpenMenu, visible = true }: TopbarProps) {
+export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
   return (
     <div
       className={cn(
@@ -25,17 +24,23 @@ export function Topbar({ profile, organisation, onOpenMenu, visible = true }: To
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <header className="h-14 sm:h-16 border-b dark:border-gray-800 flex items-center justify-between px-3 sm:px-4 md:px-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {onOpenMenu && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 sm:h-10 sm:w-10"
-              onClick={onOpenMenu}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+        <div className="flex items-center gap-2">
+          {organisation?.logo_url ? (
+            <Image
+              src={organisation.logo_url}
+              alt={organisation.name}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-contain"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+              <Building2 className="h-4 w-4" />
+            </div>
           )}
+          <span className="text-sm font-semibold truncate max-w-[140px] sm:max-w-none">
+            {organisation?.name ?? "ConciergeOS"}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <NotificationBell />
