@@ -18,6 +18,7 @@ import {
   Wrench,
   DollarSign,
   BarChart3,
+  Sun,
 } from "lucide-react";
 import {
   Sheet,
@@ -41,6 +42,7 @@ const quickActions = [
 ];
 
 const menuItems = [
+  { href: "/ma-journee", label: "Ma journée", icon: Sun },
   { href: "/logements", label: "Logements", icon: Home },
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/contrats", label: "Contrats", icon: FileText },

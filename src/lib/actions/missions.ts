@@ -87,6 +87,21 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
   }
 }
 
+export async function startMission(id: string) {
+  await requireProfile();
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("missions")
+    .update({ status: "EN_COURS" })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/ma-journee");
+  revalidatePath("/missions");
+  revalidatePath("/dashboard");
+}
+
 export async function completeMission(id: string) {
   await requireProfile();
   const supabase = createClient();
@@ -100,6 +115,7 @@ export async function completeMission(id: string) {
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+  revalidatePath("/ma-journee");
   revalidatePath("/missions");
   revalidatePath("/dashboard");
 }
