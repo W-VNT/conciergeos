@@ -12,6 +12,7 @@ import { Ban, Trash2 } from "lucide-react";
 import { bulkCancelReservations, bulkDeleteReservations } from "@/lib/actions/reservations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format-date";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -148,7 +149,7 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
                 <p className="font-medium text-sm">{reservation.guest_name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{logement?.name ?? "—"}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(reservation.check_in_date).toLocaleDateString("fr-FR")} — {new Date(reservation.check_out_date).toLocaleDateString("fr-FR")} · {nights} nuit{nights > 1 ? "s" : ""}
+                  {formatDate(reservation.check_in_date)} — {formatDate(reservation.check_out_date)} · {nights} nuit{nights > 1 ? "s" : ""}
                 </p>
               </Link>
               {reservation.amount && (
@@ -226,8 +227,8 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
                   </TableCell>
                   <TableCell className="text-sm">
                     <div>
-                      {new Date(reservation.check_in_date).toLocaleDateString("fr-FR")} —{" "}
-                      {new Date(reservation.check_out_date).toLocaleDateString("fr-FR")}
+                      {formatDate(reservation.check_in_date)} —{" "}
+                      {formatDate(reservation.check_out_date)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {nights} nuit{nights > 1 ? "s" : ""}

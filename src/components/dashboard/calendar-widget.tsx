@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MISSION_TYPE_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { formatTime } from "@/lib/format-date";
 
 interface Mission {
   id: string;
@@ -52,13 +53,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
     "Décembre",
   ];
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const fmtTime = (dateString: string) => formatTime(dateString);
 
   const formatDate = (date: Date) => {
     return `${date.getDate()} ${monthNames[date.getMonth()].slice(0, 3)}`;
@@ -71,7 +66,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
         {/* Today Section */}
         <div className="border-b border-gray-100">
           <div className="px-4 py-2 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide" suppressHydrationWarning>
               Aujourd&apos;hui · {formatDate(today)}
             </p>
           </div>
@@ -86,7 +81,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
-                      <span className="text-xs text-gray-500">{formatTime(mission.scheduled_at)}</span>
+                      <span className="text-xs text-gray-500">{fmtTime(mission.scheduled_at)}</span>
                     </div>
                     <p className="text-xs text-gray-500 truncate">
                       {mission.logement?.name || "Sans logement"}
@@ -103,7 +98,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
         {/* Tomorrow Section */}
         <div className="border-b border-gray-100">
           <div className="px-4 py-2 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide" suppressHydrationWarning>
               Demain · {formatDate(tomorrow)}
             </p>
           </div>
@@ -118,7 +113,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
-                      <span className="text-xs text-gray-500">{formatTime(mission.scheduled_at)}</span>
+                      <span className="text-xs text-gray-500">{fmtTime(mission.scheduled_at)}</span>
                     </div>
                     <p className="text-xs text-gray-500 truncate">
                       {mission.logement?.name || "Sans logement"}

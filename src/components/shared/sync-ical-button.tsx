@@ -38,8 +38,8 @@ export function SyncIcalButton({ logementId, hasIcalUrl, lastSyncedAt }: Props) 
         {syncing ? "Synchronisation..." : "Sync iCal"}
       </Button>
       {lastSyncedAt && (
-        <span className="text-xs text-muted-foreground">
-          Dernière sync: {new Date(lastSyncedAt).toLocaleString("fr-FR")}
+        <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+          Dernière sync: {new Date(lastSyncedAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })}
         </span>
       )}
     </div>

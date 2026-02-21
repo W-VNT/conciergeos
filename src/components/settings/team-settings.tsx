@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Profile, USER_ROLE_LABELS, type OperatorCapabilities } from "@/types/database";
+import { formatDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,7 +344,7 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
                   </p>
                   <p className="text-sm text-muted-foreground break-all">
                     {invitation.invited_name && <>{invitation.email}<br /></>}
-                    Invité le {new Date(invitation.created_at).toLocaleDateString("fr-FR")} • Expire le {new Date(invitation.expires_at).toLocaleDateString("fr-FR")}
+                    Invité le {formatDate(invitation.created_at)} • Expire le {formatDate(invitation.expires_at)}
                   </p>
                 </div>
                 <Button

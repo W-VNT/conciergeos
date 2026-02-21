@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from "react";
+import { formatDate } from "@/lib/format-date";
 
 export type DateRange = "7d" | "30d" | "90d" | "custom";
 
@@ -62,8 +63,8 @@ export function DateFilter({ className }: Props) {
 
   function formatDisplayRange() {
     if (customStart && customEnd) {
-      const start = new Date(customStart).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-      const end = new Date(customEnd).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+      const start = formatDate(customStart, { day: "2-digit", month: "2-digit" });
+      const end = formatDate(customEnd, { day: "2-digit", month: "2-digit" });
       return `${start} - ${end}`;
     }
     return "Sélectionner";

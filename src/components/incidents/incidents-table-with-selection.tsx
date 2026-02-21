@@ -15,6 +15,7 @@ import { bulkCloseIncidents, bulkAssignIncidents, bulkDeleteIncidents } from "@/
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { formatDate } from "@/lib/format-date";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -212,7 +213,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                 <p className="font-medium text-sm line-clamp-2">{incident.description}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{logement?.name ?? "—"}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {prestataire?.full_name ?? "—"} · {new Date(incident.opened_at).toLocaleDateString("fr-FR")}
+                  {prestataire?.full_name ?? "—"} · {formatDate(incident.opened_at)}
                 </p>
               </Link>
             </div>
@@ -283,7 +284,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                   <TableCell>{logement?.name ?? "—"}</TableCell>
                   <TableCell>{prestataire?.full_name ?? "—"}</TableCell>
                   <TableCell className="text-sm">
-                    {new Date(incident.opened_at).toLocaleDateString("fr-FR")}
+                    {formatDate(incident.opened_at)}
                   </TableCell>
                   <TableCell>
                     <StatusBadge

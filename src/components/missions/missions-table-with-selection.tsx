@@ -11,6 +11,7 @@ import { BulkAssignmentToolbar } from "./bulk-assignment-toolbar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
+import { formatDate, formatTime } from "@/lib/format-date";
 
 interface Props {
   missions: Mission[];
@@ -80,15 +81,8 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                   {logement?.name ?? "—"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {
-                    day: "2-digit",
-                    month: "short",
-                  })}{" "}
-                  à{" "}
-                  {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDate(m.scheduled_at, { day: "2-digit", month: "short" })}{" "}
+                  à {formatTime(m.scheduled_at)}
                 </p>
                 <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                   <User className="h-3 w-3" />
@@ -160,13 +154,7 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                   </TableCell>
                   <TableCell>{assignee?.full_name ?? "—"}</TableCell>
                   <TableCell className="text-sm">
-                    {new Date(m.scheduled_at).toLocaleDateString("fr-FR", {
-                      day: "2-digit",
-                      month: "short"
-                    })} à {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
+                    {formatDate(m.scheduled_at, { day: "2-digit", month: "short" })} à {formatTime(m.scheduled_at)}
                   </TableCell>
                   <TableCell>
                     <StatusBadge value={m.priority} label={MISSION_PRIORITY_LABELS[m.priority]} />

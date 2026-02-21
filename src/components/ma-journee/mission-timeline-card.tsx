@@ -10,6 +10,7 @@ import { Navigation, KeyRound, Wifi, Play, CheckCircle, Loader2 } from "lucide-r
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/lib/format-date";
 
 interface Logement {
   id: string;
@@ -106,7 +107,7 @@ export function MissionTimelineCard({ mission }: Props) {
           <StatusBadge value={mission.priority} label={MISSION_PRIORITY_LABELS[mission.priority as keyof typeof MISSION_PRIORITY_LABELS]} />
         )}
         <span className="ml-auto text-sm font-medium tabular-nums text-muted-foreground">
-          {new Date(mission.scheduled_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          {formatTime(mission.scheduled_at)}
         </span>
       </div>
 

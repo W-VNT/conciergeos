@@ -239,6 +239,7 @@ export interface ContratPDFData {
 
 function fmt(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("fr-FR", {
+    timeZone: "Europe/Paris",
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -248,6 +249,7 @@ function fmt(dateStr: string) {
 export function ContratPDF({ contrat, proprietaire, logement, organisation }: ContratPDFData) {
   const isExclusif = contrat.type === "EXCLUSIF";
   const today = new Date().toLocaleDateString("fr-FR", {
+    timeZone: "Europe/Paris",
     day: "2-digit",
     month: "long",
     year: "numeric",

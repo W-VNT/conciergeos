@@ -14,6 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Mission, Reservation, MissionType, MissionStatus, ReservationStatus } from "@/types/database";
 import { MISSION_TYPE_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
 import Link from "next/link";
+import { formatTime } from "@/lib/format-date";
 
 type ViewType = "jour" | "semaine" | "mois" | "annee";
 
@@ -274,7 +275,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                         <Link key={m.id} href={`/missions/${m.id}`} className="block">
                           <div className={`flex items-center gap-3 p-3 rounded border-l-4 bg-muted/40 hover:bg-muted transition-colors ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
                             <span className="text-sm font-mono text-muted-foreground min-w-[45px]">
-                              {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                              {formatTime(m.scheduled_at)}
                             </span>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium">{MISSION_TYPE_LABELS[m.type as MissionType]}</p>
@@ -328,7 +329,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                       <div className={`text-[10px] p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
                         <div className="font-medium truncate flex items-center gap-1">
                           <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
-                          {new Date(m.scheduled_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} {MISSION_TYPE_LABELS[m.type as MissionType]}
+                          {formatTime(m.scheduled_at)} {MISSION_TYPE_LABELS[m.type as MissionType]}
                         </div>
                       </div>
                     </Link>
