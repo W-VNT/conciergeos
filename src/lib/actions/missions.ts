@@ -11,6 +11,7 @@ import {
 } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
+import { sendPushToUser } from "@/lib/push";
 import type {
   MissionType,
   Profile,
@@ -247,6 +248,13 @@ export async function bulkAssignMissions(data: {
     if (updateError) {
       return errorResponse(updateError.message) as ActionResponse<{ count: number }>;
     }
+
+    // Send push notification to assigned operator (non-blocking)
+    sendPushToUser(validated.operator_id, {
+      title: "Nouvelle mission assignée",
+      body: `${validated.mission_ids.length} mission(s) vous ont été assignée(s)`,
+      url: "/missions",
+    }).catch((err) => console.error("[push] Failed to send push:", err));
 
     revalidatePath("/missions");
     return successResponse(
