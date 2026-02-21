@@ -31,14 +31,14 @@ export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
               alt={organisation.name}
               width={32}
               height={32}
-              className="h-8 w-8 rounded-lg object-contain"
+              className="h-8 w-8 rounded-full object-cover"
             />
           ) : (
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary">
               <Building2 className="h-4 w-4" />
             </div>
           )}
-          <span className="text-sm font-semibold truncate max-w-[140px] sm:max-w-none">
+          <span className="hidden sm:inline text-sm font-semibold truncate">
             {organisation?.name ?? "ConciergeOS"}
           </span>
         </div>
