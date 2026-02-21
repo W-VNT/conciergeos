@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { MobileSidebar } from "./mobile-sidebar";
 import { Topbar } from "./topbar";
@@ -19,6 +19,23 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [topbarVisible, setTopbarVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+        setTopbarVisible(false);
+      } else {
+        setTopbarVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -26,6 +43,7 @@ export function DashboardShell({
         profile={profile}
         organisation={organisation}
         onOpenMenu={() => setSidebarOpen(true)}
+        visible={topbarVisible}
       />
       <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
       <BottomTabBar isAdmin={profile.role === "ADMIN"} />
