@@ -1,20 +1,35 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { MissionTimelineCard } from "@/components/ma-journee/mission-timeline-card";
-import { MISSION_TYPE_LABELS } from "@/types/database";
+import { DaySwitcher } from "@/components/ma-journee/day-switcher";
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 export const revalidate = 30;
 
-export default async function MaJourneePage() {
+export default async function MaJourneePage({ searchParams }: { searchParams: { date?: string } }) {
   const profile = await requireProfile();
   const supabase = createClient();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // Parse selected date from searchParams, default to today
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const todayIso = now.toISOString().split("T")[0];
+
+  let selectedDate: Date;
+  if (searchParams.date && /^\d{4}-\d{2}-\d{2}$/.test(searchParams.date)) {
+    selectedDate = new Date(searchParams.date + "T00:00:00");
+    if (isNaN(selectedDate.getTime())) selectedDate = now;
+  } else {
+    selectedDate = now;
+  }
+  selectedDate.setHours(0, 0, 0, 0);
+
+  const selectedIso = selectedDate.toISOString().split("T")[0];
+  const isToday = selectedIso === todayIso;
+
+  const nextDay = new Date(selectedDate);
+  nextDay.setDate(nextDay.getDate() + 1);
 
   let query = supabase
     .from("missions")
@@ -24,8 +39,8 @@ export default async function MaJourneePage() {
       assignee:profiles(full_name),
       reservation:reservations(guest_name, guest_count, check_in_time, check_out_time)
     `)
-    .gte("scheduled_at", today.toISOString())
-    .lt("scheduled_at", tomorrow.toISOString())
+    .gte("scheduled_at", selectedDate.toISOString())
+    .lt("scheduled_at", nextDay.toISOString())
     .in("status", ["A_FAIRE", "EN_COURS", "TERMINE"])
     .order("scheduled_at", { ascending: true });
 
@@ -39,18 +54,22 @@ export default async function MaJourneePage() {
   const total = allMissions.length;
   const progressPct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
 
-  const dateStr = new Date().toLocaleDateString("fr-FR", {
+  const formattedDate = selectedDate.toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
+
+  const emptyLabel = isToday
+    ? "Aucune mission aujourd\u2019hui"
+    : `Aucune mission le ${selectedDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}`;
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Ma journée</h1>
-        <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
+        <DaySwitcher currentDate={selectedIso} formattedDate={formattedDate} isToday={isToday} />
       </div>
 
       {total > 0 ? (
@@ -100,11 +119,11 @@ export default async function MaJourneePage() {
           <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted mb-4">
             <CalendarDays className="h-8 w-8 text-muted-foreground" />
           </div>
-          <p className="text-lg font-medium">Aucune mission aujourd&apos;hui</p>
+          <p className="text-lg font-medium">{emptyLabel}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Profitez de votre journée ou{" "}
+            {isToday ? "Profitez de votre journée ou " : ""}
             <Link href="/missions" className="text-primary hover:underline">
-              consultez toutes les missions
+              {isToday ? "consultez toutes les missions" : "Voir toutes les missions"}
             </Link>
           </p>
         </div>

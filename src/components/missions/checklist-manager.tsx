@@ -85,7 +85,7 @@ export function ChecklistManager({ missionId }: Props) {
       if (updateResult.error) throw new Error(updateResult.error);
 
       // Marquer complété
-      const toggleResult = await toggleChecklistItem(photoModalItem.id, false);
+      const toggleResult = await toggleChecklistItem(photoModalItem.id, true);
       if (toggleResult.error) throw new Error(toggleResult.error);
 
       toast.success("Photo ajoutée — tâche complétée");
@@ -265,7 +265,8 @@ export function ChecklistManager({ missionId }: Props) {
                 <button
                   type="button"
                   onClick={() => { setPreviewUrl(null); setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center after:content-[''] after:absolute after:-inset-[10px]"
+                  aria-label="Supprimer la photo"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

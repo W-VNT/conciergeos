@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { contratSchema, type ContratFormData } from "@/lib/schemas";
@@ -15,6 +15,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Contrat, Proprietaire, Logement, OfferTier } from "@/types/database";
@@ -50,10 +51,11 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
       start_date: contrat?.start_date ? new Date(contrat.start_date).toISOString().split('T')[0] : "",
       end_date: contrat?.end_date ? new Date(contrat.end_date).toISOString().split('T')[0] : "",
       commission_rate: contrat?.commission_rate ?? 20,
-      status: contrat?.status ?? "ACTIF",
+      status: contrat?.status === "SIGNE" ? "ACTIF" : (contrat?.status ?? "ACTIF"),
       conditions: contrat?.conditions ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   const proprioId = form.watch("proprietaire_id");
   const logementId = form.watch("logement_id");
@@ -209,21 +211,20 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
             <Label>
               Type de contrat <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={form.watch("type")}
-              onValueChange={(value) => form.setValue("type", value as "EXCLUSIF" | "SIMPLE")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CONTRACT_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller name="type" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CONTRACT_TYPE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
           </div>
 
           {/* Dates */}
@@ -295,21 +296,22 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
           {/* Statut */}
           <div className="space-y-2">
             <Label>Statut</Label>
-            <Select
-              value={form.watch("status")}
-              onValueChange={(value) => form.setValue("status", value as "ACTIF" | "EXPIRE" | "RESILIE")}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CONTRACT_STATUS_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller name="status" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CONTRACT_STATUS_LABELS)
+                    .filter(([value]) => value !== "SIGNE")
+                    .map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
             <p className="text-muted-foreground text-sm">
               Le statut est automatiquement mis à jour en fonction des dates
             </p>

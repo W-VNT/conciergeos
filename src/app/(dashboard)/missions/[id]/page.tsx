@@ -404,7 +404,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                   <Wifi className="h-4 w-4 flex-shrink-0" />
                   <span>{logement.wifi_name}</span>
                   {logement.wifi_password && (
-                    <code className="bg-gray-100 px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
+                    <code className="bg-muted px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
                   )}
                 </div>
               )}
@@ -715,7 +715,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     {logement.lockbox_code && (
                       <>
                         <span className="text-muted-foreground">Boîte à clés</span>
-                        <code className="bg-gray-100 px-2 py-0.5 rounded text-right block">{logement.lockbox_code}</code>
+                        <code className="bg-muted px-2 py-0.5 rounded text-right block">{logement.lockbox_code}</code>
                       </>
                     )}
                     {logement.wifi_name && (
@@ -727,7 +727,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                     {logement.wifi_password && (
                       <>
                         <span className="text-muted-foreground">Mot de passe</span>
-                        <code className="bg-gray-100 px-2 py-0.5 rounded text-right block">{logement.wifi_password}</code>
+                        <code className="bg-muted px-2 py-0.5 rounded text-right block">{logement.wifi_password}</code>
                       </>
                     )}
                   </div>

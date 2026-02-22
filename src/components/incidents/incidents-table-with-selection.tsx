@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
-import { CheckCircle, UserPlus, Trash2 } from "lucide-react";
+import { CheckCircle, UserPlus, Trash2, AlertTriangle } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { bulkCloseIncidents, bulkAssignIncidents, bulkDeleteIncidents } from "@/lib/actions/incidents";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -220,7 +221,13 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
           );
         })}
         {incidents.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucun incident trouvé</p>
+          <EmptyState
+            variant="inline"
+            icon={AlertTriangle}
+            title="Aucun incident trouvé"
+            description="Aucun incident ne correspond à vos critères"
+            action={{ label: "Déclarer un incident", href: "/incidents/new" }}
+          />
         )}
       </div>
 
@@ -296,11 +303,12 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
               );
             })}
             {incidents.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  Aucun incident trouvé
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={AlertTriangle}
+                title="Aucun incident trouvé"
+                colSpan={7}
+              />
             )}
           </TableBody>
         </Table>

@@ -19,6 +19,9 @@ export default async function EditContratPage({ params }: { params: { id: string
 
   if (!contrat) notFound();
 
+  // Signed contracts cannot be edited
+  if (contrat.status === "SIGNE") redirect(`/contrats/${params.id}`);
+
   // Fetch proprietaires
   const { data: proprietaires } = await supabase
     .from("proprietaires")

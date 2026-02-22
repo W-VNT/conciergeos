@@ -7,6 +7,7 @@ import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS, INCIDENT_SEVERITY_LABELS, I
 import { ClipboardList, AlertTriangle, FileText } from "lucide-react";
 import Link from "next/link";
 import { CalendarWidget } from "@/components/dashboard/calendar-widget";
+import { EmptyState } from "@/components/shared/empty-state";
 
 // Revalidate every 30 seconds (ISR cache)
 export const revalidate = 30;
@@ -23,10 +24,10 @@ export default async function DashboardPage() {
 
   // Parallelize essential queries only
   const [
-    { data: upcomingMissions },
-    { data: openIncidents, count: openIncidentsCount },
-    { count: criticalCount },
-    { count: expiringContractsCount },
+    missionsResult,
+    incidentsResult,
+    criticalResult,
+    contractsResult,
   ] = await Promise.all([
     // Today's and tomorrow's missions
     (async () => {
@@ -69,6 +70,17 @@ export default async function DashboardPage() {
       .gte("end_date", today.toISOString())
       .lte("end_date", sevenDaysFromNow.toISOString()),
   ]);
+
+  if (missionsResult.error) throw new Error(missionsResult.error.message);
+  if (incidentsResult.error) throw new Error(incidentsResult.error.message);
+  if (criticalResult.error) throw new Error(criticalResult.error.message);
+  if (contractsResult.error) throw new Error(contractsResult.error.message);
+
+  const upcomingMissions = missionsResult.data;
+  const openIncidents = incidentsResult.data;
+  const openIncidentsCount = incidentsResult.count;
+  const criticalCount = criticalResult.count;
+  const expiringContractsCount = contractsResult.count;
 
   // Filter today's missions for the card
   const todayMissions = upcomingMissions?.filter(m => {
@@ -118,7 +130,12 @@ export default async function DashboardPage() {
             <CardHeader><CardTitle className="text-lg">Missions du jour</CardTitle></CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
               {!todayMissions || todayMissions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune mission aujourd&apos;hui</p>
+                <EmptyState
+                  variant="inline"
+                  icon={ClipboardList}
+                  title="Aucune mission aujourd'hui"
+                  description="Consultez le calendrier pour planifier"
+                />
               ) : (
                 <div className="space-y-3">
                   {todayMissions.map((m) => (
@@ -144,7 +161,12 @@ export default async function DashboardPage() {
             <CardHeader><CardTitle className="text-lg">Incidents ouverts</CardTitle></CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
               {!openIncidents || openIncidents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun incident ouvert</p>
+                <EmptyState
+                  variant="inline"
+                  icon={AlertTriangle}
+                  title="Aucun incident ouvert"
+                  description="Tout est en ordre"
+                />
               ) : (
                 <div className="space-y-3">
                   {openIncidents.map((i) => (

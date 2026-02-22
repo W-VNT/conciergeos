@@ -3,6 +3,7 @@ import { requireProfile } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
+import { ChipFilter } from "@/components/shared/chip-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { IncidentsTableWithSelection } from "@/components/incidents/incidents-table-with-selection";
@@ -29,7 +30,14 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
   return (
     <div>
       <PageHeader title="Incidents" createHref="/incidents/new" createLabel="Nouvel incident" />
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      {/* Filtres mobile : chips scrollables */}
+      <div className="md:hidden space-y-2 mb-4">
+        <SearchInput placeholder="Rechercher dans description..." />
+        <ChipFilter options={statusOptions} placeholder="Tous les statuts" />
+        <ChipFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />
+      </div>
+      {/* Filtres desktop : dropdowns */}
+      <div className="hidden md:flex flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans description..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />

@@ -51,7 +51,7 @@ export async function createMission(data: MissionFormData): Promise<ActionRespon
 
 export async function updateMission(id: string, data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const parsed = missionSchema.parse(data);
     const supabase = createClient();
 
@@ -71,12 +71,15 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
 
     if (parsed.status === "TERMINE") {
       updateData.completed_at = new Date().toISOString();
+    } else {
+      updateData.completed_at = null;
     }
 
     const { error } = await supabase
       .from("missions")
       .update(updateData)
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -89,13 +92,15 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
 }
 
 export async function startMission(id: string) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
   const { error } = await supabase
     .from("missions")
-    .update({ status: "EN_COURS" })
-    .eq("id", id);
+    .update({ status: "EN_COURS", completed_at: null })
+    .eq("id", id)
+    .eq("status", "A_FAIRE")
+    .eq("organisation_id", profile.organisation_id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/ma-journee");
@@ -104,7 +109,7 @@ export async function startMission(id: string) {
 }
 
 export async function completeMission(id: string) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
   const { error } = await supabase
@@ -113,7 +118,9 @@ export async function completeMission(id: string) {
       status: "TERMINE",
       completed_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .in("status", ["EN_COURS", "A_FAIRE"])
+    .eq("organisation_id", profile.organisation_id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/ma-journee");
@@ -123,10 +130,10 @@ export async function completeMission(id: string) {
 
 export async function deleteMission(id: string): Promise<ActionResponse> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const supabase = createClient();
 
-    const { error } = await supabase.from("missions").delete().eq("id", id);
+    const { error } = await supabase.from("missions").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/missions");
@@ -144,7 +151,7 @@ export async function bulkCompleteMissions(
   missionIds: string[]
 ): Promise<ActionResponse<{ count: number }>> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const supabase = createClient();
 
     const { error } = await supabase
@@ -153,7 +160,8 @@ export async function bulkCompleteMissions(
         status: "TERMINE",
         completed_at: new Date().toISOString(),
       })
-      .in("id", missionIds);
+      .in("id", missionIds)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) {
       return errorResponse(error.message) as ActionResponse<{ count: number }>;
@@ -179,13 +187,14 @@ export async function bulkDeleteMissions(
   missionIds: string[]
 ): Promise<ActionResponse<{ count: number }>> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const supabase = createClient();
 
     const { error } = await supabase
       .from("missions")
       .delete()
-      .in("id", missionIds);
+      .in("id", missionIds)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) {
       return errorResponse(error.message) as ActionResponse<{ count: number }>;
@@ -373,20 +382,32 @@ export async function autoAssignMissions(data: {
       return result;
     }
 
-    // For each mission, find a compatible operator
+    // Fetch all operators once instead of per-mission (N+1 fix)
+    const { data: allOperators } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, operator_capabilities")
+      .eq("role", "OPERATEUR")
+      .eq("organisation_id", validated.organisation_id);
+
+    const operators = allOperators || [];
+
+    // Match operators in-memory and collect assignments
+    const assignUpdates: { id: string; operator_id: string; operator_name: string }[] = [];
+
     for (const mission of missions) {
-      // Handle both array and object responses from Supabase join
       const logement = Array.isArray(mission.logement) ? mission.logement[0] : mission.logement;
       const zone = logement?.code_postal?.substring(0, 5);
 
-      // Get compatible operators
-      const compatibleOperators = await getMatchingOperators({
-        mission_type: mission.type,
-        zone: zone,
-        organisation_id: validated.organisation_id,
+      // Filter operators in-memory
+      const compatible = operators.filter((op) => {
+        const caps = op.operator_capabilities as OperatorCapabilities | null;
+        if (!caps) return false;
+        if (mission.type && caps.mission_types && !caps.mission_types.includes(mission.type)) return false;
+        if (zone && caps.zones && caps.zones.length > 0 && !caps.zones.includes(zone)) return false;
+        return true;
       });
 
-      if (compatibleOperators.length === 0) {
+      if (compatible.length === 0) {
         result.unassigned.push({
           mission_id: mission.id,
           reason: zone
@@ -396,31 +417,41 @@ export async function autoAssignMissions(data: {
         continue;
       }
 
-      // Simple algorithm: take the first available operator
-      // (Future: implement load balancing)
-      const selectedOperator = compatibleOperators[0];
+      const selectedOperator = compatible[0];
+      assignUpdates.push({
+        id: mission.id,
+        operator_id: selectedOperator.id,
+        operator_name: selectedOperator.full_name,
+      });
+    }
 
-      // Assign the mission
+    // Batch update: group by operator to minimize queries
+    const byOperator = assignUpdates.reduce<Record<string, string[]>>((acc, u) => {
+      (acc[u.operator_id] ??= []).push(u.id);
+      return acc;
+    }, {});
+
+    const now = new Date().toISOString();
+    for (const [operatorId, missionIds] of Object.entries(byOperator)) {
       const { error: assignError } = await supabase
         .from("missions")
         .update({
-          assigned_to: selectedOperator.id,
+          assigned_to: operatorId,
           status: "A_FAIRE",
-          updated_at: new Date().toISOString(),
+          updated_at: now,
         })
-        .eq("id", mission.id);
+        .in("id", missionIds);
 
       if (assignError) {
-        result.unassigned.push({
-          mission_id: mission.id,
-          reason: "Erreur technique lors de l'assignation",
-        });
+        missionIds.forEach((mid) =>
+          result.unassigned.push({ mission_id: mid, reason: "Erreur technique lors de l'assignation" })
+        );
       } else {
-        result.assigned.push({
-          mission_id: mission.id,
-          operator_id: selectedOperator.id,
-          operator_name: selectedOperator.full_name,
-        });
+        assignUpdates
+          .filter((u) => u.operator_id === operatorId)
+          .forEach((u) =>
+            result.assigned.push({ mission_id: u.id, operator_id: u.operator_id, operator_name: u.operator_name })
+          );
       }
     }
 
@@ -443,7 +474,7 @@ export async function updateOperatorCapabilities(
   capabilities: OperatorCapabilities
 ): Promise<ActionResponse> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const validated = operatorCapabilitiesSchema.parse(capabilities);
     const supabase = createClient();
 
@@ -451,7 +482,8 @@ export async function updateOperatorCapabilities(
       .from("profiles")
       .update({ operator_capabilities: validated })
       .eq("id", operatorId)
-      .eq("role", "OPERATEUR");
+      .eq("role", "OPERATEUR")
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) {
       return errorResponse(error.message);

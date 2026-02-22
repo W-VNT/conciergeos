@@ -58,40 +58,64 @@ export async function syncIcal(logementId: string) {
       const checkInDate = startDate.toISOString().split("T")[0];
       const checkOutDate = endDate.toISOString().split("T")[0];
 
-      // Check if reservation already exists (by UID or dates)
-      const { data: existing } = await supabase
+      // Upsert reservation by logement + dates to avoid race conditions
+      const { data: upserted, error: upsertError } = await supabase
         .from("reservations")
-        .select("id")
-        .eq("logement_id", logementId)
-        .eq("check_in_date", checkInDate)
-        .eq("check_out_date", checkOutDate)
-        .maybeSingle();
-
-      if (existing) {
-        // Update existing reservation
-        await supabase
-          .from("reservations")
-          .update({
+        .upsert(
+          {
+            organisation_id: profile.organisation_id,
+            logement_id: logementId,
             guest_name: summary,
-            status: "CONFIRMEE",
+            guest_count: 1,
+            check_in_date: checkInDate,
+            check_out_date: checkOutDate,
             platform: "AUTRE",
+            status: "CONFIRMEE",
             notes: `Synchronisé depuis iCal (UID: ${uid})`,
-          })
-          .eq("id", existing.id);
-        updated++;
+          },
+          { onConflict: "logement_id,check_in_date,check_out_date", ignoreDuplicates: false }
+        )
+        .select("id")
+        .single();
+
+      if (upsertError) {
+        // Fallback to check-then-insert for tables without unique constraint
+        const { data: existing } = await supabase
+          .from("reservations")
+          .select("id")
+          .eq("logement_id", logementId)
+          .eq("check_in_date", checkInDate)
+          .eq("check_out_date", checkOutDate)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("reservations")
+            .update({
+              guest_name: summary,
+              status: "CONFIRMEE",
+              platform: "AUTRE",
+              notes: `Synchronisé depuis iCal (UID: ${uid})`,
+            })
+            .eq("id", existing.id);
+          updated++;
+        } else {
+          await supabase.from("reservations").insert({
+            organisation_id: profile.organisation_id,
+            logement_id: logementId,
+            guest_name: summary,
+            guest_count: 1,
+            check_in_date: checkInDate,
+            check_out_date: checkOutDate,
+            platform: "AUTRE",
+            status: "CONFIRMEE",
+            notes: `Synchronisé depuis iCal (UID: ${uid})`,
+          });
+          created++;
+        }
       } else {
-        // Create new reservation
-        await supabase.from("reservations").insert({
-          organisation_id: profile.organisation_id,
-          logement_id: logementId,
-          guest_name: summary,
-          guest_count: 1,
-          check_in_date: checkInDate,
-          check_out_date: checkOutDate,
-          platform: "AUTRE",
-          status: "CONFIRMEE",
-          notes: `Synchronisé depuis iCal (UID: ${uid})`,
-        });
+        // Upsert succeeded — count based on whether it was an insert or update
+        // If upserted, we can't easily distinguish, so count as created
         created++;
       }
     }

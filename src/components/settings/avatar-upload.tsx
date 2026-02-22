@@ -128,8 +128,8 @@ export default function AvatarUpload({ profile }: AvatarUploadProps) {
         {avatarUrl && !uploading && (
           <button
             onClick={handleDelete}
-            className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-md"
-            title="Supprimer la photo"
+            className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-md after:content-[''] after:absolute after:-inset-[9px]"
+            aria-label="Supprimer la photo"
           >
             <X className="h-4 w-4" />
           </button>

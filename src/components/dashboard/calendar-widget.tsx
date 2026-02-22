@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MISSION_TYPE_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { formatTime } from "@/lib/format-date";
+import { CalendarDays } from "lucide-react";
 
 interface Mission {
   id: string;
@@ -60,30 +61,30 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full flex flex-col">
+    <div className="bg-card rounded-xl shadow-sm border overflow-hidden h-full flex flex-col">
       {/* Missions List */}
       <div className="flex-1 overflow-y-auto">
         {/* Today Section */}
-        <div className="border-b border-gray-100">
-          <div className="px-4 py-2 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide" suppressHydrationWarning>
+        <div className="border-b">
+          <div className="px-4 py-2 bg-muted">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide" suppressHydrationWarning>
               Aujourd&apos;hui · {formatDate(today)}
             </p>
           </div>
           {todayMissions.length > 0 ? (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y">
               {todayMissions.map((mission) => (
                 <Link
                   key={mission.id}
                   href={`/missions/${mission.id}`}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
-                      <span className="text-xs text-gray-500">{fmtTime(mission.scheduled_at)}</span>
+                      <span className="text-xs text-muted-foreground">{fmtTime(mission.scheduled_at)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {mission.logement?.name || "Sans logement"}
                     </p>
                   </div>
@@ -91,31 +92,31 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
               ))}
             </div>
           ) : (
-            <p className="px-4 py-3 text-sm text-gray-400 italic">Aucune mission</p>
+            <p className="px-4 py-3 text-sm text-muted-foreground italic flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Aucune mission</p>
           )}
         </div>
 
         {/* Tomorrow Section */}
-        <div className="border-b border-gray-100">
-          <div className="px-4 py-2 bg-gray-50">
-            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide" suppressHydrationWarning>
+        <div className="border-b">
+          <div className="px-4 py-2 bg-muted">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide" suppressHydrationWarning>
               Demain · {formatDate(tomorrow)}
             </p>
           </div>
           {tomorrowMissions.length > 0 ? (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y">
               {tomorrowMissions.map((mission) => (
                 <Link
                   key={mission.id}
                   href={`/missions/${mission.id}`}
-                  className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <StatusBadge value={mission.type} label={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]} />
-                      <span className="text-xs text-gray-500">{fmtTime(mission.scheduled_at)}</span>
+                      <span className="text-xs text-muted-foreground">{fmtTime(mission.scheduled_at)}</span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {mission.logement?.name || "Sans logement"}
                     </p>
                   </div>
@@ -123,7 +124,7 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
               ))}
             </div>
           ) : (
-            <p className="px-4 py-3 text-sm text-gray-400 italic">Aucune mission</p>
+            <p className="px-4 py-3 text-sm text-muted-foreground italic flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Aucune mission</p>
           )}
         </div>
       </div>
@@ -131,9 +132,9 @@ export function CalendarWidget({ missions }: CalendarWidgetProps) {
       {/* Footer - View All */}
       <Link
         href="/calendrier"
-        className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-center hover:bg-gray-100 transition-colors"
+        className="px-4 py-3 bg-muted border-t text-center hover:bg-muted/70 transition-colors"
       >
-        <span className="text-sm font-medium text-blue-600">
+        <span className="text-sm font-medium text-primary">
           Voir le calendrier complet →
         </span>
       </Link>

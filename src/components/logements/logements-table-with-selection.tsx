@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
-import { Trash2 } from "lucide-react";
+import { Trash2, Home } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { bulkDeleteLogements } from "@/lib/actions/logements";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -114,7 +115,13 @@ export function LogementsTableWithSelection({ logements }: Props) {
           );
         })}
         {logements.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucun logement trouvé</p>
+          <EmptyState
+            variant="inline"
+            icon={Home}
+            title="Aucun logement trouvé"
+            description="Ajoutez votre premier logement pour commencer"
+            action={{ label: "Ajouter un logement", href: "/logements/new" }}
+          />
         )}
       </div>
 
@@ -176,11 +183,12 @@ export function LogementsTableWithSelection({ logements }: Props) {
               );
             })}
             {logements.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Aucun logement trouvé
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={Home}
+                title="Aucun logement trouvé"
+                colSpan={6}
+              />
             )}
           </TableBody>
         </Table>

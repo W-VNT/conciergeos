@@ -12,7 +12,7 @@ interface EmptyStateProps {
     label: string;
     href: string;
   };
-  variant?: "table" | "card";
+  variant?: "table" | "card" | "inline";
   colSpan?: number;
   className?: string;
 }
@@ -51,35 +51,53 @@ export function EmptyState({
   colSpan,
   className,
 }: EmptyStateProps) {
+  const content = (
+    <>
+      {Icon && (
+        <Icon
+          className={
+            variant === "table"
+              ? "h-6 w-6 mx-auto mb-2 text-muted-foreground/50"
+              : "h-8 w-8 text-muted-foreground/40 mb-2"
+          }
+        />
+      )}
+      <p className={variant === "table" ? "text-muted-foreground" : "font-medium"}>
+        {title}
+      </p>
+      {description && (
+        <p className="text-sm text-muted-foreground mt-1">{description}</p>
+      )}
+      {action && (
+        <Button variant="outline" size="sm" className="mt-4" asChild>
+          <Link href={action.href}>{action.label}</Link>
+        </Button>
+      )}
+    </>
+  );
+
   if (variant === "table") {
     return (
       <TableRow>
         <TableCell colSpan={colSpan} className="text-center py-8">
-          {Icon && (
-            <Icon className="h-6 w-6 mx-auto mb-2 text-muted-foreground/50" />
-          )}
-          <p className="text-muted-foreground">{title}</p>
-          {description && (
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
-          )}
+          {content}
         </TableCell>
       </TableRow>
+    );
+  }
+
+  if (variant === "inline") {
+    return (
+      <div className={`flex flex-col items-center justify-center py-8 text-center ${className ?? ""}`}>
+        {content}
+      </div>
     );
   }
 
   return (
     <Card className={className}>
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        {Icon && <Icon className="h-10 w-10 text-muted-foreground mb-3" />}
-        <p className="font-medium">{title}</p>
-        {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        )}
-        {action && (
-          <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href={action.href}>{action.label}</Link>
-          </Button>
-        )}
+        {content}
       </CardContent>
     </Card>
   );

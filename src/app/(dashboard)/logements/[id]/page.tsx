@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
+import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import { deleteLogement } from "@/lib/actions/logements";
 import { Pencil, AlertTriangle, KeyRound, Wifi } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
@@ -17,7 +17,7 @@ import { ChecklistTemplateSection } from "@/components/logements/checklist-templ
 import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { IncidentsTable } from "@/components/logements/incidents-table";
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -28,9 +28,9 @@ export default async function LogementDetailPage({ params }: { params: { id: str
   if (!logement) notFound();
 
   const { data: attachments } = await supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).order("created_at", { ascending: false });
-  const { data: missions } = await supabase.from("missions").select("*").eq("logement_id", params.id).order("scheduled_at", { ascending: false });
-  const { data: incidents } = await supabase.from("incidents").select("*").eq("logement_id", params.id).order("opened_at", { ascending: false });
-  const { data: reservations } = await supabase.from("reservations").select("*").eq("logement_id", params.id).order("check_in_date", { ascending: false });
+  const { data: missions } = await supabase.from("missions").select("*").eq("logement_id", params.id).order("scheduled_at", { ascending: false }).limit(100);
+  const { data: incidents } = await supabase.from("incidents").select("*").eq("logement_id", params.id).order("opened_at", { ascending: false }).limit(100);
+  const { data: reservations } = await supabase.from("reservations").select("*").eq("logement_id", params.id).order("check_in_date", { ascending: false }).limit(100);
 
   const prop = logement.proprietaire as { id: string; full_name: string } | null;
 
@@ -152,50 +152,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Sévérité</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Ouvert le</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(incidents ?? []).map((inc) => {
-                    const isLate = !["RESOLU", "CLOS"].includes(inc.status) &&
-                      (Date.now() - new Date(inc.opened_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
-                    return (
-                      <TableRow key={inc.id}>
-                        <TableCell>
-                          <StatusBadge value={inc.severity} label={INCIDENT_SEVERITY_LABELS[inc.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Link href={`/incidents/${inc.id}`} className="hover:underline font-medium">
-                              {(inc.description as string)?.slice(0, 60)}
-                            </Link>
-                            {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {new Date(inc.opened_at).toLocaleDateString("fr-FR")}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge value={inc.status} label={INCIDENT_STATUS_LABELS[inc.status as keyof typeof INCIDENT_STATUS_LABELS]} />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {(incidents ?? []).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                        Aucun incident pour ce logement
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <IncidentsTable incidents={(incidents ?? []) as import("@/types/database").Incident[]} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -217,11 +217,23 @@ export async function cancelInvitation(invitationId: string) {
       return { error: "Non authentifié" };
     }
 
-    // Update invitation status
+    // Get current user's profile to check admin + org
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("organisation_id, role")
+      .eq("id", user.id)
+      .single();
+
+    if (!currentProfile || currentProfile.role !== "ADMIN") {
+      return { error: "Accès refusé - Admin uniquement" };
+    }
+
+    // Update invitation status (scoped to organisation)
     const { error } = await supabase
       .from("invitations")
       .update({ status: "CANCELLED" })
-      .eq("id", invitationId);
+      .eq("id", invitationId)
+      .eq("organisation_id", currentProfile.organisation_id);
 
     if (error) {
       console.error("Cancel invitation error:", error);

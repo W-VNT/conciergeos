@@ -100,15 +100,15 @@ function OfferCard({ config, onSaved }: OfferCardProps) {
           )}
         </div>
         {!editing ? (
-          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setEditing(true)}>
+          <Button variant="ghost" size="icon" className="relative h-8 w-8 flex-shrink-0 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => setEditing(true)} aria-label="Modifier">
             <Pencil className="h-4 w-4" />
           </Button>
         ) : (
           <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCancel}>
+            <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={handleCancel} aria-label="Annuler">
               <X className="h-4 w-4" />
             </Button>
-            <Button size="icon" className="h-8 w-8" onClick={handleSave} disabled={saving}>
+            <Button size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={handleSave} disabled={saving} aria-label="Enregistrer">
               <Check className="h-4 w-4" />
             </Button>
           </div>
@@ -182,7 +182,7 @@ function OfferCard({ config, onSaved }: OfferCardProps) {
               placeholder="Ajouter un service..."
               className="h-8 text-sm flex-1"
             />
-            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={addService}>
+            <Button type="button" variant="outline" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={addService} aria-label="Ajouter le service">
               <Plus className="h-4 w-4" />
             </Button>
           </div>

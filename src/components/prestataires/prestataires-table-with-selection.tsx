@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { SPECIALTY_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
-import { Trash2, Star } from "lucide-react";
+import { Trash2, Star, Wrench } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { bulkDeletePrestataires } from "@/lib/actions/prestataires";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -119,7 +120,12 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
           </div>
         ))}
         {prestataires.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucun prestataire trouvé</p>
+          <EmptyState
+            variant="inline"
+            icon={Wrench}
+            title="Aucun prestataire trouvé"
+            action={{ label: "Ajouter un prestataire", href: "/prestataires/new" }}
+          />
         )}
       </div>
 
@@ -179,11 +185,12 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
               </TableRow>
             ))}
             {prestataires.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  Aucun prestataire trouvé
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={Wrench}
+                title="Aucun prestataire trouvé"
+                colSpan={6}
+              />
             )}
           </TableBody>
         </Table>

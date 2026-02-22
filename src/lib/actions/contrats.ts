@@ -43,6 +43,10 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
     const parsed = contratSchema.parse(data);
     const supabase = createClient();
 
+    // Block update on signed contracts
+    const { data: existing } = await supabase.from("contrats").select("status").eq("id", id).eq("organisation_id", profile.organisation_id).single();
+    if (existing?.status === "SIGNE") return errorResponse("Un contrat signé ne peut pas être modifié") as ActionResponse<{ id: string }>;
+
     const { error } = await supabase
       .from("contrats")
       .update({
@@ -55,7 +59,8 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
         status: parsed.status,
         conditions: parsed.conditions || null,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -73,7 +78,7 @@ export async function deleteContrat(id: string): Promise<ActionResponse> {
     if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
     const supabase = createClient();
-    const { error } = await supabase.from("contrats").delete().eq("id", id);
+    const { error } = await supabase.from("contrats").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/contrats");
@@ -84,6 +89,7 @@ export async function deleteContrat(id: string): Promise<ActionResponse> {
 }
 
 export async function markContratAsSigned(id: string) {
+  const profile = await requireProfile();
   const supabase = createClient();
 
   const { error } = await supabase
@@ -93,6 +99,7 @@ export async function markContratAsSigned(id: string) {
       pdf_downloaded_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .eq("organisation_id", profile.organisation_id)
     .is("pdf_downloaded_at", null); // Only set once (first download)
 
   if (error) throw new Error(error.message);

@@ -91,7 +91,7 @@ export function BottomTabBar() {
                   className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground"
                 >
                   <tab.icon className="h-5 w-5" />
-                  <span className="text-[10px] font-medium">{tab.label}</span>
+                  <span className="text-xs font-medium">{tab.label}</span>
                 </button>
               );
             }
@@ -108,7 +108,7 @@ export function BottomTabBar() {
                 )}
               >
                 <tab.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-xs font-medium">{tab.label}</span>
               </Link>
             );
           })}

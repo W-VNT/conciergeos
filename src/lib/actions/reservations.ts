@@ -24,7 +24,12 @@ async function checkOverlap(
 
   if (excludeId) query = query.neq("id", excludeId);
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) {
+    console.error("checkOverlap error:", error);
+    // Fail safe: assume overlap to prevent double bookings
+    return true;
+  }
   return (data ?? []).length > 0;
 }
 
@@ -74,7 +79,9 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
         reservation.logement_id,
         parsed.check_in_date,
         parsed.check_out_date,
-        profile.organisation_id
+        profile.organisation_id,
+        parsed.check_in_time,
+        parsed.check_out_time
       );
       // TODO: Uncomment when Finance section is implemented
       // await createRevenuForReservation(
@@ -106,6 +113,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
       .from("reservations")
       .select("status")
       .eq("id", id)
+      .eq("organisation_id", profile.organisation_id)
       .single();
 
     if (parsed.status !== "ANNULEE") {
@@ -137,7 +145,8 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         notes: parsed.notes || null,
         access_instructions: parsed.access_instructions || null,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -148,7 +157,9 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         parsed.logement_id,
         parsed.check_in_date,
         parsed.check_out_date,
-        profile.organisation_id
+        profile.organisation_id,
+        parsed.check_in_time,
+        parsed.check_out_time
       );
       // TODO: Uncomment when Finance section is implemented
       // await createRevenuForReservation(
@@ -183,7 +194,8 @@ export async function terminateReservation(id: string) {
     .from("reservations")
     .update({ status: "TERMINEE" })
     .eq("id", id)
-    .eq("status", "CONFIRMEE");
+    .eq("status", "CONFIRMEE")
+    .eq("organisation_id", profile.organisation_id);
 
   if (error) throw new Error(error.message);
 
@@ -198,7 +210,7 @@ export async function deleteReservation(id: string): Promise<ActionResponse> {
 
     const supabase = createClient();
     await cancelMissionsForReservation(id);
-    const { error } = await supabase.from("reservations").delete().eq("id", id);
+    const { error } = await supabase.from("reservations").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/reservations");
@@ -215,12 +227,7 @@ export async function bulkCancelReservations(reservationIds: string[]): Promise<
 
     const supabase = createClient();
 
-    // Annuler toutes les missions associées
-    for (const id of reservationIds) {
-      await cancelMissionsForReservation(id);
-    }
-
-    // Mettre à jour le statut des réservations
+    // Mettre à jour le statut des réservations d'abord (opération principale)
     const { error, count } = await supabase
       .from("reservations")
       .update({ status: "ANNULEE" })
@@ -230,6 +237,17 @@ export async function bulkCancelReservations(reservationIds: string[]): Promise<
     if (error) {
       console.error("Bulk cancel reservations error:", error);
       return errorResponse("Erreur lors de l'annulation") as ActionResponse<{ count: number }>;
+    }
+
+    // Annuler les missions associées (secondaire, best-effort)
+    const { error: missionsError } = await supabase
+      .from("missions")
+      .update({ status: "ANNULE" })
+      .in("reservation_id", reservationIds)
+      .in("status", ["A_FAIRE", "EN_COURS"]);
+
+    if (missionsError) {
+      console.error("Bulk cancel missions error (non-blocking):", missionsError);
     }
 
     revalidatePath("/reservations");
@@ -251,10 +269,12 @@ export async function bulkDeleteReservations(reservationIds: string[]): Promise<
 
     const supabase = createClient();
 
-    // Annuler toutes les missions associées
-    for (const id of reservationIds) {
-      await cancelMissionsForReservation(id);
-    }
+    // Annuler toutes les missions associées en une seule requête
+    await supabase
+      .from("missions")
+      .update({ status: "ANNULE" })
+      .in("reservation_id", reservationIds)
+      .in("status", ["A_FAIRE", "EN_COURS"]);
 
     // Supprimer les réservations
     const { error, count } = await supabase
@@ -287,7 +307,9 @@ async function createMissionsForReservation(
   logementId: string,
   checkInDate: string,
   checkOutDate: string,
-  organisationId: string
+  organisationId: string,
+  checkInTime?: string | null,
+  checkOutTime?: string | null
 ) {
   const supabase = createClient();
 
@@ -298,6 +320,13 @@ async function createMissionsForReservation(
 
   if (existing && existing.length > 0) return;
 
+  // Use reservation times, falling back to defaults
+  const ciTime = checkInTime || "15:00";
+  const coTime = checkOutTime || "11:00";
+  // Ménage starts 2h after checkout
+  const [coH, coM] = coTime.split(":").map(Number);
+  const menageTime = `${String(coH + 2).padStart(2, "0")}:${String(coM).padStart(2, "0")}`;
+
   const missions = [
     {
       organisation_id: organisationId,
@@ -306,7 +335,7 @@ async function createMissionsForReservation(
       type: "CHECKIN",
       status: "A_FAIRE",
       priority: "NORMALE",
-      scheduled_at: `${checkInDate}T15:00:00`,
+      scheduled_at: `${checkInDate}T${ciTime}:00`,
       notes: `Check-in réservation`,
     },
     {
@@ -316,7 +345,7 @@ async function createMissionsForReservation(
       type: "CHECKOUT",
       status: "A_FAIRE",
       priority: "NORMALE",
-      scheduled_at: `${checkOutDate}T11:00:00`,
+      scheduled_at: `${checkOutDate}T${coTime}:00`,
       notes: `Check-out réservation`,
     },
     {
@@ -326,7 +355,7 @@ async function createMissionsForReservation(
       type: "MENAGE",
       status: "A_FAIRE",
       priority: "HAUTE",
-      scheduled_at: `${checkOutDate}T13:00:00`,
+      scheduled_at: `${checkOutDate}T${menageTime}:00`,
       notes: `Ménage post-réservation`,
     },
   ];
@@ -362,7 +391,10 @@ async function createMissionsForReservation(
     }
 
     if (checklistInserts.length > 0) {
-      await supabase.from("mission_checklist_items").insert(checklistInserts);
+      const { error: checklistError } = await supabase.from("mission_checklist_items").insert(checklistInserts);
+      if (checklistError) {
+        console.error("Failed to insert checklist items for reservation:", reservationId, checklistError);
+      }
     }
   }
 }

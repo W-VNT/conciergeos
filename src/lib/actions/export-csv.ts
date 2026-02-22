@@ -4,12 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 
 export async function exportMissionsCSV(filters?: { status?: string; type?: string }) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
   let query = supabase
     .from("missions")
     .select("*, logement:logements(name), assignee:profiles(full_name)")
+    .eq("organisation_id", profile.organisation_id)
     .order("scheduled_at", { ascending: false });
 
   if (filters?.status) query = query.eq("status", filters.status);
@@ -36,12 +37,13 @@ export async function exportMissionsCSV(filters?: { status?: string; type?: stri
 }
 
 export async function exportIncidentsCSV(filters?: { status?: string; severity?: string }) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
   let query = supabase
     .from("incidents")
     .select("*, logement:logements(name), prestataire:prestataires(full_name)")
+    .eq("organisation_id", profile.organisation_id)
     .order("opened_at", { ascending: false });
 
   if (filters?.status) query = query.eq("status", filters.status);

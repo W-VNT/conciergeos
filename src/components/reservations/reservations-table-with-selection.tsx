@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
-import { Ban, Trash2 } from "lucide-react";
+import { Ban, Trash2, CalendarDays } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { bulkCancelReservations, bulkDeleteReservations } from "@/lib/actions/reservations";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -161,7 +162,13 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
           );
         })}
         {reservations.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucune réservation trouvée</p>
+          <EmptyState
+            variant="inline"
+            icon={CalendarDays}
+            title="Aucune réservation trouvée"
+            description="Ajustez vos filtres ou ajoutez une réservation"
+            action={{ label: "Nouvelle réservation", href: "/reservations/new" }}
+          />
         )}
       </div>
 
@@ -252,11 +259,12 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
               );
             })}
             {reservations.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  Aucune réservation trouvée
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={CalendarDays}
+                title="Aucune réservation trouvée"
+                colSpan={8}
+              />
             )}
           </TableBody>
         </Table>

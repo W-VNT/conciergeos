@@ -33,8 +33,11 @@ export async function updateSession(request: NextRequest) {
   const isLoginPage = pathname === '/login';
   const isSignupPage = pathname === '/signup';
   const isAcceptInvitationPage = pathname === '/accept-invitation';
+  const isForgotPasswordPage = pathname === '/forgot-password';
+  const isResetPasswordPage = pathname === '/reset-password';
   const isRootPage = pathname === '/';
-  const isAuthPage = isLoginPage || isSignupPage || isAcceptInvitationPage;
+  const isApiRoute = pathname.startsWith('/api/');
+  const isAuthPage = isLoginPage || isSignupPage || isAcceptInvitationPage || isForgotPasswordPage || isResetPasswordPage;
 
   // Check if email is confirmed
   const isEmailConfirmed = user?.email_confirmed_at != null;
@@ -52,8 +55,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Not authenticated → redirect to login (except on login/signup pages)
-  if (!user && !isAuthPage) {
+  // Not authenticated → redirect to login (except on auth/api pages)
+  if (!user && !isAuthPage && !isApiRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
@@ -67,7 +70,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Already authenticated with confirmed email on login or signup → redirect to dashboard
-  if (user && isEmailConfirmed && isAuthPage) {
+  // Exception: reset-password page (user arrives via recovery link)
+  if (user && isEmailConfirmed && isAuthPage && !isResetPasswordPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);

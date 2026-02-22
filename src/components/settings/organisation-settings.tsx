@@ -189,8 +189,8 @@ export default function OrganisationSettings({ organisation }: Props) {
             {logoUrl && !uploading && (
               <button
                 onClick={handleDeleteLogo}
-                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-md"
-                title="Supprimer le logo"
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-md after:content-[''] after:absolute after:-inset-[10px]"
+                aria-label="Supprimer le logo"
               >
                 <X className="h-3 w-3" />
               </button>

@@ -43,7 +43,7 @@ export function ChipFilter({
           key={opt.value}
           onClick={() => handleFilter(opt.value)}
           className={cn(
-            "whitespace-nowrap rounded-full px-3 min-h-[36px] text-sm font-medium transition-colors shrink-0",
+            "whitespace-nowrap rounded-full px-3 min-h-11 text-sm font-medium transition-colors shrink-0",
             currentValue === opt.value
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"

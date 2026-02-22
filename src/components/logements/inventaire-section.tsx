@@ -383,10 +383,10 @@ export function InventaireSection({ logementId }: Props) {
                         {eq.notes && <p className="text-sm text-muted-foreground mt-1">{eq.notes}</p>}
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDialog(eq)}>
+                        <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => openDialog(eq)} aria-label="Modifier">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(eq.id)}>
+                        <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => handleDelete(eq.id)} aria-label="Supprimer">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

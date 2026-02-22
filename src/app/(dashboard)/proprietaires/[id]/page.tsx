@@ -86,8 +86,8 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
         <Card>
           <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span><span>{formatPhone(proprietaire.phone)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{proprietaire.email || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Téléphone</span>{proprietaire.phone ? <a href={`tel:${proprietaire.phone}`} className="text-primary hover:underline">{formatPhone(proprietaire.phone)}</a> : <span>—</span>}</div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Email</span>{proprietaire.email ? <a href={`mailto:${proprietaire.email}`} className="text-primary hover:underline">{proprietaire.email}</a> : <span>—</span>}</div>
             {(proprietaire.address_line1 || proprietaire.city) && (
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground shrink-0">Adresse</span>

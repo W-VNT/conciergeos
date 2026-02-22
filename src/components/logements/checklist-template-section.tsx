@@ -414,10 +414,10 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                                     )}
                                   </div>
                                   <div className="flex gap-1 flex-shrink-0">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(item, type)}>
+                                    <Button variant="ghost" size="icon" className="relative h-7 w-7 after:content-[''] after:absolute after:-inset-[8px]" onClick={() => openEdit(item, type)} aria-label="Modifier">
                                       <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(item.id)}>
+                                    <Button variant="ghost" size="icon" className="relative h-7 w-7 after:content-[''] after:absolute after:-inset-[8px]" onClick={() => handleDelete(item.id)} aria-label="Supprimer">
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                   </div>

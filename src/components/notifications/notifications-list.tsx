@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Notification } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,8 @@ import { markAsRead, markAllAsRead, deleteNotification } from "@/lib/actions/not
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Check, Trash2, CheckCheck } from "lucide-react";
+import { Check, Trash2, CheckCheck, Bell } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { toast } from "sonner";
 import { MISSION_TYPE_LABELS } from "@/types/database";
@@ -18,8 +20,29 @@ interface Props {
   initialNotifications: Notification[];
 }
 
+const POLL_INTERVAL = 30_000; // 30 seconds
+
 export function NotificationsList({ initialNotifications }: Props) {
   const [notifications, setNotifications] = useState(initialNotifications);
+
+  const pollNotifications = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (data) setNotifications(data as Notification[]);
+    } catch {
+      // Silent fail — next poll will retry
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(pollNotifications, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [pollNotifications]);
 
   async function handleMarkAsRead(id: string) {
     try {
@@ -140,11 +163,12 @@ export function NotificationsList({ initialNotifications }: Props) {
       )}
 
       {notifications.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Aucune notification
-          </CardContent>
-        </Card>
+        <EmptyState
+          variant="card"
+          icon={Bell}
+          title="Aucune notification"
+          description="Vous êtes à jour"
+        />
       ) : (
         <div className="space-y-2">
           {notifications.map((notification) => {

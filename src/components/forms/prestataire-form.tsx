@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { prestataireSchema, type PrestataireFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { Loader2, Sparkles } from "lucide-react";
 import type { Prestataire, StatutJuridique } from "@/types/database";
 import { SPECIALTY_LABELS, STATUT_JURIDIQUE_LABELS } from "@/types/database";
@@ -51,6 +52,7 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
       notes: prestataire?.notes ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   const statutJuridique = form.watch("statut_juridique");
   const siretValue = form.watch("siret") ?? "";
@@ -123,17 +125,16 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
               </div>
               <div className="space-y-2">
                 <Label>Statut juridique</Label>
-                <Select
-                  defaultValue={form.getValues("statut_juridique")}
-                  onValueChange={(v) => form.setValue("statut_juridique", v as PrestataireFormData["statut_juridique"])}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUT_JURIDIQUE_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller name="statut_juridique" control={form.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUT_JURIDIQUE_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
               </div>
               {statutJuridique !== "PARTICULIER" && (
                 <div className="space-y-2 sm:col-span-2">
@@ -209,10 +210,12 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Spécialité</Label>
-                <Select defaultValue={form.getValues("specialty")} onValueChange={(v) => form.setValue("specialty", v as PrestataireFormData["specialty"])}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{Object.entries(SPECIALTY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-                </Select>
+                <Controller name="specialty" control={form.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{Object.entries(SPECIALTY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                  </Select>
+                )} />
               </div>
               <div className="space-y-2"><Label htmlFor="hourly_rate">Taux horaire (EUR)</Label><Input id="hourly_rate" type="number" step="0.01" {...form.register("hourly_rate")} /></div>
               <div className="space-y-2"><Label htmlFor="reliability_score">Fiabilité (1-5)</Label><Input id="reliability_score" type="number" min="1" max="5" {...form.register("reliability_score")} /></div>

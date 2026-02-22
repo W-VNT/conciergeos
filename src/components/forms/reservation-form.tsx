@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { reservationSchema, type ReservationFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Reservation, Logement } from "@/types/database";
 import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -52,6 +53,7 @@ export function ReservationForm({ reservation, logements }: Props) {
       access_instructions: reservation?.access_instructions ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   const selectedLogementId = form.watch("logement_id");
   const selectedLogement = logements.find((l) => l.id === selectedLogementId);
@@ -121,21 +123,20 @@ export function ReservationForm({ reservation, logements }: Props) {
             <Label htmlFor="logement_id">
               Logement <span className="text-destructive">*</span>
             </Label>
-            <Select
-              value={form.watch("logement_id")}
-              onValueChange={(value) => form.setValue("logement_id", value)}
-            >
-              <SelectTrigger id="logement_id">
-                <SelectValue placeholder="Sélectionner un logement" />
-              </SelectTrigger>
-              <SelectContent>
-                {logements.map((l) => (
-                  <SelectItem key={l.id} value={l.id}>
-                    {l.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller name="logement_id" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="logement_id">
+                  <SelectValue placeholder="Sélectionner un logement" />
+                </SelectTrigger>
+                <SelectContent>
+                  {logements.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
             {form.formState.errors.logement_id && (
               <p className="text-destructive text-sm mt-1">{form.formState.errors.logement_id.message}</p>
             )}
@@ -168,21 +169,20 @@ export function ReservationForm({ reservation, logements }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="platform">Plateforme</Label>
-              <Select
-                value={form.watch("platform")}
-                onValueChange={(value) => form.setValue("platform", value as any)}
-              >
-                <SelectTrigger id="platform">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(BOOKING_PLATFORM_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller name="platform" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="platform">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(BOOKING_PLATFORM_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
 
             <div>
@@ -192,21 +192,20 @@ export function ReservationForm({ reservation, logements }: Props) {
 
             <div>
               <Label htmlFor="status">Statut</Label>
-              <Select
-                value={form.watch("status")}
-                onValueChange={(value) => form.setValue("status", value as any)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(RESERVATION_STATUS_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller name="status" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(RESERVATION_STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
           </div>
 
@@ -239,7 +238,7 @@ export function ReservationForm({ reservation, logements }: Props) {
               {selectedLogement?.lockbox_code && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Boîte à clés</span>
-                  <code className="bg-gray-100 px-2 py-0.5 rounded">{selectedLogement.lockbox_code}</code>
+                  <code className="bg-muted px-2 py-0.5 rounded">{selectedLogement.lockbox_code}</code>
                 </div>
               )}
               {selectedLogement?.wifi_name && (
@@ -251,7 +250,7 @@ export function ReservationForm({ reservation, logements }: Props) {
               {selectedLogement?.wifi_password && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Mot de passe WiFi</span>
-                  <code className="bg-gray-100 px-2 py-0.5 rounded">{selectedLogement.wifi_password}</code>
+                  <code className="bg-muted px-2 py-0.5 rounded">{selectedLogement.wifi_password}</code>
                 </div>
               )}
               <p className="text-xs text-muted-foreground pt-1">

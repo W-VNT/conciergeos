@@ -112,7 +112,8 @@ export function PhotoUpload({
               {canDelete && (
                 <button
                   onClick={() => handleDelete(att)}
-                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity after:content-[''] after:absolute after:-inset-[10px]"
+                  aria-label="Supprimer la photo"
                 >
                   <X className="h-3 w-3" />
                 </button>

@@ -33,6 +33,7 @@ export async function createLogement(data: LogementFormData): Promise<ActionResp
       max_guests: parsed.max_guests,
       menage_price: parsed.menage_price,
       notes: parsed.notes || null,
+      ical_url: parsed.ical_url || null,
       status: parsed.status,
     }).select("id").single();
 
@@ -73,6 +74,7 @@ export async function updateLogement(id: string, data: LogementFormData): Promis
         max_guests: parsed.max_guests,
         menage_price: parsed.menage_price,
         notes: parsed.notes || null,
+        ical_url: parsed.ical_url || null,
         status: parsed.status,
       })
       .eq("id", id);

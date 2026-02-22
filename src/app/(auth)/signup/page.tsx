@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, CheckCircle2, Mail } from "lucide-react";
+import { Building2, CheckCircle2, Mail, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
 
@@ -30,6 +30,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   // Step 2: Organisation + Profile
@@ -207,7 +209,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-12">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -240,7 +242,7 @@ export default function SignupPage() {
                         ? 'bg-primary text-primary-foreground'
                         : s === step
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-200 text-gray-500'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {s < step ? '✓' : s}
@@ -248,7 +250,7 @@ export default function SignupPage() {
                   {s < 3 && (
                     <div
                       className={`h-0.5 w-12 mx-1 ${
-                        s < step ? 'bg-primary' : 'bg-gray-200'
+                        s < step ? 'bg-primary' : 'bg-muted'
                       }`}
                     />
                   )}
@@ -266,7 +268,7 @@ export default function SignupPage() {
                         ? 'bg-primary text-primary-foreground'
                         : s === 1 && step === 3
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-200 text-gray-500'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {(s === 1 && step === 3) ? '✓' : s}
@@ -274,7 +276,7 @@ export default function SignupPage() {
                   {s < 2 && (
                     <div
                       className={`h-0.5 w-12 mx-1 ${
-                        step === 3 ? 'bg-primary' : 'bg-gray-200'
+                        step === 3 ? 'bg-primary' : 'bg-muted'
                       }`}
                     />
                   )}
@@ -323,16 +325,27 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Mot de passe *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {passwordStrength && (
                   <div className="space-y-1">
                     <div className="flex gap-1">
@@ -342,7 +355,7 @@ export default function SignupPage() {
                           className={`h-1 flex-1 rounded ${
                             i <= passwordStrength.strength
                               ? passwordStrength.color
-                              : 'bg-gray-200'
+                              : 'bg-muted'
                           }`}
                         />
                       ))}
@@ -359,16 +372,27 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirmer le mot de passe *</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-start space-x-2">

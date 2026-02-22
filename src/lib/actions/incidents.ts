@@ -37,7 +37,7 @@ export async function createIncident(data: IncidentFormData, preGeneratedId?: st
 
 export async function updateIncident(id: string, data: IncidentFormData): Promise<ActionResponse<{ id: string }>> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const parsed = incidentSchema.parse(data);
     const supabase = createClient();
 
@@ -55,12 +55,15 @@ export async function updateIncident(id: string, data: IncidentFormData): Promis
 
     if (parsed.status === "RESOLU" || parsed.status === "CLOS") {
       updateData.resolved_at = new Date().toISOString();
+    } else {
+      updateData.resolved_at = null;
     }
 
     const { error } = await supabase
       .from("incidents")
       .update(updateData)
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -73,18 +76,21 @@ export async function updateIncident(id: string, data: IncidentFormData): Promis
 }
 
 export async function updateIncidentStatus(id: string, status: string) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
   const updateData: Record<string, unknown> = { status };
   if (status === "RESOLU" || status === "CLOS") {
     updateData.resolved_at = new Date().toISOString();
+  } else {
+    updateData.resolved_at = null;
   }
 
   const { error } = await supabase
     .from("incidents")
     .update(updateData)
-    .eq("id", id);
+    .eq("id", id)
+    .eq("organisation_id", profile.organisation_id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/incidents");
@@ -93,10 +99,10 @@ export async function updateIncidentStatus(id: string, status: string) {
 
 export async function deleteIncident(id: string): Promise<ActionResponse> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const supabase = createClient();
 
-    const { error } = await supabase.from("incidents").delete().eq("id", id);
+    const { error } = await supabase.from("incidents").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/incidents");

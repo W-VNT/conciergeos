@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { missionSchema, type MissionFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Mission, Logement, Profile } from "@/types/database";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS } from "@/types/database";
 
@@ -48,6 +49,7 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
       notes: mission?.notes ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   async function onSubmit(data: MissionFormData) {
     setLoading(true);
@@ -77,42 +79,52 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Logement *</Label>
-              <Select defaultValue={form.getValues("logement_id")} onValueChange={(v) => form.setValue("logement_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner un logement" /></SelectTrigger>
-                <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="logement_id" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner un logement" /></SelectTrigger>
+                  <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
               {form.formState.errors.logement_id && <p className="text-sm text-destructive">{form.formState.errors.logement_id.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Assigné à</Label>
-              <Select defaultValue={form.getValues("assigned_to") || "NONE"} onValueChange={(v) => form.setValue("assigned_to", v === "NONE" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Non assigné" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">— Non assigné —</SelectItem>
-                  {admin ? profiles.map((p) => (<SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)) : <SelectItem value={currentUserId}>Moi-même</SelectItem>}
-                </SelectContent>
-              </Select>
+              <Controller name="assigned_to" control={form.control} render={({ field }) => (
+                <Select value={field.value || "NONE"} onValueChange={(v) => field.onChange(v === "NONE" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Non assigné" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NONE">— Non assigné —</SelectItem>
+                    {admin ? profiles.map((p) => (<SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)) : <SelectItem value={currentUserId}>Moi-même</SelectItem>}
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Type *</Label>
-              <Select defaultValue={form.getValues("type")} onValueChange={(v) => form.setValue("type", v as MissionFormData["type"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(MISSION_TYPE_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="type" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(MISSION_TYPE_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Priorité</Label>
-              <Select defaultValue={form.getValues("priority")} onValueChange={(v) => form.setValue("priority", v as MissionFormData["priority"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(MISSION_PRIORITY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="priority" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(MISSION_PRIORITY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select defaultValue={form.getValues("status")} onValueChange={(v) => form.setValue("status", v as MissionFormData["status"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(MISSION_STATUS_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="status" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(MISSION_STATUS_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Date et heure planifiées *</Label>

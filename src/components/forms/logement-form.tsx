@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { logementSchema, type LogementFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { MapPin, Loader2, ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -57,6 +58,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
       status: logement?.status ?? "ACTIF",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   async function onSubmit(data: LogementFormData) {
     setLoading(true);
@@ -246,31 +248,29 @@ export function LogementForm({ logement, proprietaires }: Props) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Offre</Label>
-              <Select
-                defaultValue={form.getValues("offer_tier")}
-                onValueChange={(v) => form.setValue("offer_tier", v as "ESSENTIEL" | "SERENITE" | "SIGNATURE")}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ESSENTIEL">Essentiel</SelectItem>
-                  <SelectItem value="SERENITE">Sérénité</SelectItem>
-                  <SelectItem value="SIGNATURE">Signature</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller name="offer_tier" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ESSENTIEL">Essentiel</SelectItem>
+                    <SelectItem value="SERENITE">Sérénité</SelectItem>
+                    <SelectItem value="SIGNATURE">Signature</SelectItem>
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select
-                defaultValue={form.getValues("status")}
-                onValueChange={(v) => form.setValue("status", v as "ACTIF" | "PAUSE" | "ARCHIVE")}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIF">Actif</SelectItem>
-                  <SelectItem value="PAUSE">En pause</SelectItem>
-                  <SelectItem value="ARCHIVE">Archivé</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller name="status" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIF">Actif</SelectItem>
+                    <SelectItem value="PAUSE">En pause</SelectItem>
+                    <SelectItem value="ARCHIVE">Archivé</SelectItem>
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">

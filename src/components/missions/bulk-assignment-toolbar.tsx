@@ -101,6 +101,7 @@ export function BulkAssignmentToolbar({
           variant="outline"
           size="sm"
           onClick={() => setDialogOpen(true)}
+          aria-label="Assigner à un opérateur"
         >
           <UserPlus className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Assigner à...</span>
@@ -111,6 +112,7 @@ export function BulkAssignmentToolbar({
           size="sm"
           onClick={handleAutoAssign}
           disabled={loading}
+          aria-label="Auto-assigner"
         >
           <Zap className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Auto-assigner</span>
@@ -121,6 +123,7 @@ export function BulkAssignmentToolbar({
           size="sm"
           onClick={handleBulkComplete}
           disabled={loading}
+          aria-label="Terminer les missions"
         >
           <CheckCircle className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Terminer</span>
@@ -130,12 +133,13 @@ export function BulkAssignmentToolbar({
           variant="destructive"
           size="sm"
           onClick={() => setDeleteDialogOpen(true)}
+          aria-label="Supprimer les missions"
         >
           <Trash2 className="h-4 w-4 sm:mr-2" />
           <span className="hidden sm:inline">Supprimer</span>
         </Button>
 
-        <Button variant="ghost" size="sm" onClick={onClear}>
+        <Button variant="ghost" size="sm" onClick={onClear} aria-label="Désélectionner tout">
           <X className="h-4 w-4" />
         </Button>
       </div>

@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
-import { Trash2 } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { bulkDeleteProprietaires } from "@/lib/actions/proprietaires";
 import { toast } from "sonner";
 import { cn, formatPhone } from "@/lib/utils";
@@ -111,7 +112,12 @@ export function ProprietairesTableWithSelection({ proprietaires }: Props) {
           </div>
         ))}
         {proprietaires.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucun propriétaire trouvé</p>
+          <EmptyState
+            variant="inline"
+            icon={Users}
+            title="Aucun propriétaire trouvé"
+            action={{ label: "Ajouter un propriétaire", href: "/proprietaires/new" }}
+          />
         )}
       </div>
 
@@ -160,11 +166,12 @@ export function ProprietairesTableWithSelection({ proprietaires }: Props) {
               </TableRow>
             ))}
             {proprietaires.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  Aucun propriétaire trouvé
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={Users}
+                title="Aucun propriétaire trouvé"
+                colSpan={5}
+              />
             )}
           </TableBody>
         </Table>

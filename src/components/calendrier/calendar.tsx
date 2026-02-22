@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import type { Mission, Reservation, MissionType, MissionStatus, ReservationStatus } from "@/types/database";
 import { MISSION_TYPE_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
 import Link from "next/link";
@@ -46,6 +47,7 @@ const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
 };
 
 const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const DAYS_SHORT = ["L", "M", "M", "J", "V", "S", "D"];
 const DAYS_FULL = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const MONTHS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -237,21 +239,38 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
       </Card>
 
       {/* ── VUE JOUR ── */}
-      {view === "jour" && (
-        <Card className="p-4">
-          <div className="space-y-4">
-            {/* Réservations du jour */}
-            {getReservationsForDate(currentDate).length > 0 && (
-              <div>
+      {view === "jour" && (() => {
+        const dayReservations = getReservationsForDate(currentDate);
+        const dayMissions = getMissionsForDate(currentDate).sort(
+          (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+        );
+        const HOURS = Array.from({ length: 16 }, (_, i) => i + 7); // 7h-22h
+
+        // Group missions by hour
+        const missionsByHour: Record<number, Mission[]> = {};
+        dayMissions.forEach((m) => {
+          const hour = new Date(m.scheduled_at).getHours();
+          const clamped = Math.max(7, Math.min(22, hour));
+          if (!missionsByHour[clamped]) missionsByHour[clamped] = [];
+          missionsByHour[clamped].push(m);
+        });
+
+        const hasEvents = dayReservations.length > 0 || dayMissions.length > 0;
+
+        return (
+          <Card className="p-0 overflow-hidden">
+            {/* Reservations - all day banner */}
+            {dayReservations.length > 0 && (
+              <div className="p-3 border-b bg-muted/30">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Réservations</p>
-                <div className="space-y-2">
-                  {getReservationsForDate(currentDate).map((r) => {
+                <div className="space-y-1.5">
+                  {dayReservations.map((r) => {
                     const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
                     return (
                       <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-sm p-3 rounded border-l-4 ${RESERVATION_STATUS_COLORS[r.status]}`}>
-                          <div className="font-medium">{logement?.name}</div>
-                          <div className="text-xs opacity-75">{r.guest_name}</div>
+                        <div className={`text-sm px-3 py-2 rounded border-l-4 ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                          <span className="font-medium">{logement?.name}</span>
+                          <span className="text-xs opacity-75 ml-2">{r.guest_name}</span>
                         </div>
                       </Link>
                     );
@@ -260,65 +279,73 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
               </div>
             )}
 
-            {/* Missions du jour */}
-            {(() => {
-              const dayMissions = getMissionsForDate(currentDate).sort(
-                (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
-              );
-              return dayMissions.length > 0 ? (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Missions</p>
-                  <div className="space-y-2">
-                    {dayMissions.map((m) => {
-                      const logement = m.logement as { name: string } | null;
-                      return (
-                        <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                          <div className={`flex items-center gap-3 p-3 rounded border-l-4 bg-muted/40 hover:bg-muted transition-colors ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
-                            <span className="text-sm font-mono text-muted-foreground min-w-[45px]">
-                              {formatTime(m.scheduled_at)}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">{MISSION_TYPE_LABELS[m.type as MissionType]}</p>
-                              <p className="text-xs text-muted-foreground truncate">{logement?.name}</p>
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                getReservationsForDate(currentDate).length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-sm">Aucun événement ce jour</p>
-                  </div>
-                )
-              );
-            })()}
-          </div>
-        </Card>
-      )}
+            {/* Hourly grid */}
+            {hasEvents ? (
+              <div className="divide-y">
+                {HOURS.map((hour) => {
+                  const missions = missionsByHour[hour] || [];
+                  const now = new Date();
+                  const isCurrentHour = isToday(currentDate) && now.getHours() === hour;
+
+                  return (
+                    <div key={hour} className={`flex min-h-[3.5rem] ${isCurrentHour ? "bg-primary/5" : ""}`}>
+                      <div className="w-14 flex-shrink-0 px-2 py-3 text-xs font-mono text-muted-foreground text-right border-r">
+                        {String(hour).padStart(2, "0")}:00
+                      </div>
+                      <div className="flex-1 px-2 py-2 space-y-1">
+                        {missions.map((m) => {
+                          const logement = m.logement as { name: string } | null;
+                          return (
+                            <Link key={m.id} href={`/missions/${m.id}`} className="block">
+                              <div className={`flex items-center gap-2 px-2.5 py-2.5 rounded border-l-4 bg-muted/40 hover:bg-muted transition-colors ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
+                                <span className="text-xs font-mono text-muted-foreground">
+                                  {formatTime(m.scheduled_at)}
+                                </span>
+                                <span className="text-sm font-medium">{MISSION_TYPE_LABELS[m.type as MissionType]}</span>
+                                <span className="text-xs text-muted-foreground truncate">{logement?.name}</span>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                variant="inline"
+                icon={CalendarIcon}
+                title="Aucun événement ce jour"
+              />
+            )}
+          </Card>
+        );
+      })()}
 
       {/* ── VUE SEMAINE ── */}
       {view === "semaine" && (
-        <Card className="p-4 overflow-x-auto">
-          <div className="grid grid-cols-7 gap-px bg-border min-w-[600px]">
+        <Card className="p-2 sm:p-4">
+          <div className="grid grid-cols-7 gap-px bg-border">
             {weekDays.map((day, i) => (
-              <div key={i} className="bg-background p-2">
-                <div className="mb-2 text-center">
-                  <p className="text-xs text-muted-foreground">{DAYS[i]}</p>
-                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${
+              <div key={i} className="bg-background p-1 sm:p-2">
+                <div className="mb-1 sm:mb-2 text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    <span className="sm:hidden">{DAYS_SHORT[i]}</span>
+                    <span className="hidden sm:inline">{DAYS[i]}</span>
+                  </p>
+                  <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-medium ${
                     isToday(day) ? "bg-primary text-primary-foreground" : ""
                   }`}>
                     {day.getDate()}
                   </span>
                 </div>
-                <div className="space-y-1 min-h-[120px]">
+                <div className="space-y-1 min-h-[60px] sm:min-h-[120px]">
                   {getReservationsForDate(day).map((r) => {
                     const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
                     return (
                       <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-[10px] p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                        <div className={`text-[10px] p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
                           <div className="font-medium truncate">{logement?.name}</div>
                         </div>
                       </Link>
@@ -326,10 +353,11 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                   })}
                   {getMissionsForDate(day).map((m) => (
                     <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                      <div className={`text-[10px] p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
-                        <div className="font-medium truncate flex items-center gap-1">
+                      <div className={`text-[10px] p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
+                        <div className="font-medium truncate flex items-center gap-0.5 sm:gap-1">
                           <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
-                          {formatTime(m.scheduled_at)} {MISSION_TYPE_LABELS[m.type as MissionType]}
+                          <span className="hidden sm:inline">{formatTime(m.scheduled_at)}</span>
+                          <span className="truncate">{MISSION_TYPE_LABELS[m.type as MissionType]}</span>
                         </div>
                       </div>
                     </Link>

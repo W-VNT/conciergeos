@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS } from "@/types/database";
 import { startMission, completeMission } from "@/lib/actions/missions";
-import { Navigation, KeyRound, Wifi, Play, CheckCircle, Loader2 } from "lucide-react";
+import { Navigation, KeyRound, Wifi, Play, CheckCircle, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -124,24 +124,40 @@ export function MissionTimelineCard({ mission }: Props) {
           </>
         )}
 
-        {/* Lockbox + WiFi */}
+        {/* Lockbox + WiFi — tap to copy */}
         {(logement?.lockbox_code || logement?.wifi_name) && (
           <div className="flex items-center gap-3 flex-wrap text-xs">
             {logement.lockbox_code && (
-              <span className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => { navigator.clipboard.writeText(logement.lockbox_code!); toast.success("Code copié"); }}
+                className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                aria-label="Copier le code de la boîte à clés"
+              >
                 <KeyRound className="h-3 w-3 text-amber-600" />
                 <code className="bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-mono font-bold text-amber-900">
                   {logement.lockbox_code}
                 </code>
-              </span>
+                <Copy className="h-3 w-3 text-muted-foreground" />
+              </button>
             )}
-            {logement.wifi_name && (
+            {logement.wifi_password && (
+              <button
+                type="button"
+                onClick={() => { navigator.clipboard.writeText(logement.wifi_password!); toast.success("Mot de passe copié"); }}
+                className="flex items-center gap-1 text-muted-foreground hover:opacity-70 transition-opacity"
+                aria-label="Copier le mot de passe WiFi"
+              >
+                <Wifi className="h-3 w-3" />
+                {logement.wifi_name && <span>{logement.wifi_name}</span>}
+                <code className="bg-gray-100 px-1.5 py-0.5 rounded">{logement.wifi_password}</code>
+                <Copy className="h-3 w-3" />
+              </button>
+            )}
+            {logement.wifi_name && !logement.wifi_password && (
               <span className="flex items-center gap-1 text-muted-foreground">
                 <Wifi className="h-3 w-3" />
                 {logement.wifi_name}
-                {logement.wifi_password && (
-                  <code className="bg-gray-100 px-1.5 py-0.5 rounded">{logement.wifi_password}</code>
-                )}
               </span>
             )}
           </div>

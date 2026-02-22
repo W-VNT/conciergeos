@@ -10,7 +10,8 @@ import type { Mission } from "@/types/database";
 import { BulkAssignmentToolbar } from "./bulk-assignment-toolbar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { User } from "lucide-react";
+import { User, ClipboardList } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate, formatTime } from "@/lib/format-date";
 
 interface Props {
@@ -101,9 +102,13 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
           );
         })}
         {missions.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Aucune mission trouvée
-          </p>
+          <EmptyState
+            variant="inline"
+            icon={ClipboardList}
+            title="Aucune mission trouvée"
+            description="Ajustez vos filtres ou créez une nouvelle mission"
+            action={{ label: "Nouvelle mission", href: "/missions/new" }}
+          />
         )}
       </div>
 
@@ -171,11 +176,13 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
               );
             })}
             {missions.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  Aucune mission trouvée
-                </TableCell>
-              </TableRow>
+              <EmptyState
+                variant="table"
+                icon={ClipboardList}
+                title="Aucune mission trouvée"
+                description="Ajustez vos filtres ou créez une nouvelle mission"
+                colSpan={8}
+              />
             )}
           </TableBody>
         </Table>

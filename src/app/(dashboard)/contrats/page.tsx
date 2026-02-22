@@ -109,7 +109,13 @@ export default async function ContratsPage({
           );
         })}
         {(!data || data.length === 0) && (
-          <p className="text-center text-muted-foreground py-8">Aucun contrat trouvé</p>
+          <EmptyState
+            variant="inline"
+            icon={FileText}
+            title="Aucun contrat trouvé"
+            description="Les contrats avec vos propriétaires apparaîtront ici"
+            action={{ label: "Nouveau contrat", href: "/contrats/new" }}
+          />
         )}
       </div>
 

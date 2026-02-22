@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle2, AlertCircle, Home } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -66,8 +68,10 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
   // Sort by date descending
   events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Limit to last 20 events
-  const recentEvents = events.slice(0, 20);
+  const PAGE_SIZE = 15;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const recentEvents = events.slice(0, visibleCount);
+  const hasMore = visibleCount < events.length;
 
   function getColors(event: TimelineEvent): { icon: string; card: string } {
     if (event.type === "incident") {
@@ -180,6 +184,17 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
                 </div>
               </Link>
             ))}
+            {hasMore && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                >
+                  Afficher plus ({events.length - visibleCount} restant{events.length - visibleCount > 1 ? "s" : ""})
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

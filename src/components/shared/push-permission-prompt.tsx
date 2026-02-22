@@ -91,7 +91,8 @@ export function PushPermissionPrompt() {
       </Button>
       <button
         onClick={handleDismiss}
-        className="h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+        className="relative h-6 w-6 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted after:content-[''] after:absolute after:-inset-[10px]"
+        aria-label="Fermer"
       >
         <X className="h-3.5 w-3.5" />
       </button>

@@ -19,12 +19,12 @@ export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
   return (
     <div
       className={cn(
-        "sticky top-0 z-40 bg-white dark:bg-gray-900 transition-transform duration-300",
+        "sticky top-0 z-40 bg-background transition-transform duration-300",
         !visible && "-translate-y-full"
       )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <header className="h-14 sm:h-16 border-b dark:border-gray-800 flex items-center justify-between px-3 sm:px-4 md:px-6">
+      <header className="h-14 sm:h-16 border-b flex items-center justify-between px-3 sm:px-4 md:px-6">
         <Link href="/organisation" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           {organisation?.logo_url ? (
             <Image

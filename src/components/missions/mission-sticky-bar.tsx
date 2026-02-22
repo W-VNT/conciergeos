@@ -42,7 +42,7 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
       <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-lg border pointer-events-auto">
         {/* Primary action: Start or Complete */}
         {missionStatus === "A_FAIRE" ? (
-          <Button size="sm" onClick={handleStart} disabled={loading} className="rounded-full h-9 px-4 text-sm font-medium">
+          <Button size="sm" onClick={handleStart} disabled={loading} className="rounded-full h-11 px-4 text-sm font-medium">
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -53,12 +53,12 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
             )}
           </Button>
         ) : (
-          <CompleteMissionButton missionId={missionId} variant="default" className="rounded-full h-9 px-4 text-sm font-medium" />
+          <CompleteMissionButton missionId={missionId} variant="default" className="rounded-full h-11 px-4 text-sm font-medium" />
         )}
 
         {/* Navigate */}
         {mapsUrl && (
-          <Button variant="outline" size="sm" asChild className="rounded-full h-9 px-4 text-sm font-medium">
+          <Button variant="outline" size="sm" asChild className="rounded-full h-11 px-4 text-sm font-medium">
             <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
               <Navigation className="h-4 w-4 mr-1.5" />
               Naviguer
@@ -67,7 +67,7 @@ export function MissionStickyBar({ missionId, missionStatus, logementId, mapsUrl
         )}
 
         {/* Report incident */}
-        <Button variant="outline" size="sm" asChild className="rounded-full h-9 px-4 text-sm font-medium">
+        <Button variant="outline" size="sm" asChild className="rounded-full h-11 px-4 text-sm font-medium">
           <Link href={`/incidents/new?logement_id=${logementId}&mission_id=${missionId}`}>
             <AlertTriangle className="h-4 w-4 mr-1.5" />
             Incident

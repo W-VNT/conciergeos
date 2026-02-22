@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { proprietaireSchema, type ProprietaireFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { Loader2, Sparkles } from "lucide-react";
 import type { Proprietaire, StatutJuridique } from "@/types/database";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
@@ -53,6 +54,7 @@ export function ProprietaireForm({ proprietaire }: Props) {
       notes: proprietaire?.notes ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   const statutJuridique = form.watch("statut_juridique");
   const siretValue = form.watch("siret") ?? "";
@@ -127,17 +129,16 @@ export function ProprietaireForm({ proprietaire }: Props) {
               </div>
               <div className="space-y-2">
                 <Label>Statut juridique</Label>
-                <Select
-                  defaultValue={form.getValues("statut_juridique")}
-                  onValueChange={(v) => form.setValue("statut_juridique", v as ProprietaireFormData["statut_juridique"])}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUT_JURIDIQUE_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller name="statut_juridique" control={form.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUT_JURIDIQUE_LABELS).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
               </div>
               {statutJuridique !== "PARTICULIER" && (
                 <div className="space-y-2 sm:col-span-2">

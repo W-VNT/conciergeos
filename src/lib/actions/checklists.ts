@@ -357,6 +357,15 @@ export async function addLogementChecklistItem(
     .single();
   if (!profile) return { error: "Profil non trouvé" };
 
+  // Verify logement belongs to this organisation
+  const { data: logement } = await supabase
+    .from("logements")
+    .select("id")
+    .eq("id", logementId)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+  if (!logement) return { error: "Logement non trouvé" };
+
   const LABELS: Record<string, string> = {
     MENAGE: "Ménage",
     CHECKIN: "Check-in",
@@ -411,6 +420,22 @@ export async function updateLogementChecklistItem(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Non authentifié" };
 
+  // Verify logement belongs to user's organisation
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organisation_id")
+    .eq("id", user.id)
+    .single();
+  if (!profile) return { error: "Profil non trouvé" };
+
+  const { data: logement } = await supabase
+    .from("logements")
+    .select("id")
+    .eq("id", logementId)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+  if (!logement) return { error: "Logement non trouvé" };
+
   const { error } = await supabase
     .from("checklist_template_items")
     .update({
@@ -433,6 +458,22 @@ export async function deleteLogementChecklistItem(itemId: string, logementId: st
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Non authentifié" };
+
+  // Verify logement belongs to user's organisation
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organisation_id")
+    .eq("id", user.id)
+    .single();
+  if (!profile) return { error: "Profil non trouvé" };
+
+  const { data: logement } = await supabase
+    .from("logements")
+    .select("id")
+    .eq("id", logementId)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+  if (!logement) return { error: "Logement non trouvé" };
 
   const { error } = await supabase
     .from("checklist_template_items")

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { incidentSchema, type IncidentFormData } from "@/lib/schemas";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Incident, Logement, Prestataire } from "@/types/database";
 import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
 
@@ -45,6 +46,7 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
       expected_resolution_date: incident?.expected_resolution_date ?? "",
     },
   });
+  useUnsavedChanges(form.formState.isDirty);
 
   async function onSubmit(data: IncidentFormData) {
     setLoading(true);
@@ -74,35 +76,43 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Logement *</Label>
-              <Select defaultValue={form.getValues("logement_id")} onValueChange={(v) => form.setValue("logement_id", v)}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="logement_id" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
               {form.formState.errors.logement_id && <p className="text-sm text-destructive">{form.formState.errors.logement_id.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Sévérité</Label>
-              <Select defaultValue={form.getValues("severity")} onValueChange={(v) => form.setValue("severity", v as IncidentFormData["severity"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(INCIDENT_SEVERITY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="severity" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(INCIDENT_SEVERITY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select defaultValue={form.getValues("status")} onValueChange={(v) => form.setValue("status", v as IncidentFormData["status"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(INCIDENT_STATUS_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
-              </Select>
+              <Controller name="status" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(INCIDENT_STATUS_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2">
               <Label>Prestataire</Label>
-              <Select defaultValue={form.getValues("prestataire_id") || "NONE"} onValueChange={(v) => form.setValue("prestataire_id", v === "NONE" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">— Aucun —</SelectItem>
-                  {prestataires.map((p) => (<SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <Controller name="prestataire_id" control={form.control} render={({ field }) => (
+                <Select value={field.value || "NONE"} onValueChange={(v) => field.onChange(v === "NONE" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NONE">— Aucun —</SelectItem>
+                    {prestataires.map((p) => (<SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              )} />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="description">Description *</Label>

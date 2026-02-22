@@ -104,13 +104,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
             {reservation.guest_email && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Email</span>
-                <span>{reservation.guest_email}</span>
+                <a href={`mailto:${reservation.guest_email}`} className="text-primary hover:underline">{reservation.guest_email}</a>
               </div>
             )}
             {reservation.guest_phone && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Téléphone</span>
-                <span>{reservation.guest_phone}</span>
+                <a href={`tel:${reservation.guest_phone}`} className="text-primary hover:underline">{reservation.guest_phone}</a>
               </div>
             )}
             <div className="flex justify-between">
@@ -197,7 +197,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
             {logement?.lockbox_code && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Boîte à clés</span>
-                <code className="bg-gray-100 px-2 py-0.5 rounded">{logement.lockbox_code}</code>
+                <code className="bg-muted px-2 py-0.5 rounded">{logement.lockbox_code}</code>
               </div>
             )}
             {logement?.wifi_name && (
@@ -209,7 +209,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
             {logement?.wifi_password && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Mot de passe WiFi</span>
-                <code className="bg-gray-100 px-2 py-0.5 rounded">{logement.wifi_password}</code>
+                <code className="bg-muted px-2 py-0.5 rounded">{logement.wifi_password}</code>
               </div>
             )}
             {reservation.access_instructions && (
