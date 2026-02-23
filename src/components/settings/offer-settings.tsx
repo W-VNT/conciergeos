@@ -12,9 +12,9 @@ import type { OfferTier, OfferTierConfig } from "@/types/database";
 import { Pencil, X, Plus, Check } from "lucide-react";
 
 const TIER_COLORS: Record<OfferTier, { badge: string; border: string }> = {
-  ESSENTIEL: { badge: "bg-slate-100 text-slate-700", border: "border-slate-200" },
-  SERENITE:  { badge: "bg-blue-100 text-blue-700",  border: "border-blue-200"  },
-  SIGNATURE: { badge: "bg-amber-100 text-amber-700", border: "border-amber-200" },
+  ESSENTIEL: { badge: "bg-slate-500/15 text-slate-700 dark:text-slate-300", border: "border-slate-500/20" },
+  SERENITE:  { badge: "bg-blue-500/15 text-blue-700 dark:text-blue-300",   border: "border-blue-500/20"  },
+  SIGNATURE: { badge: "bg-amber-500/15 text-amber-700 dark:text-amber-300", border: "border-amber-500/20" },
 };
 
 interface OfferCardProps {

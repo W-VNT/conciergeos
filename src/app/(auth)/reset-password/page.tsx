@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
           {success ? (
             <div className="space-y-4 text-center">
               <div className="flex justify-center">
-                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 </div>
               </div>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

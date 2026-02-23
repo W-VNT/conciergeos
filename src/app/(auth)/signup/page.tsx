@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building2, CheckCircle2, Mail, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
@@ -202,7 +203,7 @@ export default function SignupPage() {
     } else {
       setError(null);
       // Show success message
-      alert("Email renvoyé ! Vérifiez votre boîte de réception.");
+      toast.success("Email renvoyé ! Vérifiez votre boîte de réception.");
     }
 
     setLoading(false);
@@ -340,7 +341,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -387,7 +388,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 -m-2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

@@ -58,7 +58,7 @@ export default async function OwnerDashboardPage() {
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                 <Home className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
@@ -72,7 +72,7 @@ export default async function OwnerDashboardPage() {
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
                 <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
               <div>
@@ -86,7 +86,7 @@ export default async function OwnerDashboardPage() {
         <Card>
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
                 <CalendarDays className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div>

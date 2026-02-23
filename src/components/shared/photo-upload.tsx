@@ -103,7 +103,7 @@ export function PhotoUpload({
       {attachments.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {attachments.map((att) => (
-            <div key={att.id} className="relative group aspect-square rounded-lg overflow-hidden border bg-gray-100">
+            <div key={att.id} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
               <img
                 src={`/api/storage/${encodeURIComponent(att.storage_path)}`}
                 alt=""

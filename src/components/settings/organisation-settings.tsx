@@ -14,10 +14,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { updateOrganisation, uploadOrganisationLogo, deleteOrganisationLogo, deleteOrganisation } from "@/lib/actions/organisation";
 import { Building2, Upload, X, Trash2, AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const STATUT_JURIDIQUE_OPTIONS = [
   { value: "SARL", label: "SARL" },
@@ -60,6 +71,7 @@ export default function OrganisationSettings({ organisation }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmationName, setConfirmationName] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deleteLogoOpen, setDeleteLogoOpen] = useState(false);
 
   const siretClean = siret.replace(/\s/g, "");
   const canLookup = siretClean.length === 9 || siretClean.length === 14;
@@ -143,8 +155,11 @@ export default function OrganisationSettings({ organisation }: Props) {
     }
   }
 
-  async function handleDeleteLogo() {
-    if (!confirm("Supprimer le logo ?")) return;
+  function handleDeleteLogo() {
+    setDeleteLogoOpen(true);
+  }
+
+  async function confirmDeleteLogo() {
     try {
       setUploading(true);
       await deleteOrganisationLogo();
@@ -154,6 +169,7 @@ export default function OrganisationSettings({ organisation }: Props) {
       toast.error((err as Error).message || "Erreur lors de la suppression");
     } finally {
       setUploading(false);
+      setDeleteLogoOpen(false);
     }
   }
 
@@ -181,7 +197,7 @@ export default function OrganisationSettings({ organisation }: Props) {
           <div className="relative">
             <div className="h-24 w-24 rounded-lg overflow-hidden bg-primary/10 flex items-center justify-center border-2 border-border">
               {logoUrl ? (
-                <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
+                <Image src={logoUrl} alt={name} fill className="object-cover" />
               ) : (
                 <Building2 className="h-12 w-12 text-primary/50" />
               )}
@@ -436,6 +452,23 @@ export default function OrganisationSettings({ organisation }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteLogoOpen} onOpenChange={setDeleteLogoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le logo ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le logo de l'organisation sera supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteLogo} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

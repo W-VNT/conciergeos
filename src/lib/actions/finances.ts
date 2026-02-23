@@ -11,25 +11,29 @@ export async function getFinancialSummary(startDate: Date, endDate: Date) {
   const supabase = createClient();
 
   // Query revenus summary
-  const { data: revenus } = await supabase
+  const { data: revenus, error: revenusError } = await supabase
     .from("revenus")
     .select("montant_brut, montant_commission, montant_net")
     .eq("organisation_id", profile.organisation_id)
     .gte("date_checkin", startDate.toISOString().split("T")[0])
     .lte("date_checkin", endDate.toISOString().split("T")[0]);
 
+  if (revenusError) throw new Error(revenusError.message);
+
   const revenusBrut = revenus?.reduce((sum, r) => sum + Number(r.montant_brut || 0), 0) ?? 0;
   const commissions = revenus?.reduce((sum, r) => sum + Number(r.montant_commission || 0), 0) ?? 0;
   const revenusNet = revenus?.reduce((sum, r) => sum + Number(r.montant_net || 0), 0) ?? 0;
 
   // Query charges (for now, use incidents cost as placeholder until factures_prestataires is implemented)
-  const { data: incidents } = await supabase
+  const { data: incidents, error: incidentsError } = await supabase
     .from("incidents")
     .select("cost")
     .eq("organisation_id", profile.organisation_id)
     .gte("opened_at", startDate.toISOString())
     .lte("opened_at", endDate.toISOString())
     .not("cost", "is", null);
+
+  if (incidentsError) throw new Error(incidentsError.message);
 
   const charges = incidents?.reduce((sum, i) => sum + Number(i.cost || 0), 0) ?? 0;
 
@@ -52,13 +56,15 @@ export async function getMonthlyRevenues(startDate: Date, endDate: Date) {
   const profile = await requireProfile();
   const supabase = createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("revenus_mensuels_global")
     .select("*")
     .eq("organisation_id", profile.organisation_id)
     .gte("mois", startDate.toISOString().split("T")[0])
     .lte("mois", endDate.toISOString().split("T")[0])
     .order("mois", { ascending: true });
+
+  if (error) throw new Error(error.message);
 
   return data || [];
 }
@@ -87,7 +93,9 @@ export async function getRevenusByLogement(startDate?: Date, endDate?: Date) {
     query = query.lte("date_checkin", endDate.toISOString().split("T")[0]);
   }
 
-  const { data: revenus } = await query;
+  const { data: revenus, error } = await query;
+
+  if (error) throw new Error(error.message);
 
   // Group by logement
   const grouped = new Map<string, {
@@ -164,6 +172,9 @@ export async function getAllRevenus(startDate?: Date, endDate?: Date) {
     query = query.lte("date_checkin", endDate.toISOString().split("T")[0]);
   }
 
-  const { data } = await query;
+  const { data, error } = await query;
+
+  if (error) throw new Error(error.message);
+
   return data || [];
 }

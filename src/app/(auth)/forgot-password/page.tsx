@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
           {sent ? (
             <div className="space-y-4">
               <div className="flex justify-center">
-                <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center">
                   <Mail className="h-8 w-8 text-blue-600" />
                 </div>
               </div>

@@ -83,18 +83,18 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
         parsed.check_in_time,
         parsed.check_out_time
       );
-      // TODO: Uncomment when Finance section is implemented
-      // await createRevenuForReservation(
-      //   reservation.id,
-      //   reservation.logement_id,
-      //   parsed.check_in_date,
-      //   parsed.check_out_date,
-      //   parsed.amount,
-      //   profile.organisation_id
-      // );
+      await createRevenuForReservation(
+        reservation.id,
+        reservation.logement_id,
+        parsed.check_in_date,
+        parsed.check_out_date,
+        parsed.amount,
+        profile.organisation_id
+      );
     }
 
     revalidatePath("/reservations");
+    revalidatePath("/finances");
     return successResponse("Réservation créée avec succès", { id: reservation.id });
   } catch (err) {
     return errorResponse((err as Error).message ?? "Erreur lors de la création de la réservation") as ActionResponse<{ id: string }>;
@@ -161,15 +161,14 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         parsed.check_in_time,
         parsed.check_out_time
       );
-      // TODO: Uncomment when Finance section is implemented
-      // await createRevenuForReservation(
-      //   id,
-      //   parsed.logement_id,
-      //   parsed.check_in_date,
-      //   parsed.check_out_date,
-      //   parsed.amount,
-      //   profile.organisation_id
-      // );
+      await createRevenuForReservation(
+        id,
+        parsed.logement_id,
+        parsed.check_in_date,
+        parsed.check_out_date,
+        parsed.amount,
+        profile.organisation_id
+      );
     }
 
     // Status changed to ANNULEE → cancel missions
@@ -179,6 +178,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
 
     revalidatePath("/reservations");
     revalidatePath(`/reservations/${id}`);
+    revalidatePath("/finances");
     return successResponse("Réservation mise à jour avec succès", { id });
   } catch (err) {
     return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour de la réservation") as ActionResponse<{ id: string }>;
