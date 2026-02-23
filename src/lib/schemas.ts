@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Helper: validate HH:MM time format
+const timeString = z.string().regex(/^\d{2}:\d{2}$/, 'Format horaire invalide (HH:MM)');
+
 // Helper: coerce to number but treat empty string / NaN as null
 const nullableNumber = z.preprocess(
   (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
@@ -58,7 +61,7 @@ export const missionSchema = z.object({
   status: z.enum(['A_FAIRE', 'EN_COURS', 'TERMINE', 'ANNULE']).default('A_FAIRE'),
   priority: z.enum(['NORMALE', 'HAUTE', 'CRITIQUE']).default('NORMALE'),
   scheduled_date: z.string().min(1, 'Date requise'),
-  scheduled_time: z.string().default('09:00'),
+  scheduled_time: timeString.default('09:00'),
   time_spent_minutes: z.coerce.number().optional(),
   notes: z.string().max(5000, 'Notes trop longues (5000 caractères max)').default(''),
 });
@@ -119,9 +122,9 @@ export const reservationSchema = z.object({
   guest_phone: z.string().max(30, 'Numéro trop long').default(''),
   guest_count: z.coerce.number().int('Nombre entier requis').min(1, 'Minimum 1 voyageur').max(50, 'Maximum 50 voyageurs').default(1),
   check_in_date: z.string().min(1, 'Date d\'arrivée requise'),
-  check_in_time: z.string().default('15:00'),
+  check_in_time: timeString.default('15:00'),
   check_out_date: z.string().min(1, 'Date de départ requise'),
-  check_out_time: z.string().default('11:00'),
+  check_out_time: timeString.default('11:00'),
   platform: z.enum(['AIRBNB', 'BOOKING', 'DIRECT', 'AUTRE']).default('DIRECT'),
   amount: z.coerce.number().min(0, 'Le montant doit être positif').nullable().default(null),
   status: z.enum(['CONFIRMEE', 'ANNULEE', 'TERMINEE']).default('CONFIRMEE'),

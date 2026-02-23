@@ -4,6 +4,53 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import ICAL from "ical.js";
+import dns from "dns/promises";
+
+/** Check if an IP is private (RFC 1918, loopback, link-local, cloud metadata) */
+function isPrivateIP(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4) return false;
+  // 10.0.0.0/8
+  if (parts[0] === 10) return true;
+  // 172.16.0.0/12
+  if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+  // 192.168.0.0/16
+  if (parts[0] === 192 && parts[1] === 168) return true;
+  // 127.0.0.0/8 (loopback)
+  if (parts[0] === 127) return true;
+  // 169.254.0.0/16 (link-local / cloud metadata)
+  if (parts[0] === 169 && parts[1] === 254) return true;
+  // 0.0.0.0
+  if (parts.every((p) => p === 0)) return true;
+  return false;
+}
+
+/** Validate that a URL does not resolve to a private/internal IP */
+async function validateExternalURL(url: string): Promise<void> {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname;
+
+  // Block direct IP addresses
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) {
+    if (isPrivateIP(hostname)) {
+      throw new Error("URL iCal non autorisée : adresse IP interne");
+    }
+    return;
+  }
+
+  // Resolve hostname and check all IPs
+  try {
+    const addresses = await dns.resolve4(hostname);
+    for (const addr of addresses) {
+      if (isPrivateIP(addr)) {
+        throw new Error("URL iCal non autorisée : résolution vers une adresse interne");
+      }
+    }
+  } catch (err) {
+    if ((err as Error).message.includes("non autorisée")) throw err;
+    throw new Error("URL iCal invalide : impossible de résoudre le nom d'hôte");
+  }
+}
 
 export async function syncIcal(logementId: string) {
   const profile = await requireProfile();
@@ -23,6 +70,9 @@ export async function syncIcal(logementId: string) {
   }
 
   try {
+    // SSRF protection: block private/internal IPs
+    await validateExternalURL(logement.ical_url);
+
     // Fetch iCal file
     const response = await fetch(logement.ical_url);
     if (!response.ok) {
