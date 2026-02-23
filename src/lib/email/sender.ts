@@ -55,7 +55,7 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
     const resend = new Resend(apiKey);
 
     const { error } = await resend.emails.send({
-      from: params.from || "ConciergeOS <noreply@yourdomain.com>", // TODO: Configure your domain
+      from: params.from || process.env.EMAIL_FROM || "ConciergeOS <noreply@classazur.fr>",
       to: params.to,
       subject: params.template.subject,
       html: params.template.html,
