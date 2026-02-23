@@ -134,8 +134,8 @@ export function MissionTimelineCard({ mission }: Props) {
                 className="flex items-center gap-1 hover:opacity-70 transition-opacity"
                 aria-label="Copier le code de la boîte à clés"
               >
-                <KeyRound className="h-3 w-3 text-amber-600" />
-                <code className="bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-mono font-bold text-amber-900">
+                <KeyRound className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                <code className="bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200">
                   {logement.lockbox_code}
                 </code>
                 <Copy className="h-3 w-3 text-muted-foreground" />
@@ -150,7 +150,7 @@ export function MissionTimelineCard({ mission }: Props) {
               >
                 <Wifi className="h-3 w-3" />
                 {logement.wifi_name && <span>{logement.wifi_name}</span>}
-                <code className="bg-gray-100 px-1.5 py-0.5 rounded">{logement.wifi_password}</code>
+                <code className="bg-muted px-1.5 py-0.5 rounded">{logement.wifi_password}</code>
                 <Copy className="h-3 w-3" />
               </button>
             )}

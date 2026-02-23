@@ -177,7 +177,7 @@ export function ChecklistManager({ missionId }: Props) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Barre de progression */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all"
               style={{ width: `${progress}%` }}
@@ -202,6 +202,7 @@ export function ChecklistManager({ missionId }: Props) {
                       checked={item.completed}
                       onCheckedChange={() => handleToggle(item)}
                       className="mt-0.5"
+                      aria-label={`Marquer "${item.item?.titre}" comme ${item.completed ? "non complétée" : "complétée"}`}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -209,7 +210,7 @@ export function ChecklistManager({ missionId }: Props) {
                           {item.item?.titre}
                         </span>
                         {item.item?.photo_requise && (
-                          <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                          <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full">
                             <Camera className="h-3 w-3" />
                             Photo
                           </span>

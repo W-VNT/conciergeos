@@ -14,7 +14,7 @@ export default async function DashboardLayout({
   const organisation = await getCurrentOrganisation();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-muted/30">
       <Sidebar profile={profile} organisation={organisation} />
       <div className="md:pl-64 flex flex-col min-h-screen">
         <DashboardShell profile={profile} organisation={organisation}>

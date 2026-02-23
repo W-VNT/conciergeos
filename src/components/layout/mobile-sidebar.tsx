@@ -115,7 +115,7 @@ export function MobileSidebar({ profile, organisation, onClose }: MobileSidebarP
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-gray-100 hover:text-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
                     )}
                   >
                     <item.icon className="h-5 w-5" />
@@ -138,7 +138,7 @@ export function MobileSidebar({ profile, organisation, onClose }: MobileSidebarP
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 pathname.startsWith("/organisation")
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-gray-100 hover:text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
               title="Paramètres de l'organisation"
             >

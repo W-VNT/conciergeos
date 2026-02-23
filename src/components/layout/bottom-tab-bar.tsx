@@ -61,7 +61,7 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800"
+        className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background border-t border-border"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="grid grid-cols-5 h-16">
@@ -127,7 +127,7 @@ export function BottomTabBar() {
                 key={action.href}
                 href={action.href}
                 onClick={() => setQuickActionOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
                   <action.icon className="h-5 w-5" />
@@ -157,7 +157,7 @@ export function BottomTabBar() {
                     "flex flex-col items-center gap-2 p-3 rounded-xl transition-colors",
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-muted-foreground"
+                      : "hover:bg-accent text-muted-foreground"
                   )}
                 >
                   <item.icon className="h-5 w-5" />

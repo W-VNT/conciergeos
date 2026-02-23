@@ -9,6 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Package, Check, ChevronDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { Equipement, EquipementCategorie, EquipementEtat } from "@/types/database";
 import { EQUIPEMENT_CATEGORIE_LABELS, EQUIPEMENT_ETAT_LABELS } from "@/types/database";
@@ -63,6 +73,7 @@ export function InventaireSection({ logementId }: Props) {
   const [selected, setSelected] = useState<SuggestionItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   function toggleCat(cat: string) {
     setCollapsedCats((prev) => {
@@ -169,8 +180,6 @@ export function InventaireSection({ logementId }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Supprimer cet équipement ?")) return;
-
     const result = await deleteEquipement(id);
     if (result.error) {
       toast.error(result.error);
@@ -178,6 +187,7 @@ export function InventaireSection({ logementId }: Props) {
       toast.success("Équipement supprimé");
       loadEquipements();
     }
+    setDeleteConfirmId(null);
   }
 
   const groupedEquipements = equipements.reduce((acc, eq) => {
@@ -386,7 +396,7 @@ export function InventaireSection({ logementId }: Props) {
                         <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => openDialog(eq)} aria-label="Modifier">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => handleDelete(eq.id)} aria-label="Supprimer">
+                        <Button variant="ghost" size="icon" className="relative h-8 w-8 after:content-[''] after:absolute after:-inset-[6px]" onClick={() => setDeleteConfirmId(eq.id)} aria-label="Supprimer">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -399,6 +409,26 @@ export function InventaireSection({ logementId }: Props) {
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet équipement ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              L&apos;équipement sera supprimé de l&apos;inventaire.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); if (deleteConfirmId) handleDelete(deleteConfirmId); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

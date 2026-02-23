@@ -215,7 +215,7 @@ export function ReservationForm({ reservation, logements }: Props) {
           </div>
 
           {!isEdit && (
-            <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <span className="flex items-center gap-1.5 flex-wrap">
                 Les missions

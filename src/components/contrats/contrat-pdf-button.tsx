@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Download, Eye, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,6 +61,7 @@ export function ContratPDFButton({ data }: ContratPDFButtonProps) {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("PDF download error:", err);
+      toast.error("Erreur lors de la génération du PDF");
     } finally {
       setDownloading(false);
     }

@@ -75,18 +75,18 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
 
   function getColors(event: TimelineEvent): { icon: string; card: string } {
     if (event.type === "incident") {
-      if (event.severity === "CRITIQUE") return { icon: "bg-red-100 border-red-400 text-red-600", card: "border-red-200 bg-red-50/50" };
-      if (event.severity === "MOYEN") return { icon: "bg-orange-100 border-orange-400 text-orange-600", card: "border-orange-200 bg-orange-50/50" };
-      return { icon: "bg-yellow-100 border-yellow-400 text-yellow-600", card: "border-yellow-200 bg-yellow-50/50" };
+      if (event.severity === "CRITIQUE") return { icon: "bg-red-500/15 border-red-400 text-red-600 dark:text-red-400", card: "border-red-500/20 bg-red-500/5" };
+      if (event.severity === "MOYEN") return { icon: "bg-orange-500/15 border-orange-400 text-orange-600 dark:text-orange-400", card: "border-orange-500/20 bg-orange-500/5" };
+      return { icon: "bg-yellow-500/15 border-yellow-400 text-yellow-600 dark:text-yellow-400", card: "border-yellow-500/20 bg-yellow-500/5" };
     }
     if (event.type === "reservation") {
-      return { icon: "bg-blue-100 border-blue-400 text-blue-600", card: "border-blue-200 bg-blue-50/50" };
+      return { icon: "bg-blue-500/15 border-blue-400 text-blue-600 dark:text-blue-400", card: "border-blue-500/20 bg-blue-500/5" };
     }
     // mission
-    if (event.rawStatus === "TERMINE") return { icon: "bg-green-100 border-green-400 text-green-600", card: "border-green-200 bg-green-50/50" };
-    if (event.rawStatus === "EN_COURS") return { icon: "bg-blue-100 border-blue-400 text-blue-600", card: "border-blue-200 bg-blue-50/50" };
-    if (event.rawStatus === "ANNULE") return { icon: "bg-gray-100 border-gray-400 text-gray-500", card: "border-gray-200 bg-gray-50/50" };
-    return { icon: "bg-orange-100 border-orange-400 text-orange-600", card: "border-orange-200 bg-orange-50/50" }; // A_FAIRE
+    if (event.rawStatus === "TERMINE") return { icon: "bg-green-500/15 border-green-400 text-green-600 dark:text-green-400", card: "border-green-500/20 bg-green-500/5" };
+    if (event.rawStatus === "EN_COURS") return { icon: "bg-blue-500/15 border-blue-400 text-blue-600 dark:text-blue-400", card: "border-blue-500/20 bg-blue-500/5" };
+    if (event.rawStatus === "ANNULE") return { icon: "bg-muted border-border text-muted-foreground", card: "border-border bg-muted/30" };
+    return { icon: "bg-orange-500/15 border-orange-400 text-orange-600 dark:text-orange-400", card: "border-orange-500/20 bg-orange-500/5" }; // A_FAIRE
   }
 
   function getIcon(event: TimelineEvent) {

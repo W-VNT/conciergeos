@@ -100,13 +100,13 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             <div className="flex items-center gap-2">
               <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
               <span className="text-muted-foreground">Boîte à clés</span>
-              <code className="bg-amber-50 border border-amber-200 px-2 py-0.5 rounded font-mono font-bold text-amber-900 ml-1">{logement.lockbox_code || "—"}</code>
+              <code className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200 ml-1">{logement.lockbox_code || "—"}</code>
             </div>
             <div className="flex items-center gap-2">
               <Wifi className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <span className="text-muted-foreground">{logement.wifi_name || "—"}</span>
               {logement.wifi_password && (
-                <code className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
+                <code className="bg-muted px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
               )}
             </div>
             {logement.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1">{logement.notes}</p></div>}

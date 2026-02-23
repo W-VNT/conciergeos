@@ -534,17 +534,17 @@ export default function SignupPage() {
               </div>
 
               {isInvitation ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
-                  <p className="font-medium text-green-900 mb-1">✓ Invitation</p>
-                  <p className="text-green-700">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-sm">
+                  <p className="font-medium text-green-900 dark:text-green-200 mb-1">✓ Invitation</p>
+                  <p className="text-green-700 dark:text-green-300">
                     Votre compte sera créé et vous rejoindrez automatiquement{" "}
                     <strong>{invitationOrgName}</strong>.
                   </p>
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                  <p className="font-medium text-blue-900 mb-1">📧 Vérification email</p>
-                  <p className="text-blue-700">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-sm">
+                  <p className="font-medium text-blue-900 dark:text-blue-200 mb-1">📧 Vérification email</p>
+                  <p className="text-blue-700 dark:text-blue-300">
                     Après création, vous recevrez un email de confirmation à{" "}
                     <strong>{email}</strong>. Pensez à vérifier vos spams.
                   </p>
@@ -577,7 +577,7 @@ export default function SignupPage() {
           {step === 4 && (
             <div className="space-y-6 text-center">
               <div className="flex justify-center">
-                <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+                <div className="h-20 w-20 rounded-full bg-blue-500/10 flex items-center justify-center">
                   <Mail className="h-10 w-10 text-blue-600" />
                 </div>
               </div>
@@ -590,9 +590,9 @@ export default function SignupPage() {
                 <p className="text-lg font-medium mt-1">{email}</p>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-left">
-                <p className="font-medium text-yellow-900 mb-2">📌 Instructions</p>
-                <ol className="text-yellow-800 space-y-1 list-decimal list-inside">
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-left">
+                <p className="font-medium text-yellow-900 dark:text-yellow-200 mb-2">📌 Instructions</p>
+                <ol className="text-yellow-800 dark:text-yellow-300 space-y-1 list-decimal list-inside">
                   <li>Ouvrez votre boîte email</li>
                   <li>Recherchez l&apos;email de ConciergeOS</li>
                   <li>Cliquez sur le lien de confirmation</li>

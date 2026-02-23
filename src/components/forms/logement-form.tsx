@@ -139,6 +139,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={proprioOpen}
+                    aria-label="Sélectionner un propriétaire"
                     className="w-full justify-between font-normal"
                   >
                     {form.watch("owner_id")

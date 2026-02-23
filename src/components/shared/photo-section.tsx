@@ -122,7 +122,7 @@ export function PhotoSection({
             {attachments.map((att) => (
               <div
                 key={att.id}
-                className="relative group aspect-square rounded-lg overflow-hidden border bg-gray-100"
+                className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
               >
                 <img
                   src={`/api/storage/${encodeURIComponent(att.storage_path)}`}

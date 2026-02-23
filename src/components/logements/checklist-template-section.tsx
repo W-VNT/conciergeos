@@ -8,6 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, ClipboardList, Camera, Check, ChevronDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   getLogementTemplatesWithItems,
@@ -171,6 +181,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   const [addingSuggestions, setAddingSuggestions] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [collapsedCats, setCollapsedCats] = useState<Record<string, Set<string>>>({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   function toggleCat(type: string, cat: string) {
     setCollapsedCats((prev) => {
@@ -283,7 +294,6 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   }
 
   async function handleDelete(itemId: string) {
-    if (!confirm("Supprimer cet item ?")) return;
     const result = await deleteLogementChecklistItem(itemId, logementId);
     if (result.error) {
       toast.error(result.error);
@@ -291,6 +301,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
       toast.success("Item supprimé");
       load();
     }
+    setDeleteConfirmId(null);
   }
 
   async function handleAddSuggestions(type: MissionType) {
@@ -417,7 +428,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                                     <Button variant="ghost" size="icon" className="relative h-7 w-7 after:content-[''] after:absolute after:-inset-[8px]" onClick={() => openEdit(item, type)} aria-label="Modifier">
                                       <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="relative h-7 w-7 after:content-[''] after:absolute after:-inset-[8px]" onClick={() => handleDelete(item.id)} aria-label="Supprimer">
+                                    <Button variant="ghost" size="icon" className="relative h-7 w-7 after:content-[''] after:absolute after:-inset-[8px]" onClick={() => setDeleteConfirmId(item.id)} aria-label="Supprimer">
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
                                   </div>
@@ -534,7 +545,7 @@ export function ChecklistTemplateSection({ logementId }: Props) {
                   type="checkbox"
                   checked={photoRequise}
                   onChange={(e) => setPhotoRequise(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="h-4 w-4 rounded border-border"
                 />
                 <span className="text-sm flex items-center gap-1.5">
                   <Camera className="h-4 w-4 text-muted-foreground" />
@@ -554,6 +565,26 @@ export function ChecklistTemplateSection({ logementId }: Props) {
           </DialogContent>
         </Dialog>
       </CardContent>
+
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet item ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. L&apos;item sera supprimé de la checklist.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); if (deleteConfirmId) handleDelete(deleteConfirmId); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

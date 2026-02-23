@@ -36,7 +36,7 @@ export function DaySwitcher({ currentDate, formattedDate, isToday }: Props) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)} aria-label="Jour précédent">
         <ChevronLeft className="h-4 w-4" />
       </Button>
       <button
@@ -52,7 +52,7 @@ export function DaySwitcher({ currentDate, formattedDate, isToday }: Props) {
       >
         {isToday ? formattedDate : formattedDate}
       </button>
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(1)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(1)} aria-label="Jour suivant">
         <ChevronRight className="h-4 w-4" />
       </Button>
       {!isToday && (

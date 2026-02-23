@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { MISSION_TYPE_LABELS } from "@/types/database";
 import Link from "next/link";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -43,6 +44,7 @@ export function NotificationBell() {
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     } catch (error) {
       console.error("Error marking as read:", error);
+      toast.error("Erreur lors du marquage comme lu");
     }
   }
 
@@ -92,7 +94,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label={unreadCount > 0 ? `Notifications (${unreadCount} non lues)` : "Notifications"}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
@@ -133,7 +135,7 @@ export function NotificationBell() {
               >
                 <Link
                   href={getNotificationLink(notification)}
-                  className="flex gap-3 px-4 py-3 w-full hover:bg-gray-50"
+                  className="flex gap-3 px-4 py-3 w-full hover:bg-muted"
                 >
                   <div className="flex-1 min-w-0">
                     {/* Category + mission type badges */}

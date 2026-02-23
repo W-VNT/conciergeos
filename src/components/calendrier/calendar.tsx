@@ -41,9 +41,9 @@ const MISSION_TYPE_BORDER_COLORS: Record<MissionType, string> = {
 };
 
 const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
-  CONFIRMEE: "bg-emerald-100 border-emerald-400 text-emerald-900",
-  ANNULEE: "bg-red-100 border-red-400 text-red-700 line-through",
-  TERMINEE: "bg-blue-100 border-blue-400 text-blue-800",
+  CONFIRMEE: "bg-emerald-500/10 border-emerald-400 text-emerald-900 dark:text-emerald-200",
+  ANNULEE: "bg-red-500/10 border-red-400 text-red-700 dark:text-red-300 line-through",
+  TERMINEE: "bg-blue-500/10 border-blue-400 text-blue-800 dark:text-blue-200",
 };
 
 const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -190,11 +190,11 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
         <div className="space-y-3">
           {/* Row 1: Navigation centrée */}
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="icon" onClick={goToPrev}>
+            <Button variant="outline" size="icon" onClick={goToPrev} aria-label={view === "jour" ? "Jour précédent" : view === "semaine" ? "Semaine précédente" : view === "mois" ? "Mois précédent" : "Année précédente"}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h2 className="text-base font-semibold text-center">{getHeaderLabel()}</h2>
-            <Button variant="outline" size="icon" onClick={goToNext}>
+            <Button variant="outline" size="icon" onClick={goToNext} aria-label={view === "jour" ? "Jour suivant" : view === "semaine" ? "Semaine suivante" : view === "mois" ? "Mois suivant" : "Année suivante"}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -206,6 +206,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 <button
                   key={key}
                   onClick={() => setView(key)}
+                  aria-current={view === key ? "true" : undefined}
                   className={`flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-sm font-medium transition-all ${
                     view === key
                       ? "bg-background shadow-sm text-foreground"
@@ -330,11 +331,11 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
             {weekDays.map((day, i) => (
               <div key={i} className="bg-background p-1 sm:p-2">
                 <div className="mb-1 sm:mb-2 text-center">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground">
                     <span className="sm:hidden">{DAYS_SHORT[i]}</span>
                     <span className="hidden sm:inline">{DAYS[i]}</span>
                   </p>
-                  <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-medium ${
+                  <span className={`relative inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-medium after:content-[''] after:absolute after:-inset-2 ${
                     isToday(day) ? "bg-primary text-primary-foreground" : ""
                   }`}>
                     {day.getDate()}
@@ -345,7 +346,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                     const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
                     return (
                       <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-[10px] p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                        <div className={`text-[11px] p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
                           <div className="font-medium truncate">{logement?.name}</div>
                         </div>
                       </Link>
@@ -353,7 +354,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                   })}
                   {getMissionsForDate(day).map((m) => (
                     <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                      <div className={`text-[10px] p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
+                      <div className={`text-[11px] p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
                         <div className="font-medium truncate flex items-center gap-0.5 sm:gap-1">
                           <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
                           <span className="hidden sm:inline">{formatTime(m.scheduled_at)}</span>
@@ -389,7 +390,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                   className={`bg-background min-h-[120px] p-2 ${!day.isCurrentMonth ? "opacity-40" : ""}`}
                 >
                   <div className="mb-1">
-                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${
+                    <span className={`relative inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium after:content-[''] after:absolute after:-inset-2 ${
                       isCurrentDay ? "bg-primary text-primary-foreground font-semibold" : ""
                     }`}>
                       {day.date.getDate()}
@@ -469,12 +470,12 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 </div>
                 <div className="grid grid-cols-7 gap-px">
                   {["L", "M", "M", "J", "V", "S", "D"].map((d, idx) => (
-                    <div key={idx} className="text-[9px] text-center text-muted-foreground font-medium py-0.5">{d}</div>
+                    <div key={idx} className="text-[11px] text-center text-muted-foreground font-medium py-0.5">{d}</div>
                   ))}
                   {miniDays.map((day, idx) => {
                     const isCurrentDay = day !== null && isSameDay(new Date(year, i, day), new Date());
                     return (
-                      <div key={idx} className={`text-[10px] text-center py-0.5 rounded-full ${
+                      <div key={idx} className={`text-[11px] text-center py-0.5 rounded-full ${
                         isCurrentDay ? "bg-primary text-primary-foreground font-semibold" : "text-foreground"
                       } ${day === null ? "invisible" : ""}`}>
                         {day ?? "·"}
