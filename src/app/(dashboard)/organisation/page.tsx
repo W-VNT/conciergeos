@@ -8,6 +8,8 @@ import OfferSettings from "@/components/settings/offer-settings";
 import { getCurrentOrganisation } from "@/lib/actions/organisation";
 import { getOfferConfigs } from "@/lib/actions/offers";
 
+export const metadata = { title: "Organisation" };
+
 export default async function OrganisationPage() {
   const profile = await requireProfile();
 

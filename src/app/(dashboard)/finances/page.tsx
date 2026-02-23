@@ -5,6 +5,8 @@ import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
 import { getFinancialSummary, getRevenusByLogement } from "@/lib/actions/finances";
 
+export const metadata = { title: "Finances" };
+
 // Revalidate every 60 seconds
 export const revalidate = 60;
 

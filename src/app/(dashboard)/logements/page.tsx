@@ -10,6 +10,8 @@ import { Map } from "lucide-react";
 import Link from "next/link";
 import { LogementsTableWithSelection } from "@/components/logements/logements-table-with-selection";
 
+export const metadata = { title: "Logements" };
+
 const PAGE_SIZE = 20;
 
 export const revalidate = 30;

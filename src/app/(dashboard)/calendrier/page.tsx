@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import Calendar from "@/components/calendrier/calendar";
 import type { Mission, Reservation } from "@/types/database";
 
+export const metadata = { title: "Calendrier" };
+
 export default async function CalendrierPage() {
   const profile = await requireProfile();
   const supabase = await createClient();

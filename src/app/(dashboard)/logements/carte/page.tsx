@@ -6,6 +6,7 @@ import type { Logement } from "@/types/database";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, AlertCircle } from "lucide-react";
 
+export const metadata = { title: "Carte des logements" };
 export const revalidate = 30;
 
 export default async function LogementsCartePage() {

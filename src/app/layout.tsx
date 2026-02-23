@@ -15,7 +15,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "ConciergeOS",
+  title: {
+    default: "ConciergeOS",
+    template: "%s | ConciergeOS",
+  },
   description: "Back-office premium pour conciergeries",
   appleWebApp: {
     capable: true,

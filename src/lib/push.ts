@@ -20,15 +20,8 @@ interface PushPayload {
 }
 
 export async function sendPushToUser(userId: string, payload: PushPayload) {
-  if (!process.env.VAPID_PRIVATE_KEY) {
-    console.warn("[push] VAPID keys not configured, skipping push");
-    return;
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn("[push] SUPABASE_SERVICE_ROLE_KEY not configured, skipping push");
-    return;
-  }
+  if (!process.env.VAPID_PRIVATE_KEY) return;
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return;
 
   // Use service role key to bypass RLS (called from webhook without user session)
   const supabase = createServerClient(
@@ -36,12 +29,10 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data: subscriptions, error } = await supabase
+  const { data: subscriptions } = await supabase
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
-
-  console.log("[push] Subscriptions for user", userId, ":", subscriptions?.length ?? 0, error ? `error: ${error.message}` : "");
 
   if (!subscriptions?.length) return;
 

@@ -6,6 +6,8 @@ import { Clock, DollarSign, Percent, TrendingUp, AlertTriangle, BarChart3 } from
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
 import Link from "next/link";
 
+export const metadata = { title: "Analytics" };
+
 // Revalidate every 60 seconds
 export const revalidate = 60;
 

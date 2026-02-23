@@ -8,6 +8,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { IncidentsTableWithSelection } from "@/components/incidents/incidents-table-with-selection";
 
+export const metadata = { title: "Incidents" };
 export const revalidate = 30;
 
 const PAGE_SIZE = 20;

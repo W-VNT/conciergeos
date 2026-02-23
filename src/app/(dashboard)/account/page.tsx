@@ -5,6 +5,8 @@ import ProfileSettings from "@/components/settings/profile-settings";
 import SecuritySettings from "@/components/settings/security-settings";
 import ApplicationSettings from "@/components/settings/application-settings";
 
+export const metadata = { title: "Mon compte" };
+
 export default async function AccountPage() {
   const profile = await requireProfile();
 

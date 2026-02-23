@@ -7,6 +7,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { ProprietairesTableWithSelection } from "@/components/proprietaires/proprietaires-table-with-selection";
 
+export const metadata = { title: "Propriétaires" };
 export const revalidate = 30;
 
 const PAGE_SIZE = 20;

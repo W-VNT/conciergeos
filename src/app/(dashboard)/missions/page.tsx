@@ -8,6 +8,8 @@ import { Pagination } from "@/components/shared/pagination";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
 import { MissionsTableWithSelection } from "@/components/missions/missions-table-with-selection";
 
+export const metadata = { title: "Missions" };
+
 const PAGE_SIZE = 20;
 
 // Revalidate every 30 seconds

@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import type { Notification } from "@/types/database";
 
+export const metadata = { title: "Notifications" };
+
 export default async function NotificationsPage() {
   const profile = await requireProfile();
   const supabase = createClient();

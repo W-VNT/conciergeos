@@ -27,14 +27,7 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    console.warn("⚠️ RESEND_API_KEY not configured. Email not sent:", params.template.subject);
-    // In development, just log the email instead of throwing
     if (process.env.NODE_ENV === "development") {
-      console.log("📧 Email preview:", {
-        to: params.to,
-        subject: params.template.subject,
-        html: params.template.html,
-      });
       return;
     }
     throw new Error("RESEND_API_KEY is not configured");
@@ -42,13 +35,11 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
 
   try {
     // Dynamic import to avoid requiring resend if not configured
-    // Using require for optional dependency
     let Resend;
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       Resend = require("resend").Resend;
     } catch {
-      console.warn("⚠️ Resend package not installed. Please run: npm install resend");
       return;
     }
 
@@ -63,13 +54,11 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
     });
 
     if (error) {
-      console.error("❌ Error sending email:", error);
+      console.error("Email send error:", error);
       throw new Error(`Failed to send email: ${error.message}`);
     }
-
-    console.log("✅ Email sent successfully to", params.to);
   } catch (error) {
-    console.error("❌ Email sending failed:", error);
+    console.error("Email sending failed:", error);
     // Don't throw in production to avoid breaking the app
     if (process.env.NODE_ENV !== "production") {
       throw error;

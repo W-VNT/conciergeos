@@ -7,6 +7,8 @@ import { Pagination } from "@/components/shared/pagination";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
 import { ReservationsTableWithSelection } from "@/components/reservations/reservations-table-with-selection";
 
+export const metadata = { title: "Réservations" };
+
 const PAGE_SIZE = 20;
 
 export const revalidate = 30;

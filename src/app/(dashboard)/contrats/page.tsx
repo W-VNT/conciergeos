@@ -11,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 
+export const metadata = { title: "Contrats" };
+
 const PAGE_SIZE = 20;
 
 export const revalidate = 30;

@@ -5,6 +5,7 @@ import { DaySwitcher } from "@/components/ma-journee/day-switcher";
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
+export const metadata = { title: "Ma journée" };
 export const revalidate = 30;
 
 export default async function MaJourneePage({ searchParams }: { searchParams: { date?: string } }) {

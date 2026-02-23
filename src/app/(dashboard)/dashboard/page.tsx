@@ -9,6 +9,8 @@ import Link from "next/link";
 import { CalendarWidget } from "@/components/dashboard/calendar-widget";
 import { EmptyState } from "@/components/shared/empty-state";
 
+export const metadata = { title: "Tableau de bord" };
+
 // Revalidate every 30 seconds (ISR cache)
 export const revalidate = 30;
 

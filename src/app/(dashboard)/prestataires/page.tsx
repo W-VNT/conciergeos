@@ -7,6 +7,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { SPECIALTY_LABELS } from "@/types/database";
 import { PrestatairesTableWithSelection } from "@/components/prestataires/prestataires-table-with-selection";
 
+export const metadata = { title: "Prestataires" };
 export const revalidate = 30;
 
 const PAGE_SIZE = 20;
