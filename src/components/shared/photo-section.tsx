@@ -33,38 +33,70 @@ export function PhotoSection({
   const router = useRouter();
   const supabase = createClient();
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setUploading(true);
     try {
-      for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop();
-        const path = `${organisationId}/${entityType}/${entityId}/${Date.now()}.${ext}`;
+      // Filter valid files first
+      const validFiles = Array.from(files).filter((file) => {
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          toast.error(`Type non autorisé : ${file.type || "inconnu"}. Formats acceptés : JPEG, PNG, WebP, HEIC.`);
+          return false;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). Maximum : 10 Mo.`);
+          return false;
+        }
+        return true;
+      });
 
-        const { error: uploadError } = await supabase.storage
-          .from("attachments")
-          .upload(path, file);
+      const results = await Promise.allSettled(
+        validFiles.map(async (file, i) => {
+          const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+          const path = `${organisationId}/${entityType}/${entityId}/${Date.now()}_${i}.${ext}`;
 
-        if (uploadError) throw uploadError;
+          const { error: uploadError } = await supabase.storage
+            .from("attachments")
+            .upload(path, file);
+          if (uploadError) throw uploadError;
 
-        const { data: att, error: dbError } = await supabase
-          .from("attachments")
-          .insert({
-            organisation_id: organisationId,
-            entity_type: entityType,
-            entity_id: entityId,
-            storage_path: path,
-            mime_type: file.type,
-          })
-          .select()
-          .single();
+          const { data: att, error: dbError } = await supabase
+            .from("attachments")
+            .insert({
+              organisation_id: organisationId,
+              entity_type: entityType,
+              entity_id: entityId,
+              storage_path: path,
+              mime_type: file.type,
+            })
+            .select()
+            .single();
+          if (dbError) {
+            // Cleanup orphaned storage file
+            await supabase.storage.from("attachments").remove([path]);
+            throw dbError;
+          }
+          return att;
+        })
+      );
 
-        if (dbError) throw dbError;
-        if (att) setAttachments((prev) => [...prev, att]);
+      const uploaded = results
+        .filter((r): r is PromiseFulfilledResult<Attachment> => r.status === "fulfilled" && r.value != null)
+        .map((r) => r.value);
+      const errorCount = results.filter((r) => r.status === "rejected").length;
+
+      if (uploaded.length > 0) {
+        setAttachments((prev) => [...prev, ...uploaded]);
+        toast.success(`${uploaded.length} photo${uploaded.length > 1 ? "s" : ""} ajoutée${uploaded.length > 1 ? "s" : ""}`);
       }
-      toast.success("Photo(s) ajoutée(s)");
+      if (errorCount > 0) {
+        toast.error(`${errorCount} photo${errorCount > 1 ? "s" : ""} en erreur`);
+      }
       router.refresh();
     } catch (err) {
       toast.error("Erreur lors de l'upload");
@@ -125,7 +157,7 @@ export function PhotoSection({
                 className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
               >
                 <img
-                  src={`/api/storage/${encodeURIComponent(att.storage_path)}`}
+                  src={`/api/storage/${att.storage_path}`}
                   alt=""
                   className="w-full h-full object-cover"
                 />

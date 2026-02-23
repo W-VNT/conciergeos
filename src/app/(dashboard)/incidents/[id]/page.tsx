@@ -22,10 +22,11 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
     .from("incidents")
     .select("*, logement:logements(id, name), prestataire:prestataires(id, full_name), mission:missions(id, type, reservation_id)")
     .eq("id", params.id)
+    .eq("organisation_id", profile.organisation_id)
     .single();
   if (!incident) notFound();
 
-  const { data: attachments } = await supabase.from("attachments").select("*").eq("entity_type", "INCIDENT").eq("entity_id", params.id).order("created_at", { ascending: false });
+  const { data: attachments } = await supabase.from("attachments").select("*").eq("entity_type", "INCIDENT").eq("entity_id", params.id).eq("organisation_id", profile.organisation_id).order("created_at", { ascending: false });
 
   const logement = incident.logement as { id: string; name: string } | null;
   const prestataire = incident.prestataire as { id: string; full_name: string } | null;
@@ -34,7 +35,7 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
   // Fetch reservation if mission has one
   let reservation: { id: string; guest_name: string } | null = null;
   if (mission?.reservation_id) {
-    const { data } = await supabase.from("reservations").select("id, guest_name").eq("id", mission.reservation_id).single();
+    const { data } = await supabase.from("reservations").select("id, guest_name").eq("id", mission.reservation_id).eq("organisation_id", profile.organisation_id).single();
     reservation = data;
   }
 
@@ -70,7 +71,7 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
           {reservation && <div className="flex justify-between"><span className="text-muted-foreground">Réservation</span><Link href={`/reservations/${reservation.id}`} className="hover:underline">{reservation.guest_name}</Link></div>}
           {prestataire && <div className="flex justify-between"><span className="text-muted-foreground">Prestataire</span><Link href={`/prestataires/${prestataire.id}`} className="hover:underline">{prestataire.full_name}</Link></div>}
           <div><span className="text-muted-foreground">Description</span><p className="mt-1">{incident.description}</p></div>
-          {incident.cost && <div className="flex justify-between"><span className="text-muted-foreground">Coût</span><span>{Number(incident.cost).toFixed(2)}€</span></div>}
+          {incident.cost != null && <div className="flex justify-between"><span className="text-muted-foreground">Coût</span><span>{new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(incident.cost)}</span></div>}
           {incident.expected_resolution_date && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Résolution prévue</span>

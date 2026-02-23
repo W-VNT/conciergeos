@@ -1,23 +1,27 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import type { MissionType } from "@/types/database";
+import { z } from "zod";
 
 /**
  * Get checklist for a mission
  */
 export async function getMissionChecklist(missionId: string) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
+    // Verify mission belongs to this organisation
+    const { data: mission } = await supabase
+      .from("missions")
+      .select("id")
+      .eq("id", missionId)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+    if (!mission) return { error: "Mission non trouvée" };
 
     const { data: items, error } = await supabase
       .from("mission_checklist_items")
@@ -48,15 +52,26 @@ export async function createMissionChecklistFromTemplate(
   templateId: string
 ) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Verify mission belongs to this organisation
+    const { data: mission } = await supabase
+      .from("missions")
+      .select("id")
+      .eq("id", missionId)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+    if (!mission) return { error: "Mission non trouvée" };
 
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
+    // Verify template belongs to this organisation
+    const { data: template } = await supabase
+      .from("checklist_templates")
+      .select("id")
+      .eq("id", templateId)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+    if (!template) return { error: "Template non trouvé" };
 
     // Get template items
     const { data: templateItems, error: templateError } = await supabase
@@ -100,29 +115,26 @@ export async function createMissionChecklistFromTemplate(
  */
 export async function toggleChecklistItem(itemId: string, completed: boolean) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get the item to find mission_id for revalidation
+    // Get the item + verify mission belongs to this organisation
     const { data: item } = await supabase
       .from("mission_checklist_items")
-      .select("mission_id")
+      .select("mission_id, mission:missions(organisation_id)")
       .eq("id", itemId)
       .single();
+
+    if (!item || (item.mission as unknown as { organisation_id: string })?.organisation_id !== profile.organisation_id) {
+      return { error: "Item non trouvé" };
+    }
 
     const { error } = await supabase
       .from("mission_checklist_items")
       .update({
         completed,
         completed_at: completed ? new Date().toISOString() : null,
-        completed_by: completed ? user.id : null,
+        completed_by: completed ? profile.id : null,
       })
       .eq("id", itemId);
 
@@ -150,26 +162,28 @@ export async function updateChecklistItem(
   data: { photo_url?: string; notes?: string }
 ) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get the item to find mission_id for revalidation
+    // Get the item + verify mission belongs to this organisation
     const { data: item } = await supabase
       .from("mission_checklist_items")
-      .select("mission_id")
+      .select("mission_id, mission:missions(organisation_id)")
       .eq("id", itemId)
       .single();
 
+    if (!item || (item.mission as unknown as { organisation_id: string })?.organisation_id !== profile.organisation_id) {
+      return { error: "Item non trouvé" };
+    }
+
+    const parsed = z.object({
+      photo_url: z.string().optional(),
+      notes: z.string().max(5000).optional(),
+    }).parse(data);
+
     const { error } = await supabase
       .from("mission_checklist_items")
-      .update(data)
+      .update(parsed)
       .eq("id", itemId);
 
     if (error) {
@@ -193,26 +207,8 @@ export async function updateChecklistItem(
  */
 export async function getChecklistTemplates(typeMission?: MissionType) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get user's organisation
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("organisation_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) {
-      return { error: "Profil non trouvé" };
-    }
 
     let query = supabase
       .from("checklist_templates")
@@ -245,15 +241,17 @@ export async function getChecklistTemplates(typeMission?: MissionType) {
  */
 export async function getTemplateItems(templateId: string) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
+    // Verify template belongs to this organisation
+    const { data: template } = await supabase
+      .from("checklist_templates")
+      .select("id")
+      .eq("id", templateId)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+    if (!template) return { error: "Template non trouvé" };
 
     const { data: items, error } = await supabase
       .from("checklist_template_items")
@@ -281,14 +279,23 @@ export async function getTemplateItems(templateId: string) {
  * Get all checklist templates for a logement, with their items, keyed by type_mission
  */
 export async function getLogementTemplatesWithItems(logementId: string) {
+  const profile = await requireProfile();
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+
+  // Verify logement belongs to this organisation
+  const { data: logement } = await supabase
+    .from("logements")
+    .select("id")
+    .eq("id", logementId)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+  if (!logement) return { error: "Logement non trouvé" };
 
   const { data: templates, error } = await supabase
     .from("checklist_templates")
     .select("*, items:checklist_template_items(*)")
     .eq("logement_id", logementId)
+    .eq("organisation_id", profile.organisation_id)
     .eq("actif", true)
     .order("created_at");
 
@@ -319,6 +326,7 @@ async function getOrCreateTemplate(
     .eq("logement_id", logementId)
     .eq("type_mission", typeMission)
     .eq("actif", true)
+    .eq("organisation_id", organisationId)
     .maybeSingle();
 
   if (existing) return existing.id;
@@ -346,16 +354,10 @@ export async function addLogementChecklistItem(
   typeMission: MissionType,
   data: { titre: string; categorie: string; photo_requise: boolean }
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+  const profile = await requireProfile();
+  if (!isAdmin(profile)) return { error: "Non autorisé" };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organisation_id")
-    .eq("id", user.id)
-    .single();
-  if (!profile) return { error: "Profil non trouvé" };
+  const supabase = await createClient();
 
   // Verify logement belongs to this organisation
   const { data: logement } = await supabase
@@ -416,17 +418,10 @@ export async function updateLogementChecklistItem(
   logementId: string,
   data: { titre: string; categorie: string; photo_requise: boolean }
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+  const profile = await requireProfile();
+  if (!isAdmin(profile)) return { error: "Non autorisé" };
 
-  // Verify logement belongs to user's organisation
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organisation_id")
-    .eq("id", user.id)
-    .single();
-  if (!profile) return { error: "Profil non trouvé" };
+  const supabase = await createClient();
 
   const { data: logement } = await supabase
     .from("logements")
@@ -435,6 +430,16 @@ export async function updateLogementChecklistItem(
     .eq("organisation_id", profile.organisation_id)
     .single();
   if (!logement) return { error: "Logement non trouvé" };
+
+  // Verify item belongs to a template of this logement
+  const { data: item } = await supabase
+    .from("checklist_template_items")
+    .select("id, template:checklist_templates(logement_id)")
+    .eq("id", itemId)
+    .single();
+  if (!item || (item.template as unknown as { logement_id: string })?.logement_id !== logementId) {
+    return { error: "Item non trouvé" };
+  }
 
   const { error } = await supabase
     .from("checklist_template_items")
@@ -455,17 +460,10 @@ export async function updateLogementChecklistItem(
  * Delete a checklist template item
  */
 export async function deleteLogementChecklistItem(itemId: string, logementId: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+  const profile = await requireProfile();
+  if (!isAdmin(profile)) return { error: "Non autorisé" };
 
-  // Verify logement belongs to user's organisation
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organisation_id")
-    .eq("id", user.id)
-    .single();
-  if (!profile) return { error: "Profil non trouvé" };
+  const supabase = await createClient();
 
   const { data: logement } = await supabase
     .from("logements")
@@ -474,6 +472,16 @@ export async function deleteLogementChecklistItem(itemId: string, logementId: st
     .eq("organisation_id", profile.organisation_id)
     .single();
   if (!logement) return { error: "Logement non trouvé" };
+
+  // Verify item belongs to a template of this logement
+  const { data: item } = await supabase
+    .from("checklist_template_items")
+    .select("id, template:checklist_templates(logement_id)")
+    .eq("id", itemId)
+    .single();
+  if (!item || (item.template as unknown as { logement_id: string })?.logement_id !== logementId) {
+    return { error: "Item non trouvé" };
+  }
 
   const { error } = await supabase
     .from("checklist_template_items")
@@ -492,7 +500,8 @@ export async function deleteLogementChecklistItem(itemId: string, logementId: st
 export async function findLogementTemplate(
   supabase: Awaited<ReturnType<typeof createClient>>,
   logementId: string,
-  typeMission: MissionType
+  typeMission: MissionType,
+  organisationId: string
 ): Promise<string | null> {
   const { data } = await supabase
     .from("checklist_templates")
@@ -500,6 +509,7 @@ export async function findLogementTemplate(
     .eq("logement_id", logementId)
     .eq("type_mission", typeMission)
     .eq("actif", true)
+    .eq("organisation_id", organisationId)
     .maybeSingle();
   return data?.id ?? null;
 }

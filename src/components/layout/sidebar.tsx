@@ -95,7 +95,9 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
         <span className="font-semibold text-lg">ConciergeOS</span>
       </div>
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
-        {navGroups.map((group, groupIndex) => (
+        {navGroups
+          .filter((group) => group.label !== "Finances" || isAdmin)
+          .map((group, groupIndex) => (
           <div key={groupIndex} className={groupIndex > 0 ? "mt-4" : ""}>
             {group.label && (
               <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">

@@ -35,9 +35,10 @@ interface Logement {
 
 interface Props {
   logements: Logement[];
+  canBulkDelete?: boolean;
 }
 
-export function LogementsTableWithSelection({ logements }: Props) {
+export function LogementsTableWithSelection({ logements, canBulkDelete = false }: Props) {
   const {
     selectedIds,
     toggleSelection,
@@ -101,7 +102,7 @@ export function LogementsTableWithSelection({ logements }: Props) {
               )}
             >
               <div className="flex items-center gap-2 mb-2">
-                <Checkbox checked={isSelected(l.id)} onCheckedChange={() => toggleSelection(l.id)} />
+                {canBulkDelete && <Checkbox checked={isSelected(l.id)} onCheckedChange={() => toggleSelection(l.id)} />}
                 <StatusBadge value={l.offer_tier} label={OFFER_TIER_LABELS[l.offer_tier as keyof typeof OFFER_TIER_LABELS]} />
                 <StatusBadge value={l.status} label={LOGEMENT_STATUS_LABELS[l.status as keyof typeof LOGEMENT_STATUS_LABELS]} className="ml-auto" />
               </div>
@@ -130,12 +131,14 @@ export function LogementsTableWithSelection({ logements }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={toggleAll}
-                />
-              </TableHead>
+              {canBulkDelete && (
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={toggleAll}
+                  />
+                </TableHead>
+              )}
               <TableHead>Nom</TableHead>
               <TableHead>Ville</TableHead>
               <TableHead>Propriétaire</TableHead>
@@ -154,12 +157,14 @@ export function LogementsTableWithSelection({ logements }: Props) {
                   key={logement.id}
                   className={isSelected(logement.id) ? "bg-primary/5" : ""}
                 >
-                  <TableCell>
-                    <Checkbox
-                      checked={isSelected(logement.id)}
-                      onCheckedChange={() => toggleSelection(logement.id)}
-                    />
-                  </TableCell>
+                  {canBulkDelete && (
+                    <TableCell>
+                      <Checkbox
+                        checked={isSelected(logement.id)}
+                        onCheckedChange={() => toggleSelection(logement.id)}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Link href={`/logements/${logement.id}`} className="font-medium hover:underline">
                       {logement.name}
@@ -187,7 +192,7 @@ export function LogementsTableWithSelection({ logements }: Props) {
                 variant="table"
                 icon={Home}
                 title="Aucun logement trouvé"
-                colSpan={6}
+                colSpan={canBulkDelete ? 6 : 5}
               />
             )}
           </TableBody>

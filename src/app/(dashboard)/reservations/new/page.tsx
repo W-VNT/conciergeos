@@ -13,6 +13,7 @@ export default async function NewReservationPage() {
   const { data: logements, error } = await supabase
     .from("logements")
     .select("*")
+    .eq("organisation_id", profile.organisation_id)
     .eq("status", "ACTIF")
     .order("name");
 

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 export async function getUnreadNotifications() {
   const profile = await requireProfile();
@@ -45,13 +46,14 @@ export async function getUnreadCount() {
 export async function getAllNotifications(limit: number = 50) {
   const profile = await requireProfile();
   const supabase = createClient();
+  const safeLim = Math.min(Math.max(1, limit), 200);
 
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(safeLim);
 
   if (error) {
     console.error("Error fetching notifications:", error);
@@ -62,6 +64,7 @@ export async function getAllNotifications(limit: number = 50) {
 }
 
 export async function markAsRead(notificationId: string) {
+  z.string().uuid().parse(notificationId);
   const profile = await requireProfile();
   const supabase = createClient();
 
@@ -98,6 +101,7 @@ export async function markAllAsRead() {
 }
 
 export async function deleteNotification(notificationId: string) {
+  z.string().uuid().parse(notificationId);
   const profile = await requireProfile();
   const supabase = createClient();
 

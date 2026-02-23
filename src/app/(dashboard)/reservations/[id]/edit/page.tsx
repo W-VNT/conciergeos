@@ -14,6 +14,7 @@ export default async function EditReservationPage({ params }: { params: { id: st
     .from("reservations")
     .select("*")
     .eq("id", params.id)
+    .eq("organisation_id", profile.organisation_id)
     .single();
 
   if (!reservation) notFound();
@@ -21,6 +22,7 @@ export default async function EditReservationPage({ params }: { params: { id: st
   const { data: logements } = await supabase
     .from("logements")
     .select("*")
+    .eq("organisation_id", profile.organisation_id)
     .order("name");
 
   return (

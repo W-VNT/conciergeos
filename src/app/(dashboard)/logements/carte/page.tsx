@@ -2,16 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { PageHeader } from "@/components/shared/page-header";
 import { LogementsMap } from "@/components/logements/logements-map";
-import type { Logement } from "@/types/database";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, AlertCircle } from "lucide-react";
 
 export const metadata = { title: "Carte des logements" };
-export const revalidate = 30;
+export const revalidate = 0;
 
 export default async function LogementsCartePage() {
   const profile = await requireProfile();
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: logements } = await supabase
     .from("logements")
@@ -37,9 +37,7 @@ export default async function LogementsCartePage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
           <span>
-            {logementsWithCoords?.length || 0} logement
-            {(logementsWithCoords?.length || 0) > 1 ? "s" : ""} géolocalisé
-            {(logementsWithCoords?.length || 0) > 1 ? "s" : ""}
+            {logementsWithCoords?.length || 0} logement{(logementsWithCoords?.length || 0) > 1 ? "s" : ""} géolocalisé{(logementsWithCoords?.length || 0) > 1 ? "s" : ""}
           </span>
         </div>
       </PageHeader>
@@ -71,7 +69,7 @@ export default async function LogementsCartePage() {
         </Card>
       )}
 
-      <LogementsMap logements={(logements as Logement[]) || []} />
+      <LogementsMap logements={logements ?? []} />
 
       {logementsWithoutCoords && logementsWithoutCoords.length > 0 && (
         <Card className="mt-4">

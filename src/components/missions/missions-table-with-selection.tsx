@@ -121,6 +121,7 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                 <Checkbox
                   checked={selectedIds.length === missions.length && missions.length > 0}
                   onCheckedChange={toggleAll}
+                  aria-label="Sélectionner toutes les missions"
                 />
               </TableHead>
               <TableHead>Type</TableHead>
@@ -147,6 +148,7 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                     <Checkbox
                       checked={selectedIds.includes(m.id)}
                       onCheckedChange={() => toggleSelection(m.id)}
+                      aria-label={`Sélectionner la mission ${MISSION_TYPE_LABELS[m.type]} - ${(Array.isArray(m.logement) ? m.logement[0] : m.logement)?.name ?? ""}`}
                     />
                   </TableCell>
                   <TableCell>

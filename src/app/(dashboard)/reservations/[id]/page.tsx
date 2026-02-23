@@ -11,6 +11,9 @@ import { deleteReservation, terminateReservation } from "@/lib/actions/reservati
 import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
+const formatEur = (amount: number) =>
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
+
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
@@ -20,6 +23,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     .from("reservations")
     .select("*, logement:logements(*)")
     .eq("id", params.id)
+    .eq("organisation_id", profile.organisation_id)
     .single();
 
   if (!reservation) notFound();
@@ -35,12 +39,14 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
       .from("missions")
       .select("id, type, status, scheduled_at")
       .eq("reservation_id", params.id)
+      .eq("organisation_id", profile.organisation_id)
       .order("scheduled_at"),
     reservation.guest_email
       ? supabase
           .from("reservations")
           .select("id, check_in_date, check_out_date, status, logement:logements(name)")
           .eq("guest_email", reservation.guest_email)
+          .eq("organisation_id", profile.organisation_id)
           .neq("id", params.id)
           .order("check_in_date", { ascending: false })
           .limit(5)
@@ -177,10 +183,12 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{reservation.amount}€</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Soit {(reservation.amount / nights).toFixed(2)}€ / nuit
-            </p>
+            <p className="text-2xl font-bold">{formatEur(reservation.amount)}</p>
+            {nights > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Soit {formatEur(reservation.amount / nights)} / nuit
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

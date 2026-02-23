@@ -32,7 +32,7 @@ export default async function AccountPage() {
           </TabsContent>
 
           <TabsContent value="security" className="mt-6">
-            <SecuritySettings />
+            <SecuritySettings profile={profile} />
           </TabsContent>
 
           <TabsContent value="application" className="mt-6">

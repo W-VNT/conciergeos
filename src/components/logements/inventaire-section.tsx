@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,11 +90,7 @@ export function InventaireSection({ logementId }: Props) {
   const [etat, setEtat] = useState<EquipementEtat>("BON");
   const [notes, setNotes] = useState("");
 
-  useEffect(() => {
-    loadEquipements();
-  }, [logementId]);
-
-  async function loadEquipements() {
+  const loadEquipements = useCallback(async function loadEquipements() {
     setLoading(true);
     const result = await getEquipements(logementId);
     if (result.equipements) {
@@ -104,7 +100,11 @@ export function InventaireSection({ logementId }: Props) {
       setCollapsedCats(new Set(cats.slice(1)));
     }
     setLoading(false);
-  }
+  }, [logementId]);
+
+  useEffect(() => {
+    loadEquipements();
+  }, [loadEquipements]);
 
   function openDialog(equipement?: Equipement) {
     if (equipement) {
@@ -138,18 +138,21 @@ export function InventaireSection({ logementId }: Props) {
   async function handleSubmitMultiple() {
     if (selected.length === 0) return;
     setSubmittingMulti(true);
-    let errors = 0;
-    for (const item of selected) {
-      const result = await createEquipement({
-        logement_id: logementId,
-        categorie: item.categorie,
-        nom: item.nom,
-        quantite: 1,
-        etat: "BON",
-        notes: "",
-      });
-      if (result.error) errors++;
-    }
+    const results = await Promise.allSettled(
+      selected.map((item) =>
+        createEquipement({
+          logement_id: logementId,
+          categorie: item.categorie,
+          nom: item.nom,
+          quantite: 1,
+          etat: "BON",
+          notes: "",
+        })
+      )
+    );
+    const errors = results.filter(
+      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
+    ).length;
     setSubmittingMulti(false);
     if (errors > 0) {
       toast.error(`${errors} équipement(s) n'ont pas pu être ajoutés`);
@@ -318,7 +321,7 @@ export function InventaireSection({ logementId }: Props) {
                       type="number"
                       min={1}
                       value={quantite}
-                      onChange={(e) => setQuantite(parseInt(e.target.value))}
+                      onChange={(e) => setQuantite(parseInt(e.target.value) || 1)}
                     />
                   </div>
                   <div className="space-y-2">

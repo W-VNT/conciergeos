@@ -147,7 +147,7 @@ export function ChecklistManager({ missionId }: Props) {
   }
 
   const completedCount = items.filter((i) => i.completed).length;
-  const progress = Math.round((completedCount / items.length) * 100);
+  const progress = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
 
   const grouped = items.reduce((acc, item) => {
     const cat = item.item?.categorie || "Autre";
@@ -224,7 +224,7 @@ export function ChecklistManager({ missionId }: Props) {
                       {item.photo_url && (
                         <div className="mt-2">
                           <img
-                            src={`/api/storage/${encodeURIComponent(item.photo_url)}`}
+                            src={`/api/storage/${item.photo_url}`}
                             alt="Photo"
                             className="h-16 w-16 object-cover rounded border"
                           />

@@ -11,8 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export const metadata = { title: "Tableau de bord" };
 
-// Revalidate every 30 seconds (ISR cache)
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
@@ -39,6 +38,7 @@ export default async function DashboardPage() {
       let query = supabase
         .from("missions")
         .select("*, logement:logements(name), assignee:profiles(full_name)")
+        .eq("organisation_id", profile.organisation_id)
         .gte("scheduled_at", today.toISOString())
         .lt("scheduled_at", dayAfterTomorrow.toISOString())
         .order("scheduled_at");
@@ -53,6 +53,7 @@ export default async function DashboardPage() {
     supabase
       .from("incidents")
       .select("*, logement:logements(name)", { count: "exact" })
+      .eq("organisation_id", profile.organisation_id)
       .in("status", ["OUVERT", "EN_COURS"])
       .order("opened_at", { ascending: false })
       .limit(10),
@@ -61,6 +62,7 @@ export default async function DashboardPage() {
     supabase
       .from("incidents")
       .select("*", { count: "exact", head: true })
+      .eq("organisation_id", profile.organisation_id)
       .in("status", ["OUVERT", "EN_COURS"])
       .eq("severity", "CRITIQUE"),
 
@@ -68,6 +70,7 @@ export default async function DashboardPage() {
     supabase
       .from("contrats")
       .select("*", { count: "exact", head: true })
+      .eq("organisation_id", profile.organisation_id)
       .eq("status", "ACTIF")
       .gte("end_date", today.toISOString())
       .lte("end_date", sevenDaysFromNow.toISOString()),

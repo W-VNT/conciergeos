@@ -15,6 +15,8 @@ import { PhotoSection } from "@/components/shared/photo-section";
 import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
 import { SignContratButton } from "@/components/contrats/sign-contrat-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function ContratDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
@@ -25,6 +27,7 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
       .from("contrats")
       .select("*, proprietaire:proprietaires(*), logement:logements(*)")
       .eq("id", params.id)
+      .eq("organisation_id", profile.organisation_id)
       .single(),
     supabase
       .from("organisations")

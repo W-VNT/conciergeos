@@ -14,33 +14,38 @@ export const metadata = { title: "Logements" };
 
 const PAGE_SIZE = 20;
 
-export const revalidate = 30;
+export const revalidate = 0;
 
 export default async function LogementsPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams: { q?: string; status?: string; offer_tier?: string; city?: string; page?: string };
+  searchParams: Promise<{ q?: string; status?: string; offer_tier?: string; city?: string; page?: string }>;
 }) {
+  const searchParams = await searchParamsPromise;
   const profile = await requireProfile();
   const admin = isAdmin(profile);
-  const supabase = createClient();
-  const page = Number(searchParams.page ?? "1");
+  const supabase = await createClient();
+  const page = Math.max(1, Number(searchParams.page) || 1);
   const from = (page - 1) * PAGE_SIZE;
 
   let query = supabase
     .from("logements")
     .select("*, proprietaire:proprietaires(full_name)", { count: "exact" })
+    .eq("organisation_id", profile.organisation_id)
     .order("name")
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) query = query.ilike("name", `%${searchParams.q}%`);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    query = query.ilike("name", `%${sanitized}%`);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.offer_tier) query = query.eq("offer_tier", searchParams.offer_tier);
   if (searchParams.city) query = query.eq("city", searchParams.city);
 
   const [{ data, count }, { data: allLogements }] = await Promise.all([
     query,
-    supabase.from("logements").select("city").not("city", "is", null),
+    supabase.from("logements").select("city").eq("organisation_id", profile.organisation_id).not("city", "is", null),
   ]);
 
   const cities = Array.from(new Set((allLogements ?? []).map((l) => l.city as string))).sort();
@@ -65,7 +70,7 @@ export default async function LogementsPage({
         <StatusFilter paramName="offer_tier" options={offerOptions} placeholder="Toutes les offres" />
         <StatusFilter paramName="city" options={cityOptions} placeholder="Toutes les villes" />
       </div>
-      <LogementsTableWithSelection logements={data || []} />
+      <LogementsTableWithSelection logements={data || []} canBulkDelete={admin} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />
     </div>
   );

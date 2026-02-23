@@ -56,6 +56,7 @@ export interface Profile {
   phone: string | null;
   avatar_url: string | null;
   email?: string | null; // From auth.users, joined in queries
+  email_confirmed_at?: string | null; // From auth.users
   proprietaire_id?: string | null;
   operator_capabilities?: OperatorCapabilities | null;
   created_at: string;

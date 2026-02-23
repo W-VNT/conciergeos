@@ -9,7 +9,7 @@ import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/databa
 import { IncidentsTableWithSelection } from "@/components/incidents/incidents-table-with-selection";
 
 export const metadata = { title: "Incidents" };
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
 
@@ -19,8 +19,11 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
   const page = Number(searchParams.page ?? "1");
   const from = (page - 1) * PAGE_SIZE;
 
-  let query = supabase.from("incidents").select("*, logement:logements(name), prestataire:prestataires(full_name)", { count: "exact" }).order("opened_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
-  if (searchParams.q) query = query.ilike("description", `%${searchParams.q}%`);
+  let query = supabase.from("incidents").select("*, logement:logements(name), prestataire:prestataires(full_name)", { count: "exact" }).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    query = query.ilike("description", `%${sanitized}%`);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.severity) query = query.eq("severity", searchParams.severity);
   const { data, count } = await query;

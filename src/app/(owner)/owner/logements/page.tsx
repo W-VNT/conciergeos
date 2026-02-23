@@ -1,15 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import { Home, MapPin, Users, BedDouble } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 
 export default async function OwnerLogementsPage() {
+  const profile = await requireProfile();
   const supabase = createClient();
 
-  const { data: logements } = await supabase
-    .from("logements")
-    .select("id, name, address_line1, city, postal_code, status, offer_tier, bedrooms, beds, max_guests")
-    .order("name");
+  const logementFilter = profile.proprietaire_id
+    ? supabase.from("logements").select("id, name, address_line1, city, postal_code, status, offer_tier, bedrooms, beds, max_guests").eq("organisation_id", profile.organisation_id).eq("owner_id", profile.proprietaire_id).order("name")
+    : supabase.from("logements").select("id, name, address_line1, city, postal_code, status, offer_tier, bedrooms, beds, max_guests").eq("organisation_id", profile.organisation_id).order("name");
+
+  const { data: logements } = await logementFilter;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

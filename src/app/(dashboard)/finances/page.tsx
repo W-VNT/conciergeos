@@ -1,4 +1,5 @@
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isAdmin } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
@@ -7,15 +8,15 @@ import { getFinancialSummary, getRevenusByLogement } from "@/lib/actions/finance
 
 export const metadata = { title: "Finances" };
 
-// Revalidate every 60 seconds
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface FinancesPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function FinancesPage({ searchParams }: FinancesPageProps) {
-  await requireProfile();
+  const profile = await requireProfile();
+  if (!isAdmin(profile)) redirect("/dashboard");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -46,6 +47,9 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
   const summary = await getFinancialSummary(startDate, endDate);
   const revenusByLogement = await getRevenusByLogement(startDate, endDate);
 
+  const fmtEur = (v: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+
   // Format range label for display
   const rangeLabel =
     range === "7d"
@@ -70,25 +74,25 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="CA Brut"
-          value={`${summary.revenusBrut.toFixed(0)}€`}
+          value={fmtEur(summary.revenusBrut)}
           description="Revenus total réservations"
           icon={DollarSign}
         />
         <KpiCard
           title="Commissions"
-          value={`${summary.commissions.toFixed(0)}€`}
+          value={fmtEur(summary.commissions)}
           description="Commissions conciergerie"
           icon={TrendingUp}
         />
         <KpiCard
           title="Charges"
-          value={`${summary.charges.toFixed(0)}€`}
+          value={fmtEur(summary.charges)}
           description="Coûts incidents & factures"
           icon={TrendingDown}
         />
         <KpiCard
           title="Marge nette"
-          value={`${summary.marge.toFixed(0)}€`}
+          value={fmtEur(summary.marge)}
           description={summary.marge >= 0 ? "Positif" : "Négatif"}
           icon={PiggyBank}
         />
@@ -131,16 +135,16 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
                       </td>
                       <td className="py-3 text-right">{item.nb_reservations}</td>
                       <td className="py-3 text-right font-medium">
-                        {item.total_brut.toFixed(0)}€
+                        {fmtEur(item.total_brut)}
                       </td>
                       <td className="py-3 text-right text-muted-foreground">
-                        {item.total_commissions.toFixed(0)}€
+                        {fmtEur(item.total_commissions)}
                         <span className="text-xs ml-1">
                           ({item.taux_moyen.toFixed(1)}%)
                         </span>
                       </td>
                       <td className="py-3 text-right font-medium text-green-600">
-                        {item.total_net.toFixed(0)}€
+                        {fmtEur(item.total_net)}
                       </td>
                     </tr>
                   ))}
@@ -152,22 +156,13 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
                       {revenusByLogement.reduce((sum, i) => sum + i.nb_reservations, 0)}
                     </td>
                     <td className="pt-3 text-right">
-                      {revenusByLogement
-                        .reduce((sum, i) => sum + i.total_brut, 0)
-                        .toFixed(0)}
-                      €
+                      {fmtEur(revenusByLogement.reduce((sum, i) => sum + i.total_brut, 0))}
                     </td>
                     <td className="pt-3 text-right">
-                      {revenusByLogement
-                        .reduce((sum, i) => sum + i.total_commissions, 0)
-                        .toFixed(0)}
-                      €
+                      {fmtEur(revenusByLogement.reduce((sum, i) => sum + i.total_commissions, 0))}
                     </td>
                     <td className="pt-3 text-right text-green-600">
-                      {revenusByLogement
-                        .reduce((sum, i) => sum + i.total_net, 0)
-                        .toFixed(0)}
-                      €
+                      {fmtEur(revenusByLogement.reduce((sum, i) => sum + i.total_net, 0))}
                     </td>
                   </tr>
                 </tfoot>
@@ -178,14 +173,16 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
       </Card>
 
       {/* Note pour Phase 3 */}
-      <Card className="border-dashed">
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>Phase 3:</strong> Gestion des factures prestataires et export
-            comptable (CSV/PDF) à venir
-          </p>
-        </CardContent>
-      </Card>
+      {process.env.NODE_ENV === "development" && (
+        <Card className="border-dashed">
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">
+              <strong>Phase 3:</strong> Gestion des factures prestataires et export
+              comptable (CSV/PDF) à venir
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ import { fr } from "date-fns/locale";
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasFetchedOnce = useRef(false);
 
   useEffect(() => {
     loadNotifications();
@@ -32,10 +33,14 @@ export function NotificationBell() {
   }, []);
 
   async function loadNotifications() {
-    setLoading(true);
+    // Only show loading spinner on the first fetch, not on subsequent polls
+    if (!hasFetchedOnce.current) {
+      setLoading(true);
+    }
     const data = await getUnreadNotifications();
     setNotifications(data);
     setLoading(false);
+    hasFetchedOnce.current = true;
   }
 
   async function handleMarkAsRead(notificationId: string) {

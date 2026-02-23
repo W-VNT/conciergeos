@@ -9,8 +9,8 @@ export default async function NewIncidentPage({ searchParams }: { searchParams: 
   const profile = await requireProfile();
   const supabase = createClient();
   const [{ data: logements }, { data: prestataires }] = await Promise.all([
-    supabase.from("logements").select("*").order("name"),
-    supabase.from("prestataires").select("*").order("full_name"),
+    supabase.from("logements").select("*").eq("organisation_id", profile.organisation_id).order("name"),
+    supabase.from("prestataires").select("*").eq("organisation_id", profile.organisation_id).order("full_name"),
   ]);
 
   const preGeneratedId = randomUUID();

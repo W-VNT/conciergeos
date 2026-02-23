@@ -119,6 +119,8 @@ export function LogementForm({ logement, proprietaires }: Props) {
     }
   }
 
+  const ownerId = form.watch("owner_id");
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -142,8 +144,8 @@ export function LogementForm({ logement, proprietaires }: Props) {
                     aria-label="Sélectionner un propriétaire"
                     className="w-full justify-between font-normal"
                   >
-                    {form.watch("owner_id")
-                      ? proprietaires.find((p) => p.id === form.watch("owner_id"))?.full_name
+                    {ownerId
+                      ? proprietaires.find((p) => p.id === ownerId)?.full_name
                       : "— Aucun —"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -158,7 +160,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
                           value=""
                           onSelect={() => { form.setValue("owner_id", ""); setPropioOpen(false); }}
                         >
-                          <Check className={cn("mr-2 h-4 w-4", !form.watch("owner_id") ? "opacity-100" : "opacity-0")} />
+                          <Check className={cn("mr-2 h-4 w-4", !ownerId ? "opacity-100" : "opacity-0")} />
                           — Aucun —
                         </CommandItem>
                         {proprietaires.map((p) => (
@@ -167,7 +169,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
                             value={p.full_name}
                             onSelect={() => { form.setValue("owner_id", p.id); setPropioOpen(false); }}
                           >
-                            <Check className={cn("mr-2 h-4 w-4", form.watch("owner_id") === p.id ? "opacity-100" : "opacity-0")} />
+                            <Check className={cn("mr-2 h-4 w-4", ownerId === p.id ? "opacity-100" : "opacity-0")} />
                             {p.full_name}
                           </CommandItem>
                         ))}
@@ -180,6 +182,9 @@ export function LogementForm({ logement, proprietaires }: Props) {
             <div className="space-y-2">
               <Label htmlFor="address_line1">Adresse</Label>
               <Input id="address_line1" {...form.register("address_line1")} />
+              {form.formState.errors.address_line1 && (
+                <p className="text-sm text-destructive">{form.formState.errors.address_line1.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="city">Ville</Label>
@@ -330,6 +335,9 @@ export function LogementForm({ logement, proprietaires }: Props) {
               {...form.register("menage_price")}
               placeholder="Ex: 60"
             />
+            {form.formState.errors.menage_price && (
+              <p className="text-sm text-destructive">{form.formState.errors.menage_price.message}</p>
+            )}
             <p className="text-sm text-muted-foreground">
               Coût du ménage spécifique à ce logement. Laissez vide pour utiliser le tarif par défaut.
             </p>
@@ -342,6 +350,9 @@ export function LogementForm({ logement, proprietaires }: Props) {
               {...form.register("ical_url")}
               placeholder="https://www.airbnb.com/calendar/ical/..."
             />
+            {form.formState.errors.ical_url && (
+              <p className="text-sm text-destructive">{form.formState.errors.ical_url.message}</p>
+            )}
             <p className="text-sm text-muted-foreground">
               Pour synchroniser automatiquement les réservations depuis Airbnb, Booking.com, etc.
             </p>
@@ -349,6 +360,9 @@ export function LogementForm({ logement, proprietaires }: Props) {
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" {...form.register("notes")} />
+            {form.formState.errors.notes && (
+              <p className="text-sm text-destructive">{form.formState.errors.notes.message}</p>
+            )}
           </div>
           <Button type="submit" disabled={loading}>
             {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}

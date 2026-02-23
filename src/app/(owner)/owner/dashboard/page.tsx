@@ -13,29 +13,47 @@ export default async function OwnerDashboardPage() {
     .toISOString()
     .split("T")[0];
 
-  // Fetch logements (RLS filters by proprietaire_id automatically)
-  const { data: logements } = await supabase
+  // Fetch logements (scoped to proprietaire)
+  let logementsQuery = supabase
     .from("logements")
     .select("id, name, city, status")
-    .order("name");
+    .eq("organisation_id", profile.organisation_id);
+  if (profile.proprietaire_id) logementsQuery = logementsQuery.eq("owner_id", profile.proprietaire_id);
+  const { data: logements } = await logementsQuery.order("name");
 
-  // Fetch upcoming reservations (check-in in next 7 days or currently ongoing)
-  const { data: upcomingReservations } = await supabase
+  const logementIds = (logements ?? []).map((l) => l.id);
+
+  // Fetch upcoming reservations (scoped to proprietaire's logements)
+  let upcomingQuery = supabase
     .from("reservations")
     .select("id, guest_name, check_in_date, check_out_date, status, logement:logements(name)")
+    .eq("organisation_id", profile.organisation_id)
     .eq("status", "CONFIRMEE")
     .gte("check_out_date", today)
     .lte("check_in_date", in7days)
     .order("check_in_date")
     .limit(5);
+  if (logementIds.length > 0) {
+    upcomingQuery = upcomingQuery.in("logement_id", logementIds);
+  } else if (profile.proprietaire_id) {
+    upcomingQuery = upcomingQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+  const { data: upcomingReservations } = await upcomingQuery;
 
-  // Fetch current reservations (ongoing)
-  const { data: currentReservations } = await supabase
+  // Fetch current reservations (scoped to proprietaire's logements)
+  let currentQuery = supabase
     .from("reservations")
     .select("id")
+    .eq("organisation_id", profile.organisation_id)
     .eq("status", "CONFIRMEE")
     .lte("check_in_date", today)
     .gte("check_out_date", today);
+  if (logementIds.length > 0) {
+    currentQuery = currentQuery.in("logement_id", logementIds);
+  } else if (profile.proprietaire_id) {
+    currentQuery = currentQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+  const { data: currentReservations } = await currentQuery;
 
   const logementsActifs = logements?.filter((l) => l.status === "ACTIF").length ?? 0;
   const totalLogements = logements?.length ?? 0;

@@ -12,8 +12,7 @@ export const metadata = { title: "Missions" };
 
 const PAGE_SIZE = 20;
 
-// Revalidate every 30 seconds
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function MissionsPage({
   searchParams,
@@ -28,10 +27,14 @@ export default async function MissionsPage({
   let query = supabase
     .from("missions")
     .select("*, logement:logements(name), assignee:profiles(full_name)", { count: "exact" })
+    .eq("organisation_id", profile.organisation_id)
     .order("scheduled_at", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) query = query.ilike("notes", `%${searchParams.q}%`);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    query = query.ilike("notes", `%${sanitized}%`);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.type) query = query.eq("type", searchParams.type);
 

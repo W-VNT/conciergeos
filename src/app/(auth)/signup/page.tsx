@@ -40,6 +40,9 @@ export default function SignupPage() {
   const [orgName, setOrgName] = useState("");
   const [orgCity, setOrgCity] = useState("");
 
+  // Step 4: Resend cooldown
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   // Check invitation and pre-fill data
   useEffect(() => {
     async function checkInvitation() {
@@ -76,6 +79,27 @@ export default function SignupPage() {
 
     checkUser();
   }, [supabase, router]);
+
+  // Polling: auto-redirect when email is confirmed (step 4)
+  useEffect(() => {
+    if (step !== 4) return;
+    const interval = setInterval(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email_confirmed_at) {
+        router.push("/dashboard");
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [step, supabase, router]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   // Password strength
   function getPasswordStrength(pass: string): { strength: number; label: string; color: string } {
@@ -168,7 +192,7 @@ export default function SignupPage() {
     if (authError) {
       setError(authError.message === "User already registered"
         ? "Cet email est déjà utilisé. Voulez-vous vous connecter ?"
-        : authError.message
+        : "Une erreur est survenue lors de la création du compte"
       );
       setLoading(false);
       return;
@@ -202,8 +226,8 @@ export default function SignupPage() {
       setError("Erreur lors de l'envoi de l'email");
     } else {
       setError(null);
-      // Show success message
       toast.success("Email renvoyé ! Vérifiez votre boîte de réception.");
+      setResendCooldown(60);
     }
 
     setLoading(false);
@@ -289,7 +313,7 @@ export default function SignupPage() {
 
         <CardContent className="pt-6">
           {error && (
-            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive" role="alert">
               {error}
             </div>
           )}
@@ -611,19 +635,23 @@ export default function SignupPage() {
                   onClick={handleResendEmail}
                   variant="outline"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || resendCooldown > 0}
                 >
-                  {loading ? 'Envoi...' : 'Renvoyer l\'email'}
+                  {loading
+                    ? 'Envoi...'
+                    : resendCooldown > 0
+                      ? `Renvoyer (${resendCooldown}s)`
+                      : 'Renvoyer l\'email'}
                 </Button>
 
                 <p className="text-xs text-muted-foreground">
                   Mauvaise adresse email ?{" "}
-                  <button
-                    onClick={() => setStep(1)}
+                  <Link
+                    href="/login"
                     className="underline hover:text-primary"
                   >
-                    Recommencer
-                  </button>
+                    Se connecter avec un autre compte
+                  </Link>
                 </p>
               </div>
             </div>

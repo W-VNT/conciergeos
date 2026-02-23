@@ -138,7 +138,7 @@ export async function getRevenusByLogement(startDate?: Date, endDate?: Date) {
   // Calculate average commission rate
   const result = Array.from(grouped.values()).map((entry) => ({
     ...entry,
-    taux_moyen: entry.nb_reservations > 0 ? (entry.total_commissions / entry.total_brut) * 100 : 0,
+    taux_moyen: entry.total_brut > 0 ? (entry.total_commissions / entry.total_brut) * 100 : 0,
   }));
 
   // Sort by total_brut descending

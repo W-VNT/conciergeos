@@ -113,7 +113,7 @@ export function AcceptInvitationContent() {
   function handleLogin() {
     if (!token || !invitation) return;
     // Pass token to login page to redirect back after login
-    router.push(`/login?redirect=/accept-invitation?token=${encodeURIComponent(token)}`);
+    router.push(`/login?redirect=${encodeURIComponent(`/accept-invitation?token=${token}`)}`);
   }
 
   if (loading) {

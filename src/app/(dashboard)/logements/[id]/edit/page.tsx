@@ -1,18 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdmin, getProfile } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { LogementForm } from "@/components/forms/logement-form";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const profile = await getProfile();
+  if (!profile) return { title: "Modifier le logement" };
+  const supabase = await createClient();
+  const { data } = await supabase.from("logements").select("name").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
+  return { title: data ? `Modifier ${data.name}` : "Modifier le logement" };
+}
 
 export default async function EditLogementPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   if (!isAdmin(profile)) redirect("/logements");
 
-  const supabase = createClient();
-  const { data: logement } = await supabase.from("logements").select("*").eq("id", params.id).single();
+  const supabase = await createClient();
+  const [{ data: logement, error: logementError }, { data: proprietaires }] = await Promise.all([
+    supabase.from("logements").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single(),
+    supabase.from("proprietaires").select("*").eq("organisation_id", profile.organisation_id).order("full_name"),
+  ]);
+  if (logementError) {
+    console.error("Fetch logement error:", logementError);
+  }
   if (!logement) notFound();
-
-  const { data: proprietaires } = await supabase.from("proprietaires").select("*").order("full_name");
 
   return (
     <div>

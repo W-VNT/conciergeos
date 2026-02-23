@@ -66,7 +66,6 @@ export function BulkAssignDialog({
     const result = await bulkAssignMissions({
       mission_ids: missionIds,
       operator_id: selectedOperator,
-      organisation_id: organisationId,
     });
 
     setLoading(false);

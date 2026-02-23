@@ -122,37 +122,32 @@ export async function inviteMember(data: {
     }
 
     // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(data.email)) {
       return { error: "Email invalide" };
     }
 
-    // Check if email is already a member
-    const { data: existingMembers } = await supabase
+    // Check if email is already a member (query profiles.email directly)
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const { data: existingMember } = await supabase
       .from("profiles")
       .select("id")
-      .eq("organisation_id", currentProfile.organisation_id);
+      .eq("organisation_id", currentProfile.organisation_id)
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
 
-    if (existingMembers) {
-      // Get emails for existing members
-      for (const member of existingMembers) {
-        const { data: authData } = await supabase.auth.admin.getUserById(
-          member.id
-        );
-        if (authData?.user?.email === data.email) {
-          return { error: "Cet email est déjà membre de l'organisation" };
-        }
-      }
+    if (existingMember) {
+      return { error: "Cet email est déjà membre de l'organisation" };
     }
 
-    // Check if there's already a pending invitation
+    // Check if there's already a pending invitation (case-insensitive)
     const { data: existingInvitation } = await supabase
       .from("invitations")
       .select("id")
       .eq("organisation_id", currentProfile.organisation_id)
-      .eq("email", data.email)
+      .ilike("email", normalizedEmail)
       .eq("status", "PENDING")
-      .single();
+      .maybeSingle();
 
     if (existingInvitation) {
       return { error: "Une invitation est déjà en attente pour cet email" };
@@ -165,7 +160,7 @@ export async function inviteMember(data: {
 
     const { error: insertError } = await supabase.from("invitations").insert({
       organisation_id: currentProfile.organisation_id,
-      email: data.email,
+      email: normalizedEmail,
       invited_name: data.name || null,
       role: data.role,
       token,
@@ -198,7 +193,7 @@ export async function inviteMember(data: {
 
     revalidatePath("/organisation");
 
-    return { success: true, invitationUrl };
+    return { success: true };
   } catch (error) {
     console.error("Invite member error:", error);
     return { error: "Une erreur est survenue" };
@@ -288,6 +283,7 @@ export async function removeMember(userId: string) {
       .from("profiles")
       .select("role")
       .eq("id", userId)
+      .eq("organisation_id", currentProfile.organisation_id)
       .single();
 
     if (
@@ -405,7 +401,7 @@ export async function acceptInvitation(token: string) {
     }
 
     // Check if email matches
-    if (user.email !== invitation.email) {
+    if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
       return {
         error: `Cette invitation est pour ${invitation.email}. Veuillez vous connecter avec le bon compte.`,
       };
@@ -486,17 +482,28 @@ export async function inviteProprietaire(data: {
       return { error: "Accès refusé - Admin uniquement" };
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Vérifier que le propriétaire appartient à l'organisation
+    const { data: proprietaire } = await supabase
+      .from("proprietaires")
+      .select("id")
+      .eq("id", data.proprietaireId)
+      .eq("organisation_id", currentProfile.organisation_id)
+      .single();
+    if (!proprietaire) return { error: "Propriétaire non trouvé" };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(data.email)) return { error: "Email invalide" };
 
-    // Check no pending invitation already exists for this proprietaire
+    const normalizedProprietaireEmail = data.email.trim().toLowerCase();
+
+    // Check no pending invitation already exists for this proprietaire (case-insensitive)
     const { data: existingInvitation } = await supabase
       .from("invitations")
       .select("id")
       .eq("organisation_id", currentProfile.organisation_id)
-      .eq("email", data.email)
+      .ilike("email", normalizedProprietaireEmail)
       .eq("status", "PENDING")
-      .single();
+      .maybeSingle();
 
     if (existingInvitation) {
       return { error: "Une invitation est déjà en attente pour cet email" };
@@ -508,7 +515,7 @@ export async function inviteProprietaire(data: {
 
     const { error: insertError } = await supabase.from("invitations").insert({
       organisation_id: currentProfile.organisation_id,
-      email: data.email,
+      email: normalizedProprietaireEmail,
       invited_name: data.name || null,
       role: "PROPRIETAIRE",
       proprietaire_id: data.proprietaireId,
@@ -536,7 +543,7 @@ export async function inviteProprietaire(data: {
 
     revalidatePath(`/proprietaires/${data.proprietaireId}`);
 
-    return { success: true, invitationUrl };
+    return { success: true };
   } catch (error) {
     console.error("Invite proprietaire error:", error);
     return { error: "Une erreur est survenue" };

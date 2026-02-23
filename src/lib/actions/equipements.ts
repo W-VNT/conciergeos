@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import type { EquipementCategorie, EquipementEtat } from "@/types/database";
 
@@ -26,26 +27,8 @@ interface UpdateEquipementData {
  */
 export async function getEquipements(logementId: string) {
   try {
+    const profile = await requireProfile();
     const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get user's organisation
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("organisation_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) {
-      return { error: "Profil non trouvé" };
-    }
 
     const { data: equipements, error } = await supabase
       .from("equipements")
@@ -72,26 +55,19 @@ export async function getEquipements(logementId: string) {
  */
 export async function createEquipement(data: CreateEquipementData) {
   try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return { error: "Non autorisé" };
+
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get user's organisation
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("organisation_id")
-      .eq("id", user.id)
+    // Verify logement belongs to this organisation
+    const { data: logement } = await supabase
+      .from("logements")
+      .select("id")
+      .eq("id", data.logement_id)
+      .eq("organisation_id", profile.organisation_id)
       .single();
-
-    if (!profile) {
-      return { error: "Profil non trouvé" };
-    }
+    if (!logement) return { error: "Logement non trouvé" };
 
     const { error } = await supabase.from("equipements").insert({
       organisation_id: profile.organisation_id,
@@ -125,22 +101,20 @@ export async function updateEquipement(
   data: UpdateEquipementData
 ) {
   try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return { error: "Non autorisé" };
+
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get the equipement to find logement_id for revalidation
+    // Get the equipement (scoped to org) for revalidation
     const { data: equipement } = await supabase
       .from("equipements")
       .select("logement_id")
       .eq("id", equipementId)
+      .eq("organisation_id", profile.organisation_id)
       .single();
+
+    if (!equipement) return { error: "Équipement non trouvé" };
 
     const { error } = await supabase
       .from("equipements")
@@ -148,16 +122,15 @@ export async function updateEquipement(
         ...data,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", equipementId);
+      .eq("id", equipementId)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) {
       console.error("Update equipement error:", error);
       return { error: "Erreur lors de la mise à jour de l'équipement" };
     }
 
-    if (equipement) {
-      revalidatePath(`/logements/${equipement.logement_id}`);
-    }
+    revalidatePath(`/logements/${equipement.logement_id}`);
 
     return { success: true };
   } catch (error) {
@@ -171,36 +144,33 @@ export async function updateEquipement(
  */
 export async function deleteEquipement(equipementId: string) {
   try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return { error: "Non autorisé" };
+
     const supabase = await createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { error: "Non authentifié" };
-    }
-
-    // Get the equipement to find logement_id for revalidation
+    // Get the equipement (scoped to org) for revalidation
     const { data: equipement } = await supabase
       .from("equipements")
       .select("logement_id")
       .eq("id", equipementId)
+      .eq("organisation_id", profile.organisation_id)
       .single();
+
+    if (!equipement) return { error: "Équipement non trouvé" };
 
     const { error } = await supabase
       .from("equipements")
       .delete()
-      .eq("id", equipementId);
+      .eq("id", equipementId)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) {
       console.error("Delete equipement error:", error);
       return { error: "Erreur lors de la suppression de l'équipement" };
     }
 
-    if (equipement) {
-      revalidatePath(`/logements/${equipement.logement_id}`);
-    }
+    revalidatePath(`/logements/${equipement.logement_id}`);
 
     return { success: true };
   } catch (error) {

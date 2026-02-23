@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { sendPushToUser } from "@/lib/push";
 
 export async function GET() {
+  if (process.env.NODE_ENV !== "development") {
+    return new Response("Not found", { status: 404 });
+  }
+
   const supabase = createClient();
 
   const {

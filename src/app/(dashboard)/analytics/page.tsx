@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isAdmin } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, DollarSign, Percent, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
@@ -8,15 +9,15 @@ import Link from "next/link";
 
 export const metadata = { title: "Analytics" };
 
-// Revalidate every 60 seconds
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface AnalyticsPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps) {
-  await requireProfile();
+  const profile = await requireProfile();
+  if (!isAdmin(profile)) redirect("/dashboard");
   const supabase = createClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -28,10 +29,23 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   endDate.setHours(23, 59, 59, 999);
 
   if (range === "custom" && searchParams.start && searchParams.end) {
-    startDate = new Date(searchParams.start as string);
-    startDate.setHours(0, 0, 0, 0);
-    endDate = new Date(searchParams.end as string);
-    endDate.setHours(23, 59, 59, 999);
+    const parsedStart = new Date(searchParams.start as string);
+    const parsedEnd = new Date(searchParams.end as string);
+
+    if (
+      Number.isNaN(parsedStart.getTime()) ||
+      Number.isNaN(parsedEnd.getTime()) ||
+      (parsedEnd.getTime() - parsedStart.getTime()) / (1000 * 60 * 60 * 24) > 365
+    ) {
+      // Invalid dates or range exceeds 365 days -- fall back to default 30d
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 30);
+    } else {
+      startDate = parsedStart;
+      startDate.setHours(0, 0, 0, 0);
+      endDate = parsedEnd;
+      endDate.setHours(23, 59, 59, 999);
+    }
   } else if (range === "7d") {
     startDate = new Date(today);
     startDate.setDate(startDate.getDate() - 7);
@@ -56,6 +70,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     supabase
       .from("incidents")
       .select("opened_at, resolved_at")
+      .eq("organisation_id", profile.organisation_id)
       .not("resolved_at", "is", null)
       .gte("resolved_at", startDate.toISOString())
       .lte("resolved_at", endDate.toISOString()),
@@ -64,6 +79,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     supabase
       .from("incidents")
       .select("cost")
+      .eq("organisation_id", profile.organisation_id)
       .not("cost", "is", null)
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString()),
@@ -72,6 +88,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     supabase
       .from("incidents")
       .select("logement_id, logement:logements(id, name)")
+      .eq("organisation_id", profile.organisation_id)
       .not("logement_id", "is", null)
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString()),
@@ -80,12 +97,14 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     supabase
       .from("logements")
       .select("id, name")
+      .eq("organisation_id", profile.organisation_id)
       .eq("status", "ACTIF"),
 
     // Reservations for the selected date range
     supabase
       .from("reservations")
       .select("check_in_date, check_out_date, amount, status")
+      .eq("organisation_id", profile.organisation_id)
       .eq("status", "CONFIRMEE")
       .gte("check_out_date", startDate.toISOString())
       .lte("check_in_date", endDate.toISOString()),

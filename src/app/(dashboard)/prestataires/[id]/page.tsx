@@ -16,10 +16,10 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
   const admin = isAdmin(profile);
   const supabase = createClient();
 
-  const { data: prestataire } = await supabase.from("prestataires").select("*").eq("id", params.id).single();
+  const { data: prestataire } = await supabase.from("prestataires").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
   if (!prestataire) notFound();
 
-  const { data: incidents } = await supabase.from("incidents").select("id, severity, status, description, opened_at").eq("prestataire_id", prestataire.id).order("opened_at", { ascending: false }).limit(10);
+  const { data: incidents } = await supabase.from("incidents").select("id, severity, status, description, opened_at").eq("prestataire_id", prestataire.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(10);
 
   return (
     <div className="space-y-6">

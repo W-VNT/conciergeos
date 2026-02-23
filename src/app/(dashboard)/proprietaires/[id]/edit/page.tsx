@@ -9,7 +9,7 @@ export default async function EditProprietairePage({ params }: { params: { id: s
   if (!isAdmin(profile)) redirect("/proprietaires");
 
   const supabase = createClient();
-  const { data } = await supabase.from("proprietaires").select("*").eq("id", params.id).single();
+  const { data } = await supabase.from("proprietaires").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
   if (!data) notFound();
 
   return (

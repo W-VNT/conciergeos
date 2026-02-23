@@ -8,7 +8,7 @@ import { SPECIALTY_LABELS } from "@/types/database";
 import { PrestatairesTableWithSelection } from "@/components/prestataires/prestataires-table-with-selection";
 
 export const metadata = { title: "Prestataires" };
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
 
@@ -19,8 +19,11 @@ export default async function PrestatairesPage({ searchParams }: { searchParams:
   const page = Number(searchParams.page ?? "1");
   const from = (page - 1) * PAGE_SIZE;
 
-  let query = supabase.from("prestataires").select("*", { count: "exact" }).order("full_name").range(from, from + PAGE_SIZE - 1);
-  if (searchParams.q) query = query.ilike("full_name", `%${searchParams.q}%`);
+  let query = supabase.from("prestataires").select("*", { count: "exact" }).eq("organisation_id", profile.organisation_id).order("full_name").range(from, from + PAGE_SIZE - 1);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    query = query.ilike("full_name", `%${sanitized}%`);
+  }
   if (searchParams.specialty) query = query.eq("specialty", searchParams.specialty);
 
   const { data, count } = await query;

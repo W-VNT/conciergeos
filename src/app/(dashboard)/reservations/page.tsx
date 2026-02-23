@@ -11,7 +11,7 @@ export const metadata = { title: "Réservations" };
 
 const PAGE_SIZE = 20;
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function ReservationsPage({
   searchParams,
@@ -27,17 +27,21 @@ export default async function ReservationsPage({
   let query = supabase
     .from("reservations")
     .select("*, logement:logements(name)", { count: "exact" })
+    .eq("organisation_id", profile.organisation_id)
     .order("check_in_date", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) query = query.or(`guest_name.ilike.%${searchParams.q}%,guest_email.ilike.%${searchParams.q}%`);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/[,.()"\\]/g, "").replace(/%/g, '\\%').replace(/_/g, '\\_');
+    if (sanitized) query = query.or(`guest_name.ilike.%${sanitized}%,guest_email.ilike.%${sanitized}%`);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.platform) query = query.eq("platform", searchParams.platform);
   if (searchParams.logement_id) query = query.eq("logement_id", searchParams.logement_id);
 
   const [{ data, count }, { data: logements }] = await Promise.all([
     query,
-    supabase.from("logements").select("id, name").eq("status", "ACTIF").order("name"),
+    supabase.from("logements").select("id, name").eq("organisation_id", profile.organisation_id).eq("status", "ACTIF").order("name"),
   ]);
 
   const statusOptions = Object.entries(RESERVATION_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));

@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { LogementForm } from "@/components/forms/logement-form";
 
+export const metadata = { title: "Nouveau logement" };
+
 export default async function NewLogementPage() {
   const profile = await requireProfile();
   if (!isAdmin(profile)) redirect("/logements");
 
-  const supabase = createClient();
-  const { data: proprietaires } = await supabase.from("proprietaires").select("*").order("full_name");
+  const supabase = await createClient();
+  const { data: proprietaires } = await supabase.from("proprietaires").select("*").eq("organisation_id", profile.organisation_id).order("full_name");
 
   return (
     <div>

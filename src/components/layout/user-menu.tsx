@@ -83,6 +83,8 @@ export function UserMenu({ profile }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
         aria-label="Menu utilisateur"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
       >
         {/* Avatar with online status */}
         <div className="relative">
@@ -125,7 +127,7 @@ export function UserMenu({ profile }: UserMenuProps) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-popover rounded-lg shadow-lg border border-border z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-popover rounded-lg shadow-lg border border-border z-50" role="menu">
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-border">
             <div className="flex items-center gap-3">
@@ -161,6 +163,7 @@ export function UserMenu({ profile }: UserMenuProps) {
           {/* Menu Items */}
           <div className="py-2">
             <button
+              role="menuitem"
               onClick={() => {
                 setIsOpen(false);
                 router.push("/account");
@@ -174,6 +177,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             <div className="border-t border-border my-2" />
 
             <button
+              role="menuitem"
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-accent transition-colors text-left"
             >

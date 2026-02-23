@@ -1,8 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isAdmin } from "@/lib/auth";
 import { incidentSchema, type IncidentFormData } from "@/lib/schemas";
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
 
@@ -77,9 +78,10 @@ export async function updateIncident(id: string, data: IncidentFormData): Promis
 
 export async function updateIncidentStatus(id: string, status: string) {
   const profile = await requireProfile();
+  const validatedStatus = z.enum(['OUVERT', 'EN_COURS', 'RESOLU', 'CLOS']).parse(status);
   const supabase = createClient();
 
-  const updateData: Record<string, unknown> = { status };
+  const updateData: Record<string, unknown> = { status: validatedStatus };
   if (status === "RESOLU" || status === "CLOS") {
     updateData.resolved_at = new Date().toISOString();
   } else {
@@ -100,6 +102,7 @@ export async function updateIncidentStatus(id: string, status: string) {
 export async function deleteIncident(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
     const supabase = createClient();
 
     const { error } = await supabase.from("incidents").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
@@ -115,6 +118,7 @@ export async function deleteIncident(id: string): Promise<ActionResponse> {
 export async function bulkCloseIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(incidentIds);
     const supabase = createClient();
 
     const { error, count } = await supabase
@@ -123,7 +127,7 @@ export async function bulkCloseIncidents(incidentIds: string[]): Promise<ActionR
         status: "CLOS",
         resolved_at: new Date().toISOString()
       })
-      .in("id", incidentIds)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {
@@ -146,10 +150,10 @@ export async function bulkCloseIncidents(incidentIds: string[]): Promise<ActionR
 export async function bulkAssignIncidents(data: {
   incident_ids: string[];
   prestataire_id: string;
-  organisation_id: string;
 }): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(data.incident_ids);
     const supabase = createClient();
 
     // Vérifier que le prestataire existe et appartient à l'organisation
@@ -157,7 +161,7 @@ export async function bulkAssignIncidents(data: {
       .from("prestataires")
       .select("id, full_name")
       .eq("id", data.prestataire_id)
-      .eq("organisation_id", data.organisation_id)
+      .eq("organisation_id", profile.organisation_id)
       .single();
 
     if (prestataireError || !prestataire) {
@@ -167,7 +171,7 @@ export async function bulkAssignIncidents(data: {
     const { error, count } = await supabase
       .from("incidents")
       .update({ prestataire_id: data.prestataire_id })
-      .in("id", data.incident_ids)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {
@@ -190,12 +194,14 @@ export async function bulkAssignIncidents(data: {
 export async function bulkDeleteIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(incidentIds);
     const supabase = createClient();
 
     const { error, count } = await supabase
       .from("incidents")
       .delete({ count: "exact" })
-      .in("id", incidentIds)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdmin, getProfile } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -15,22 +15,38 @@ import { SyncIcalButton } from "@/components/shared/sync-ical-button";
 import { InventaireSection } from "@/components/logements/inventaire-section";
 import { ChecklistTemplateSection } from "@/components/logements/checklist-template-section";
 import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UrlTabs } from "@/components/shared/url-tabs";
 import { Badge } from "@/components/ui/badge";
 import { IncidentsTable } from "@/components/logements/incidents-table";
+import { SensitiveField } from "@/components/shared/sensitive-field";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const profile = await getProfile();
+  if (!profile) return { title: "Logement" };
+  const supabase = await createClient();
+  const { data } = await supabase.from("logements").select("name").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
+  return { title: data?.name ?? "Logement" };
+}
 
 export default async function LogementDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   const admin = isAdmin(profile);
-  const supabase = createClient();
+  const supabase = await createClient();
 
-  const { data: logement } = await supabase.from("logements").select("*, proprietaire:proprietaires(*)").eq("id", params.id).single();
+  const { data: logement, error: logementError } = await supabase.from("logements").select("*, proprietaire:proprietaires(*)").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
+  if (logementError) {
+    console.error("Fetch logement error:", logementError);
+  }
   if (!logement) notFound();
 
-  const { data: attachments } = await supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).order("created_at", { ascending: false });
-  const { data: missions } = await supabase.from("missions").select("*").eq("logement_id", params.id).order("scheduled_at", { ascending: false }).limit(100);
-  const { data: incidents } = await supabase.from("incidents").select("*").eq("logement_id", params.id).order("opened_at", { ascending: false }).limit(100);
-  const { data: reservations } = await supabase.from("reservations").select("*").eq("logement_id", params.id).order("check_in_date", { ascending: false }).limit(100);
+  const [{ data: attachments }, { data: missions }, { data: incidents }, { data: reservations }] = await Promise.all([
+    supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).eq("organisation_id", profile.organisation_id).order("created_at", { ascending: false }),
+    supabase.from("missions").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("scheduled_at", { ascending: false }).limit(100),
+    supabase.from("incidents").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(100),
+    supabase.from("reservations").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("check_in_date", { ascending: false }).limit(100),
+  ]);
 
   const prop = logement.proprietaire as { id: string; full_name: string } | null;
 
@@ -100,13 +116,17 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             <div className="flex items-center gap-2">
               <KeyRound className="h-4 w-4 flex-shrink-0 text-amber-600" />
               <span className="text-muted-foreground">Boîte à clés</span>
-              <code className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200 ml-1">{logement.lockbox_code || "—"}</code>
+              {logement.lockbox_code ? (
+                <SensitiveField value={logement.lockbox_code} className="bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200 ml-1" />
+              ) : (
+                <span className="ml-1">—</span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Wifi className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <span className="text-muted-foreground">{logement.wifi_name || "—"}</span>
               {logement.wifi_password && (
-                <code className="bg-muted px-2 py-0.5 rounded text-xs ml-1">{logement.wifi_password}</code>
+                <SensitiveField value={logement.wifi_password} className="bg-muted px-2 py-0.5 rounded text-xs ml-1" />
               )}
             </div>
             {logement.notes && <div><span className="text-muted-foreground">Notes</span><p className="mt-1">{logement.notes}</p></div>}
@@ -116,7 +136,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
 
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
 
-      <Tabs defaultValue="inventaire">
+      <UrlTabs defaultValue="inventaire">
         <Card className="p-2 mb-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="inventaire">Inventaire</TabsTrigger>
@@ -163,8 +183,13 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             incidents={incidents ?? []}
             reservations={reservations ?? []}
           />
+          {((missions?.length ?? 0) >= 100 || (incidents?.length ?? 0) >= 100 || (reservations?.length ?? 0) >= 100) && (
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Seuls les 100 derniers éléments de chaque catégorie sont affichés.
+            </p>
+          )}
         </TabsContent>
-      </Tabs>
+      </UrlTabs>
 
     </div>
   );

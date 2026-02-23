@@ -116,7 +116,6 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
     const result = await bulkAssignIncidents({
       incident_ids: selectedIds,
       prestataire_id: selectedPrestataire,
-      organisation_id: organisationId,
     });
 
     setLoading(false);

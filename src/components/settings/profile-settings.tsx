@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Profile } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { updateProfile } from "@/lib/actions/profile";
+import { createClient } from "@/lib/supabase/client";
 import AvatarUpload from "./avatar-upload";
 import { USER_ROLE_LABELS } from "@/types/database";
+import { CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface ProfileSettingsProps {
   profile: Profile;
@@ -18,6 +20,40 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
   const [fullName, setFullName] = useState(profile.full_name);
   const [phone, setPhone] = useState(profile.phone || "");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  const isEmailVerified = !!profile.email_confirmed_at;
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  async function handleResendVerification() {
+    if (!profile.email) return;
+    setResending(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: profile.email,
+      });
+      if (error) {
+        toast.error("Erreur lors de l'envoi de l'email");
+      } else {
+        toast.success("Email de vérification envoyé !");
+        setResendCooldown(60);
+      }
+    } catch {
+      toast.error("Une erreur est survenue");
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,7 +109,20 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="email">Email</Label>
+              {isEmailVerified ? (
+                <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Vérifié
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Non vérifié
+                </span>
+              )}
+            </div>
             <Input
               id="email"
               type="email"
@@ -81,9 +130,23 @@ export default function ProfileSettings({ profile }: ProfileSettingsProps) {
               disabled
               className="bg-muted"
             />
-            <p className="text-sm text-muted-foreground">
-              Pour changer votre email, contactez le support
-            </p>
+            {!isEmailVerified && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResendVerification}
+                disabled={resending || resendCooldown > 0}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
+                {resendCooldown > 0
+                  ? `Renvoyer (${resendCooldown}s)`
+                  : resending
+                    ? "Envoi..."
+                    : "Renvoyer l'email de vérification"}
+              </Button>
+            )}
           </div>
 
           <div className="space-y-2">

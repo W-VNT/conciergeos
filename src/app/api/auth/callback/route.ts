@@ -9,12 +9,14 @@ export async function GET(request: Request) {
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+
+    console.error("Auth callback code exchange failed:", error.message);
   }
 
   // If code exchange fails, redirect to login with error

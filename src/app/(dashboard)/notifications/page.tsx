@@ -5,6 +5,7 @@ import { NotificationsList } from "@/components/notifications/notifications-list
 import type { Notification } from "@/types/database";
 
 export const metadata = { title: "Notifications" };
+export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
   const profile = await requireProfile();
@@ -20,7 +21,7 @@ export default async function NotificationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Notifications" showCreate={false} />
-      <NotificationsList initialNotifications={(notifications as Notification[]) || []} />
+      <NotificationsList initialNotifications={(notifications as Notification[]) || []} userId={profile.id} />
     </div>
   );
 }

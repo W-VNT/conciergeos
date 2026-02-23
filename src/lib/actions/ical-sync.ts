@@ -1,12 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import ICAL from "ical.js";
 
 export async function syncIcal(logementId: string) {
   const profile = await requireProfile();
+  if (!isAdmin(profile)) throw new Error("Non autorisé");
   const supabase = createClient();
 
   // Get logement with ical_url
@@ -86,6 +87,7 @@ export async function syncIcal(logementId: string) {
           .eq("logement_id", logementId)
           .eq("check_in_date", checkInDate)
           .eq("check_out_date", checkOutDate)
+          .eq("organisation_id", profile.organisation_id)
           .maybeSingle();
 
         if (existing) {
@@ -97,7 +99,8 @@ export async function syncIcal(logementId: string) {
               platform: "AUTRE",
               notes: `Synchronisé depuis iCal (UID: ${uid})`,
             })
-            .eq("id", existing.id);
+            .eq("id", existing.id)
+            .eq("organisation_id", profile.organisation_id);
           updated++;
         } else {
           await supabase.from("reservations").insert({
@@ -124,7 +127,8 @@ export async function syncIcal(logementId: string) {
     await supabase
       .from("logements")
       .update({ ical_last_synced_at: new Date().toISOString() })
-      .eq("id", logementId);
+      .eq("id", logementId)
+      .eq("organisation_id", profile.organisation_id);
 
     revalidatePath("/reservations");
     revalidatePath(`/logements/${logementId}`);
@@ -146,6 +150,7 @@ export async function syncIcal(logementId: string) {
 
 export async function syncAllIcals() {
   const profile = await requireProfile();
+  if (!isAdmin(profile)) throw new Error("Non autorisé");
   const supabase = createClient();
 
   // Get all logements with iCal URLs

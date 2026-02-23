@@ -12,11 +12,13 @@ async function checkOverlap(
   logementId: string,
   checkInDate: string,
   checkOutDate: string,
+  organisationId: string,
   excludeId?: string
 ): Promise<boolean> {
   let query = supabase
     .from("reservations")
     .select("id")
+    .eq("organisation_id", organisationId)
     .eq("logement_id", logementId)
     .neq("status", "ANNULEE")
     .lt("check_in_date", checkOutDate)
@@ -45,7 +47,8 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
       supabase,
       parsed.logement_id,
       parsed.check_in_date,
-      parsed.check_out_date
+      parsed.check_out_date,
+      profile.organisation_id
     );
     if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.") as ActionResponse<{ id: string }>;
 
@@ -122,6 +125,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         parsed.logement_id,
         parsed.check_in_date,
         parsed.check_out_date,
+        profile.organisation_id,
         id
       );
       if (hasOverlap) return errorResponse("Ce logement est déjà réservé sur cette période.") as ActionResponse<{ id: string }>;
@@ -171,9 +175,12 @@ export async function updateReservation(id: string, data: ReservationFormData): 
       );
     }
 
-    // Status changed to ANNULEE → cancel missions
+    // Status changed to ANNULEE → cancel missions + delete orphan revenus
     if (currentReservation?.status !== "ANNULEE" && parsed.status === "ANNULEE") {
-      await cancelMissionsForReservation(id);
+      await cancelMissionsForReservation(id, profile.organisation_id);
+      // Supprimer le revenu associé pour éviter les orphelins
+      const supabaseCleanup = createClient();
+      await supabaseCleanup.from("revenus").delete().eq("reservation_id", id).eq("organisation_id", profile.organisation_id);
     }
 
     revalidatePath("/reservations");
@@ -209,11 +216,14 @@ export async function deleteReservation(id: string): Promise<ActionResponse> {
     if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
     const supabase = createClient();
-    await cancelMissionsForReservation(id);
+    await cancelMissionsForReservation(id, profile.organisation_id);
+    // Supprimer les revenus orphelins avant la réservation
+    await supabase.from("revenus").delete().eq("reservation_id", id).eq("organisation_id", profile.organisation_id);
     const { error } = await supabase.from("reservations").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/reservations");
+    revalidatePath("/finances");
     return successResponse("Réservation supprimée avec succès");
   } catch (err) {
     return errorResponse((err as Error).message ?? "Erreur lors de la suppression de la réservation");
@@ -222,6 +232,10 @@ export async function deleteReservation(id: string): Promise<ActionResponse> {
 
 export async function bulkCancelReservations(reservationIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
+    if (!reservationIds.length || reservationIds.length > 100) {
+      return errorResponse("Veuillez sélectionner entre 1 et 100 réservations") as ActionResponse<{ count: number }>;
+    }
+
     const profile = await requireProfile();
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
 
@@ -244,13 +258,22 @@ export async function bulkCancelReservations(reservationIds: string[]): Promise<
       .from("missions")
       .update({ status: "ANNULE" })
       .in("reservation_id", reservationIds)
+      .eq("organisation_id", profile.organisation_id)
       .in("status", ["A_FAIRE", "EN_COURS"]);
 
     if (missionsError) {
       console.error("Bulk cancel missions error (non-blocking):", missionsError);
     }
 
+    // Supprimer les revenus orphelins
+    await supabase
+      .from("revenus")
+      .delete()
+      .in("reservation_id", reservationIds)
+      .eq("organisation_id", profile.organisation_id);
+
     revalidatePath("/reservations");
+    revalidatePath("/finances");
 
     return successResponse(
       `${count} réservation${count && count > 1 ? "s" : ""} annulée${count && count > 1 ? "s" : ""} avec succès`,
@@ -264,6 +287,10 @@ export async function bulkCancelReservations(reservationIds: string[]): Promise<
 
 export async function bulkDeleteReservations(reservationIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
+    if (!reservationIds.length || reservationIds.length > 100) {
+      return errorResponse("Veuillez sélectionner entre 1 et 100 réservations") as ActionResponse<{ count: number }>;
+    }
+
     const profile = await requireProfile();
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
 
@@ -274,7 +301,15 @@ export async function bulkDeleteReservations(reservationIds: string[]): Promise<
       .from("missions")
       .update({ status: "ANNULE" })
       .in("reservation_id", reservationIds)
+      .eq("organisation_id", profile.organisation_id)
       .in("status", ["A_FAIRE", "EN_COURS"]);
+
+    // Supprimer les revenus associés
+    await supabase
+      .from("revenus")
+      .delete()
+      .in("reservation_id", reservationIds)
+      .eq("organisation_id", profile.organisation_id);
 
     // Supprimer les réservations
     const { error, count } = await supabase
@@ -316,7 +351,8 @@ async function createMissionsForReservation(
   const { data: existing } = await supabase
     .from("missions")
     .select("id")
-    .eq("reservation_id", reservationId);
+    .eq("reservation_id", reservationId)
+    .eq("organisation_id", organisationId);
 
   if (existing && existing.length > 0) return;
 
@@ -325,7 +361,8 @@ async function createMissionsForReservation(
   const coTime = checkOutTime || "11:00";
   // Ménage starts 2h after checkout
   const [coH, coM] = coTime.split(":").map(Number);
-  const menageTime = `${String(coH + 2).padStart(2, "0")}:${String(coM).padStart(2, "0")}`;
+  const menageH = (coH + 2) % 24;
+  const menageTime = `${String(menageH).padStart(2, "0")}:${String(coM).padStart(2, "0")}`;
 
   const missions = [
     {
@@ -370,7 +407,7 @@ async function createMissionsForReservation(
     const checklistInserts: { mission_id: string; item_id: string; completed: boolean }[] = [];
 
     for (const mission of created) {
-      const templateId = await findLogementTemplate(supabase, logementId, mission.type);
+      const templateId = await findLogementTemplate(supabase, logementId, mission.type, organisationId);
       if (!templateId) continue;
 
       const { data: items } = await supabase
@@ -399,12 +436,13 @@ async function createMissionsForReservation(
   }
 }
 
-async function cancelMissionsForReservation(reservationId: string) {
+async function cancelMissionsForReservation(reservationId: string, organisationId: string) {
   const supabase = createClient();
   await supabase
     .from("missions")
     .update({ status: "ANNULE" })
     .eq("reservation_id", reservationId)
+    .eq("organisation_id", organisationId)
     .in("status", ["A_FAIRE", "EN_COURS"]);
 }
 
@@ -425,6 +463,7 @@ async function createRevenuForReservation(
     .from("revenus")
     .select("id")
     .eq("reservation_id", reservationId)
+    .eq("organisation_id", organisationId)
     .maybeSingle();
 
   if (existing) return;
@@ -434,6 +473,7 @@ async function createRevenuForReservation(
     .from("contrats")
     .select("id, commission_rate")
     .eq("logement_id", logementId)
+    .eq("organisation_id", organisationId)
     .eq("status", "ACTIF")
     .lte("start_date", checkInDate)
     .gte("end_date", checkInDate)
@@ -442,7 +482,7 @@ async function createRevenuForReservation(
     .maybeSingle();
 
   const tauxCommission = contrat?.commission_rate ?? 0;
-  const montantCommission = Math.round(montantBrut * tauxCommission) / 100;
+  const montantCommission = Math.round(montantBrut * (tauxCommission / 100) * 100) / 100;
   const montantNet = montantBrut - montantCommission;
 
   await supabase.from("revenus").insert({

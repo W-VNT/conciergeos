@@ -6,7 +6,7 @@ import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = { title: "Ma journée" };
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function MaJourneePage({ searchParams }: { searchParams: { date?: string } }) {
   const profile = await requireProfile();
@@ -40,6 +40,7 @@ export default async function MaJourneePage({ searchParams }: { searchParams: { 
       assignee:profiles(full_name),
       reservation:reservations(guest_name, guest_count, check_in_time, check_out_time)
     `)
+    .eq("organisation_id", profile.organisation_id)
     .gte("scheduled_at", selectedDate.toISOString())
     .lt("scheduled_at", nextDay.toISOString())
     .in("status", ["A_FAIRE", "EN_COURS", "TERMINE"])

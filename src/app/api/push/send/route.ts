@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendPushToUser } from "@/lib/push";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export async function POST(request: NextRequest) {
   // Authenticate via shared secret (for Supabase webhook or internal calls)
@@ -24,6 +25,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Missing user_id or title" },
       { status: 400 }
+    );
+  }
+
+  // Validate that the target user_id belongs to a valid organisation
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: "Server misconfigured: missing service role key" },
+      { status: 500 }
+    );
+  }
+
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: targetProfile, error: profileError } = await admin
+    .from("profiles")
+    .select("organisation_id")
+    .eq("id", userId)
+    .single();
+
+  if (profileError || !targetProfile?.organisation_id) {
+    return NextResponse.json(
+      { error: "Target user_id does not belong to any organisation" },
+      { status: 403 }
     );
   }
 

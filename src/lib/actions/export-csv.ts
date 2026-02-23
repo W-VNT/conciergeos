@@ -25,11 +25,11 @@ export async function exportMissionsCSV(filters?: { status?: string; type?: stri
     m.type as string,
     m.status as string,
     m.priority as string,
-    (m.logement as Record<string, string> | null)?.name ?? "",
-    (m.assignee as Record<string, string> | null)?.full_name ?? "",
+    ((m.logement as Record<string, string> | null)?.name ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
+    ((m.assignee as Record<string, string> | null)?.full_name ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
     m.scheduled_at as string,
     (m.completed_at as string) ?? "",
-    ((m.notes as string) ?? "").replace(/"/g, '""'),
+    ((m.notes as string) ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
   ]);
 
   const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
@@ -57,9 +57,9 @@ export async function exportIncidentsCSV(filters?: { status?: string; severity?:
     i.id as string,
     i.severity as string,
     i.status as string,
-    (i.logement as Record<string, string> | null)?.name ?? "",
-    (i.prestataire as Record<string, string> | null)?.full_name ?? "",
-    ((i.description as string) ?? "").replace(/"/g, '""'),
+    ((i.logement as Record<string, string> | null)?.name ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
+    ((i.prestataire as Record<string, string> | null)?.full_name ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
+    ((i.description as string) ?? "").replace(/"/g, '""').replace(/[\r\n]+/g, ' '),
     String(i.cost ?? ""),
     i.opened_at as string,
     (i.resolved_at as string) ?? "",

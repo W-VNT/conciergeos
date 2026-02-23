@@ -4,20 +4,28 @@ import Calendar from "@/components/calendrier/calendar";
 import type { Mission, Reservation } from "@/types/database";
 
 export const metadata = { title: "Calendrier" };
+export const dynamic = "force-dynamic";
 
 export default async function CalendrierPage() {
   const profile = await requireProfile();
   const supabase = await createClient();
 
-  // Get all missions for the organisation
-  const { data: missions } = await supabase
+  // Get missions for the organisation, scoped by role
+  let missionsQuery = supabase
     .from("missions")
     .select(`
       *,
       logement:logements(name),
       assignee:profiles(full_name)
     `)
-    .eq("organisation_id", profile.organisation_id)
+    .eq("organisation_id", profile.organisation_id);
+
+  // OPERATEUR role: only see their own assigned missions
+  if (profile.role === "OPERATEUR") {
+    missionsQuery = missionsQuery.eq("assigned_to", profile.id);
+  }
+
+  const { data: missions } = await missionsQuery
     .order("scheduled_at", { ascending: true });
 
   // Get all reservations for the organisation

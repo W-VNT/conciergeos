@@ -1,5 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const subscribeSchema = z.object({
+  endpoint: z.string().url().startsWith("https://"),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
+});
 
 export async function POST(request: NextRequest) {
   const supabase = createClient();
@@ -11,18 +20,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { endpoint, keys } = body as {
-    endpoint: string;
-    keys: { p256dh: string; auth: string };
-  };
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
-  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+  const parsed = subscribeSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Missing subscription data" },
+      { error: "Invalid subscription data", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
+
+  const { endpoint, keys } = parsed.data;
 
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
@@ -51,12 +64,20 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { endpoint } = body as { endpoint: string };
-
-  if (!endpoint) {
-    return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  const deleteSchema = z.object({ endpoint: z.string().url().startsWith("https://") });
+  const parsed = deleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid endpoint" }, { status: 400 });
+  }
+
+  const { endpoint } = parsed.data;
 
   await supabase
     .from("push_subscriptions")

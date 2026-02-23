@@ -27,6 +27,9 @@ export function PhotoUpload({
   const [uploading, setUploading] = useState(false);
   const supabase = createClient();
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -34,7 +37,15 @@ export function PhotoUpload({
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop();
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          toast.error(`Type non autorisé : ${file.type || "inconnu"}. Formats acceptés : JPEG, PNG, WebP, HEIC.`);
+          continue;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`Fichier trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} Mo). Maximum : 10 Mo.`);
+          continue;
+        }
+        const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         const path = `${organisationId}/${entityType}/${entityId}/${Date.now()}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
@@ -51,7 +62,11 @@ export function PhotoUpload({
           mime_type: file.type,
         });
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          // Cleanup orphaned storage file
+          await supabase.storage.from("attachments").remove([path]);
+          throw dbError;
+        }
       }
       toast.success("Photo(s) ajoutée(s)");
       onUpload?.();
@@ -105,7 +120,7 @@ export function PhotoUpload({
           {attachments.map((att) => (
             <div key={att.id} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
               <img
-                src={`/api/storage/${encodeURIComponent(att.storage_path)}`}
+                src={`/api/storage/${att.storage_path}`}
                 alt=""
                 className="w-full h-full object-cover"
               />

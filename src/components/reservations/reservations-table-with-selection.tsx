@@ -25,6 +25,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const formatEur = (amount: number) =>
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
+
 interface Reservation {
   id: string;
   guest_name: string;
@@ -155,7 +158,7 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
               </Link>
               {reservation.amount && (
                 <div className="pl-8 mt-2 pt-2 border-t">
-                  <p className="text-sm font-medium">{reservation.amount}€</p>
+                  <p className="text-sm font-medium">{formatEur(reservation.amount)}</p>
                 </div>
               )}
             </div>
@@ -248,7 +251,7 @@ export function ReservationsTableWithSelection({ reservations }: Props) {
                       label={BOOKING_PLATFORM_LABELS[reservation.platform as keyof typeof BOOKING_PLATFORM_LABELS]}
                     />
                   </TableCell>
-                  <TableCell>{reservation.amount ? `${reservation.amount}€` : "—"}</TableCell>
+                  <TableCell>{reservation.amount ? formatEur(reservation.amount) : "—"}</TableCell>
                   <TableCell>
                     <StatusBadge
                       value={reservation.status}

@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { ContratForm } from "@/components/forms/contrat-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditContratPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
   if (!isAdmin(profile)) redirect(`/contrats/${params.id}`);
@@ -15,6 +17,7 @@ export default async function EditContratPage({ params }: { params: { id: string
     .from("contrats")
     .select("*")
     .eq("id", params.id)
+    .eq("organisation_id", profile.organisation_id)
     .single();
 
   if (!contrat) notFound();
@@ -26,11 +29,12 @@ export default async function EditContratPage({ params }: { params: { id: string
   const { data: proprietaires } = await supabase
     .from("proprietaires")
     .select("*")
+    .eq("organisation_id", profile.organisation_id)
     .order("full_name");
 
   // Fetch logements + offer configs
   const [{ data: logements }, { data: offerConfigs }] = await Promise.all([
-    supabase.from("logements").select("*").order("name"),
+    supabase.from("logements").select("*").eq("organisation_id", profile.organisation_id).order("name"),
     supabase
       .from("offer_tier_configs")
       .select("tier, commission_rate, name")

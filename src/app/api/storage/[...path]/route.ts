@@ -6,11 +6,32 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   const storagePath = params.path.join("/");
-  const supabase = createClient();
+
+  // Block path traversal attempts
+  if (params.path.some((seg) => seg === ".." || seg === ".")) {
+    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Verify the file belongs to the user's organisation
+  // Storage path format: {organisationId}/{entityType}/{entityId}/{filename}
+  const orgIdFromPath = params.path[0];
+  if (orgIdFromPath) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organisation_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.organisation_id !== orgIdFromPath) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const { data, error } = await supabase.storage

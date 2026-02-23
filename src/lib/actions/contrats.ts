@@ -45,7 +45,8 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
 
     // Block update on signed contracts
     const { data: existing } = await supabase.from("contrats").select("status").eq("id", id).eq("organisation_id", profile.organisation_id).single();
-    if (existing?.status === "SIGNE") return errorResponse("Un contrat signé ne peut pas être modifié") as ActionResponse<{ id: string }>;
+    if (!existing) return errorResponse("Contrat non trouvé") as ActionResponse<{ id: string }>;
+    if (existing.status === "SIGNE") return errorResponse("Un contrat signé ne peut pas être modifié") as ActionResponse<{ id: string }>;
 
     const { error } = await supabase
       .from("contrats")
@@ -78,6 +79,12 @@ export async function deleteContrat(id: string): Promise<ActionResponse> {
     if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
     const supabase = createClient();
+
+    // Vérifier que le contrat n'est pas signé avant suppression
+    const { data: existing } = await supabase.from("contrats").select("status").eq("id", id).eq("organisation_id", profile.organisation_id).single();
+    if (!existing) return errorResponse("Contrat non trouvé");
+    if (existing.status === "SIGNE") return errorResponse("Un contrat signé ne peut pas être supprimé");
+
     const { error } = await supabase.from("contrats").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
@@ -88,21 +95,27 @@ export async function deleteContrat(id: string): Promise<ActionResponse> {
   }
 }
 
-export async function markContratAsSigned(id: string) {
-  const profile = await requireProfile();
-  const supabase = createClient();
+export async function markContratAsSigned(id: string): Promise<ActionResponse> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    const supabase = createClient();
 
-  const { error } = await supabase
-    .from("contrats")
-    .update({
-      status: "SIGNE",
-      pdf_downloaded_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("organisation_id", profile.organisation_id)
-    .is("pdf_downloaded_at", null); // Only set once (first download)
+    const { error } = await supabase
+      .from("contrats")
+      .update({
+        status: "SIGNE",
+        pdf_downloaded_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id)
+      .is("pdf_downloaded_at", null); // Only set once (first download)
 
-  if (error) throw new Error(error.message);
-  revalidatePath(`/contrats/${id}`);
-  revalidatePath("/contrats");
+    if (error) return errorResponse(error.message);
+    revalidatePath(`/contrats/${id}`);
+    revalidatePath("/contrats");
+    return successResponse("Contrat marqué comme signé");
+  } catch (err) {
+    return errorResponse((err as Error).message ?? "Erreur lors de la signature du contrat");
+  }
 }

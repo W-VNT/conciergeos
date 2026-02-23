@@ -8,7 +8,7 @@ import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { ProprietairesTableWithSelection } from "@/components/proprietaires/proprietaires-table-with-selection";
 
 export const metadata = { title: "Propriétaires" };
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
 
@@ -26,10 +26,14 @@ export default async function ProprietairesPage({
   let query = supabase
     .from("proprietaires")
     .select("*", { count: "exact" })
+    .eq("organisation_id", profile.organisation_id)
     .order("full_name")
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) query = query.ilike("full_name", `%${searchParams.q}%`);
+  if (searchParams.q) {
+    const sanitized = searchParams.q.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    query = query.ilike("full_name", `%${sanitized}%`);
+  }
   if (searchParams.statut_juridique) query = query.eq("statut_juridique", searchParams.statut_juridique);
 
   const { data, count } = await query;

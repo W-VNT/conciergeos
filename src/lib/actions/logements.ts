@@ -12,7 +12,7 @@ export async function createLogement(data: LogementFormData): Promise<ActionResp
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = logementSchema.parse(data);
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { data: created, error } = await supabase.from("logements").insert({
       organisation_id: profile.organisation_id,
@@ -52,7 +52,7 @@ export async function updateLogement(id: string, data: LogementFormData): Promis
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = logementSchema.parse(data);
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase
       .from("logements")
@@ -77,7 +77,8 @@ export async function updateLogement(id: string, data: LogementFormData): Promis
         ical_url: parsed.ical_url || null,
         status: parsed.status,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -94,8 +95,8 @@ export async function deleteLogement(id: string): Promise<ActionResponse> {
     const profile = await requireProfile();
     if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
-    const supabase = createClient();
-    const { error } = await supabase.from("logements").delete().eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase.from("logements").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/logements");
@@ -107,10 +108,14 @@ export async function deleteLogement(id: string): Promise<ActionResponse> {
 
 export async function bulkDeleteLogements(logementIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
+    if (!logementIds.length || logementIds.length > 100) {
+      return errorResponse("Nombre de logements invalide (max 100)") as ActionResponse<{ count: number }>;
+    }
+
     const profile = await requireProfile();
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error, count } = await supabase
       .from("logements")

@@ -18,7 +18,7 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
   const admin = isAdmin(profile);
   const supabase = createClient();
 
-  const { data: proprietaire } = await supabase.from("proprietaires").select("*").eq("id", params.id).single();
+  const { data: proprietaire } = await supabase.from("proprietaires").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
   if (!proprietaire) notFound();
 
   const { data: logements } = await supabase.from("logements").select("id, name, status").eq("owner_id", proprietaire.id);

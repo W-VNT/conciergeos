@@ -35,10 +35,10 @@ export function LogementsMap({ logements }: LogementsMapProps) {
     }
 
     const avgLat =
-      logementsWithCoords.reduce((sum, l) => sum + (l.latitude || 0), 0) /
+      logementsWithCoords.reduce((sum, l) => sum + (l.latitude ?? 0), 0) /
       logementsWithCoords.length;
     const avgLng =
-      logementsWithCoords.reduce((sum, l) => sum + (l.longitude || 0), 0) /
+      logementsWithCoords.reduce((sum, l) => sum + (l.longitude ?? 0), 0) /
       logementsWithCoords.length;
 
     return { latitude: avgLat, longitude: avgLng };

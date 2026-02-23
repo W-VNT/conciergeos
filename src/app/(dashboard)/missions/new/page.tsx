@@ -7,8 +7,8 @@ export default async function NewMissionPage() {
   const profile = await requireProfile();
   const supabase = createClient();
 
-  const { data: logements } = await supabase.from("logements").select("*").eq("status", "ACTIF").order("name");
-  const { data: profiles } = await supabase.from("profiles").select("*").order("full_name");
+  const { data: logements } = await supabase.from("logements").select("*").eq("organisation_id", profile.organisation_id).eq("status", "ACTIF").order("name");
+  const { data: profiles } = await supabase.from("profiles").select("*").eq("organisation_id", profile.organisation_id).order("full_name");
 
   return (
     <div>

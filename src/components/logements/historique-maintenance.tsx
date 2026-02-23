@@ -65,13 +65,14 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
     })),
   ];
 
-  // Sort by date descending
-  events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Filter out events with null dates, then sort descending
+  const validEvents = events.filter((e) => e.date != null);
+  validEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const PAGE_SIZE = 15;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const recentEvents = events.slice(0, visibleCount);
-  const hasMore = visibleCount < events.length;
+  const recentEvents = validEvents.slice(0, visibleCount);
+  const hasMore = visibleCount < validEvents.length;
 
   function getColors(event: TimelineEvent): { icon: string; card: string } {
     if (event.type === "incident") {
@@ -121,7 +122,7 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
               Historique de Maintenance
             </CardTitle>
             <CardDescription>
-              {events.length} événement{events.length > 1 ? "s" : ""} enregistré{events.length > 1 ? "s" : ""}
+              {validEvents.length} événement{validEvents.length > 1 ? "s" : ""} enregistré{validEvents.length > 1 ? "s" : ""}
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
@@ -191,7 +192,7 @@ export function HistoriqueMaintenance({ missions, incidents, reservations }: Pro
                   size="sm"
                   onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                 >
-                  Afficher plus ({events.length - visibleCount} restant{events.length - visibleCount > 1 ? "s" : ""})
+                  Afficher plus ({validEvents.length - visibleCount} restant{validEvents.length - visibleCount > 1 ? "s" : ""})
                 </Button>
               </div>
             )}

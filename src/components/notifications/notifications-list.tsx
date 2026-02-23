@@ -18,11 +18,12 @@ import { MISSION_TYPE_LABELS } from "@/types/database";
 
 interface Props {
   initialNotifications: Notification[];
+  userId: string;
 }
 
 const POLL_INTERVAL = 30_000; // 30 seconds
 
-export function NotificationsList({ initialNotifications }: Props) {
+export function NotificationsList({ initialNotifications, userId }: Props) {
   const [notifications, setNotifications] = useState(initialNotifications);
 
   const pollNotifications = useCallback(async () => {
@@ -31,13 +32,14 @@ export function NotificationsList({ initialNotifications }: Props) {
       const { data } = await supabase
         .from("notifications")
         .select("*")
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(100);
       if (data) setNotifications(data as Notification[]);
     } catch {
       // Silent fail — next poll will retry
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const interval = setInterval(pollNotifications, POLL_INTERVAL);

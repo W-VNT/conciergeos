@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
+import { z } from "zod";
+
+const prefsSchema = z.object({}).catchall(z.boolean());
 
 export interface NotificationPreferences {
   // Mission notifications
@@ -75,13 +78,14 @@ export async function updateNotificationPreferences(
   preferences: Partial<NotificationPreferences>
 ): Promise<ActionResponse> {
   try {
+    const parsed = prefsSchema.parse(preferences);
     const profile = await requireProfile();
     const supabase = createClient();
 
     // Try to update first
     const { error: updateError } = await supabase
       .from("notification_preferences")
-      .update(preferences)
+      .update(parsed)
       .eq("user_id", profile.id);
 
     // If update failed because row doesn't exist, insert it
@@ -90,7 +94,7 @@ export async function updateNotificationPreferences(
         .from("notification_preferences")
         .insert({
           user_id: profile.id,
-          ...preferences,
+          ...parsed,
         });
 
       if (insertError) {

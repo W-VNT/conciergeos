@@ -14,11 +14,12 @@ export default async function NewContratPage() {
   const { data: proprietaires } = await supabase
     .from("proprietaires")
     .select("*")
+    .eq("organisation_id", profile.organisation_id)
     .order("full_name");
 
   // Fetch logements + offer configs
   const [{ data: logements }, { data: offerConfigs }] = await Promise.all([
-    supabase.from("logements").select("*").eq("status", "ACTIF").order("name"),
+    supabase.from("logements").select("*").eq("status", "ACTIF").eq("organisation_id", profile.organisation_id).order("name"),
     supabase
       .from("offer_tier_configs")
       .select("tier, commission_rate, name")

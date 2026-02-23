@@ -15,7 +15,7 @@ export const metadata = { title: "Contrats" };
 
 const PAGE_SIZE = 20;
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function ContratsPage({
   searchParams,
@@ -31,17 +31,21 @@ export default async function ContratsPage({
   let query = supabase
     .from("contrats")
     .select("*, proprietaire:proprietaires(full_name), logement:logements(name)", { count: "exact" })
+    .eq("organisation_id", profile.organisation_id)
     .order("start_date", { ascending: false })
     .range(from, from + PAGE_SIZE - 1);
 
-  if (searchParams.q) query = query.or(`conditions.ilike.%${searchParams.q}%`);
+  if (searchParams.q) {
+    const safeQ = searchParams.q.replace(/%/g, "\\%").replace(/_/g, "\\_");
+    query = query.ilike("conditions", `%${safeQ}%`);
+  }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.type) query = query.eq("type", searchParams.type);
   if (searchParams.proprietaire_id) query = query.eq("proprietaire_id", searchParams.proprietaire_id);
 
   const [{ data, count }, { data: proprietaires }] = await Promise.all([
     query,
-    supabase.from("proprietaires").select("id, full_name").order("full_name"),
+    supabase.from("proprietaires").select("id, full_name").eq("organisation_id", profile.organisation_id).order("full_name"),
   ]);
 
   const statusOptions = Object.entries(CONTRACT_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));

@@ -307,15 +307,18 @@ export function ChecklistTemplateSection({ logementId }: Props) {
   async function handleAddSuggestions(type: MissionType) {
     if (selectedSuggestions.length === 0) return;
     setAddingSuggestions(true);
-    let errors = 0;
-    for (const s of selectedSuggestions) {
-      const result = await addLogementChecklistItem(logementId, type, {
-        titre: s.titre,
-        categorie: s.categorie,
-        photo_requise: false,
-      });
-      if (result.error) errors++;
-    }
+    const results = await Promise.allSettled(
+      selectedSuggestions.map((s) =>
+        addLogementChecklistItem(logementId, type, {
+          titre: s.titre,
+          categorie: s.categorie,
+          photo_requise: false,
+        })
+      )
+    );
+    const errors = results.filter(
+      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
+    ).length;
     setAddingSuggestions(false);
     if (errors > 0) {
       toast.error(`${errors} item(s) n'ont pas pu être ajoutés`);

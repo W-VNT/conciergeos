@@ -196,3 +196,36 @@ ConciergeOS - Gestion de conciergerie
     `,
   };
 }
+
+export function passwordChangedEmail(data: {
+  userName: string;
+}): EmailTemplate {
+  return {
+    subject: "Votre mot de passe a été modifié",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">🔒 Mot de passe modifié</h2>
+        <p>Bonjour ${data.userName},</p>
+        <p>Votre mot de passe ConciergeOS a été modifié avec succès.</p>
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0;"><strong>Si vous n'êtes pas à l'origine de ce changement</strong>, veuillez immédiatement réinitialiser votre mot de passe via la page de connexion.</p>
+        </div>
+        <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">
+          ConciergeOS - Gestion de conciergerie
+        </p>
+      </div>
+    `,
+    text: `
+Mot de passe modifié
+
+Bonjour ${data.userName},
+
+Votre mot de passe ConciergeOS a été modifié avec succès.
+
+Si vous n'êtes pas à l'origine de ce changement, veuillez immédiatement réinitialiser votre mot de passe via la page de connexion.
+
+--
+ConciergeOS - Gestion de conciergerie
+    `,
+  };
+}

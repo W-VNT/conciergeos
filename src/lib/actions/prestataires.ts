@@ -5,6 +5,7 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { prestataireSchema, type PrestataireFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
+import { z } from "zod";
 
 export async function createPrestataire(data: PrestataireFormData): Promise<ActionResponse<{ id: string }>> {
   try {
@@ -63,7 +64,8 @@ export async function updatePrestataire(id: string, data: PrestataireFormData): 
         reliability_score: parsed.reliability_score || null,
         notes: parsed.notes || null,
       })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
@@ -81,7 +83,7 @@ export async function deletePrestataire(id: string): Promise<ActionResponse> {
     if (!isAdmin(profile)) return errorResponse("Non autorisé");
 
     const supabase = createClient();
-    const { error } = await supabase.from("prestataires").delete().eq("id", id);
+    const { error } = await supabase.from("prestataires").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
     if (error) return errorResponse(error.message);
 
     revalidatePath("/prestataires");
@@ -95,13 +97,14 @@ export async function bulkDeletePrestataires(prestataireIds: string[]): Promise<
   try {
     const profile = await requireProfile();
     if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(prestataireIds);
 
     const supabase = createClient();
 
     const { error, count } = await supabase
       .from("prestataires")
       .delete({ count: "exact" })
-      .in("id", prestataireIds)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {

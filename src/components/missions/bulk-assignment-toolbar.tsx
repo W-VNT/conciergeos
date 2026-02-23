@@ -39,7 +39,6 @@ export function BulkAssignmentToolbar({
 
     const result = await autoAssignMissions({
       mission_ids: missionIds,
-      organisation_id: organisationId,
     });
 
     setLoading(false);

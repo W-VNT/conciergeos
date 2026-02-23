@@ -1,19 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import { CalendarDays, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
 
 export default async function OwnerReservationsPage() {
+  const profile = await requireProfile();
   const supabase = createClient();
   const today = new Date().toISOString().split("T")[0];
 
-  const { data: reservations } = await supabase
+  // Get proprietaire's logement IDs to scope reservations
+  let logementIds: string[] = [];
+  if (profile.proprietaire_id) {
+    const { data: ownerLogements } = await supabase
+      .from("logements")
+      .select("id")
+      .eq("organisation_id", profile.organisation_id)
+      .eq("owner_id", profile.proprietaire_id);
+    logementIds = (ownerLogements ?? []).map((l) => l.id);
+  }
+
+  let resQuery = supabase
     .from("reservations")
     .select(
       "id, guest_name, guest_count, check_in_date, check_out_date, platform, status, logement:logements(name)"
     )
+    .eq("organisation_id", profile.organisation_id)
     .order("check_in_date", { ascending: false })
     .limit(50);
+
+  if (logementIds.length > 0) {
+    resQuery = resQuery.in("logement_id", logementIds);
+  } else if (profile.proprietaire_id) {
+    // Proprietaire has no logements — return empty
+    resQuery = resQuery.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
+  const { data: reservations } = await resQuery;
 
   const upcoming = reservations?.filter(
     (r) => r.check_in_date >= today && r.status === "CONFIRMEE"

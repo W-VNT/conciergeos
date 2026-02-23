@@ -24,9 +24,21 @@ export async function updateProfile(data: UpdateProfileData) {
     throw new Error("Non authentifié");
   }
 
+  // Trim string fields
+  const sanitizedData: UpdateProfileData = { ...data };
+  if (sanitizedData.full_name !== undefined) {
+    sanitizedData.full_name = sanitizedData.full_name.trim();
+    if (sanitizedData.full_name.length < 2 || sanitizedData.full_name.length > 100) {
+      throw new Error("Le nom doit contenir entre 2 et 100 caractères");
+    }
+  }
+  if (sanitizedData.phone !== undefined) {
+    sanitizedData.phone = sanitizedData.phone.trim();
+  }
+
   const { error } = await supabase
     .from("profiles")
-    .update(data)
+    .update(sanitizedData)
     .eq("id", user.id);
 
   if (error) {

@@ -21,15 +21,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/api/auth/callback?next=/reset-password`,
+    // Always show success to prevent email enumeration
+    await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/reset-password`,
     });
-
-    if (error) {
-      setError("Erreur lors de l'envoi. Vérifiez votre adresse email.");
-      setLoading(false);
-      return;
-    }
 
     setSent(true);
     setLoading(false);
@@ -107,7 +102,7 @@ export default function ForgotPasswordPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-destructive">{error}</p>
+                <p className="text-sm text-destructive" role="alert">{error}</p>
               )}
 
               <Button type="submit" className="w-full" disabled={loading}>

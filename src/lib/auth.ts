@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import type { Profile } from '@/types/database';
 
 export async function getSession() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
@@ -15,7 +15,7 @@ export async function requireAuth() {
 }
 
 export async function getProfile(): Promise<Profile | null> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -28,12 +28,12 @@ export async function getProfile(): Promise<Profile | null> {
   if (!data) return null;
 
   // Add email from auth.users to profile
-  return { ...data, email: user.email };
+  return { ...data, email: user.email, email_confirmed_at: user.email_confirmed_at };
 }
 
 export async function requireProfile(): Promise<Profile> {
   const user = await requireAuth();
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -49,11 +49,11 @@ export async function requireProfile(): Promise<Profile> {
     });
 
     if (error || !newProfile) redirect('/login');
-    return { ...newProfile, email: user.email } as Profile;
+    return { ...newProfile, email: user.email, email_confirmed_at: user.email_confirmed_at } as Profile;
   }
 
   // Add email from auth.users to profile
-  return { ...profile, email: user.email };
+  return { ...profile, email: user.email, email_confirmed_at: user.email_confirmed_at };
 }
 
 export function isAdmin(profile: Profile): boolean {

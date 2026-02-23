@@ -5,14 +5,14 @@ import { PageHeader } from "@/components/shared/page-header";
 import { IncidentForm } from "@/components/forms/incident-form";
 
 export default async function EditIncidentPage({ params }: { params: { id: string } }) {
-  await requireProfile();
+  const profile = await requireProfile();
   const supabase = createClient();
 
-  const { data: incident } = await supabase.from("incidents").select("*").eq("id", params.id).single();
+  const { data: incident } = await supabase.from("incidents").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
   if (!incident) notFound();
 
-  const { data: logements } = await supabase.from("logements").select("*").order("name");
-  const { data: prestataires } = await supabase.from("prestataires").select("*").order("full_name");
+  const { data: logements } = await supabase.from("logements").select("*").eq("organisation_id", profile.organisation_id).order("name");
+  const { data: prestataires } = await supabase.from("prestataires").select("*").eq("organisation_id", profile.organisation_id).order("full_name");
 
   return (
     <div>

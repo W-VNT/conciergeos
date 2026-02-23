@@ -23,6 +23,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     .from("missions")
     .select("*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes), assignee:profiles(id, full_name)")
     .eq("id", params.id)
+    .eq("organisation_id", profile.organisation_id)
     .single();
 
   if (!mission) notFound();
@@ -330,7 +331,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                   {logement?.menage_price && (
                     <>
                       <span className="text-muted-foreground">Prix ménage</span>
-                      <span className="text-right font-medium">{logement.menage_price} €</span>
+                      <span className="text-right font-medium">{new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(logement.menage_price)}</span>
                     </>
                   )}
                 </div>

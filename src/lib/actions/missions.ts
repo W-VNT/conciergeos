@@ -1,7 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, isAdmin } from "@/lib/auth";
+import { z } from "zod";
 import {
   missionSchema,
   type MissionFormData,
@@ -22,6 +23,7 @@ import type {
 export async function createMission(data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
     const parsed = missionSchema.parse(data);
     const supabase = createClient();
 
@@ -52,6 +54,7 @@ export async function createMission(data: MissionFormData): Promise<ActionRespon
 export async function updateMission(id: string, data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
     const parsed = missionSchema.parse(data);
     const supabase = createClient();
 
@@ -131,6 +134,7 @@ export async function completeMission(id: string) {
 export async function deleteMission(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
     const supabase = createClient();
 
     const { error } = await supabase.from("missions").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
@@ -152,6 +156,7 @@ export async function bulkCompleteMissions(
 ): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(missionIds);
     const supabase = createClient();
 
     const { error } = await supabase
@@ -160,7 +165,7 @@ export async function bulkCompleteMissions(
         status: "TERMINE",
         completed_at: new Date().toISOString(),
       })
-      .in("id", missionIds)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {
@@ -170,8 +175,8 @@ export async function bulkCompleteMissions(
     revalidatePath("/missions");
     revalidatePath("/dashboard");
     return successResponse(
-      `${missionIds.length} mission(s) terminée(s)`,
-      { count: missionIds.length }
+      `${validatedIds.length} mission(s) terminée(s)`,
+      { count: validatedIds.length }
     );
   } catch (err) {
     return errorResponse(
@@ -188,12 +193,14 @@ export async function bulkDeleteMissions(
 ): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(missionIds);
     const supabase = createClient();
 
     const { error } = await supabase
       .from("missions")
       .delete()
-      .in("id", missionIds)
+      .in("id", validatedIds)
       .eq("organisation_id", profile.organisation_id);
 
     if (error) {
@@ -203,8 +210,8 @@ export async function bulkDeleteMissions(
     revalidatePath("/missions");
     revalidatePath("/dashboard");
     return successResponse(
-      `${missionIds.length} mission(s) supprimée(s)`,
-      { count: missionIds.length }
+      `${validatedIds.length} mission(s) supprimée(s)`,
+      { count: validatedIds.length }
     );
   } catch (err) {
     return errorResponse(
@@ -223,10 +230,9 @@ export async function bulkDeleteMissions(
 export async function bulkAssignMissions(data: {
   mission_ids: string[];
   operator_id: string;
-  organisation_id: string;
 }): Promise<ActionResponse<{ count: number }>> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const validated = bulkAssignmentSchema.parse(data);
     const supabase = createClient();
 
@@ -235,7 +241,7 @@ export async function bulkAssignMissions(data: {
       .from("profiles")
       .select("id, full_name, role")
       .eq("id", validated.operator_id)
-      .eq("organisation_id", validated.organisation_id)
+      .eq("organisation_id", profile.organisation_id)
       .in("role", ["OPERATEUR", "ADMIN"])
       .single();
 
@@ -252,7 +258,7 @@ export async function bulkAssignMissions(data: {
         updated_at: new Date().toISOString(),
       })
       .in("id", validated.mission_ids)
-      .eq("organisation_id", validated.organisation_id);
+      .eq("organisation_id", profile.organisation_id);
 
     if (updateError) {
       return errorResponse(updateError.message) as ActionResponse<{ count: number }>;
@@ -262,7 +268,8 @@ export async function bulkAssignMissions(data: {
     const { data: assignedMissions } = await supabase
       .from("missions")
       .select("id, type")
-      .in("id", validated.mission_ids);
+      .in("id", validated.mission_ids)
+      .eq("organisation_id", profile.organisation_id);
 
     const TYPE_LABELS: Record<string, string> = {
       CHECKIN: "Check-in",
@@ -314,16 +321,16 @@ export async function bulkAssignMissions(data: {
 export async function getMatchingOperators(params: {
   mission_type: MissionType;
   zone?: string;
-  organisation_id: string;
 }): Promise<Array<{ id: string; full_name: string; email: string; operator_capabilities: OperatorCapabilities | null }>> {
   try {
+    const profile = await requireProfile();
     const supabase = createClient();
 
     let query = supabase
       .from("profiles")
       .select("id, full_name, email, operator_capabilities")
       .eq("role", "OPERATEUR")
-      .eq("organisation_id", params.organisation_id);
+      .eq("organisation_id", profile.organisation_id);
 
     // Filter by mission type using JSONB contains
     if (params.mission_type) {
@@ -358,10 +365,9 @@ export async function getMatchingOperators(params: {
  */
 export async function autoAssignMissions(data: {
   mission_ids: string[];
-  organisation_id: string;
 }): Promise<AutoAssignmentResult> {
   try {
-    await requireProfile();
+    const profile = await requireProfile();
     const validated = autoAssignmentSchema.parse(data);
     const supabase = createClient();
 
@@ -375,7 +381,7 @@ export async function autoAssignMissions(data: {
       .from("missions")
       .select("id, type, logement:logements(code_postal)")
       .in("id", validated.mission_ids)
-      .eq("organisation_id", validated.organisation_id);
+      .eq("organisation_id", profile.organisation_id);
 
     if (missionsError || !missions) {
       console.error("Error fetching missions:", missionsError);
@@ -387,7 +393,7 @@ export async function autoAssignMissions(data: {
       .from("profiles")
       .select("id, full_name, email, operator_capabilities")
       .eq("role", "OPERATEUR")
-      .eq("organisation_id", validated.organisation_id);
+      .eq("organisation_id", profile.organisation_id);
 
     const operators = allOperators || [];
 
@@ -440,7 +446,8 @@ export async function autoAssignMissions(data: {
           status: "A_FAIRE",
           updated_at: now,
         })
-        .in("id", missionIds);
+        .in("id", missionIds)
+        .eq("organisation_id", profile.organisation_id);
 
       if (assignError) {
         missionIds.forEach((mid) =>
@@ -475,6 +482,7 @@ export async function updateOperatorCapabilities(
 ): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé");
     const validated = operatorCapabilitiesSchema.parse(capabilities);
     const supabase = createClient();
 
