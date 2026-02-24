@@ -24,6 +24,8 @@ export async function createContrat(data: ContratFormData): Promise<ActionRespon
       commission_rate: parsed.commission_rate,
       status: parsed.status,
       conditions: parsed.conditions || null,
+      auto_renew: parsed.auto_renew ?? false,
+      renewal_duration_months: parsed.renewal_duration_months ?? 12,
     }).select("id").single();
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
@@ -59,6 +61,8 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
         commission_rate: parsed.commission_rate,
         status: parsed.status,
         conditions: parsed.conditions || null,
+        auto_renew: parsed.auto_renew ?? false,
+        renewal_duration_months: parsed.renewal_duration_months ?? 12,
       })
       .eq("id", id)
       .eq("organisation_id", profile.organisation_id);

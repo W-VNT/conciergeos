@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -53,12 +54,15 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
       commission_rate: contrat?.commission_rate ?? 20,
       status: contrat?.status === "SIGNE" ? "ACTIF" : (contrat?.status ?? "ACTIF"),
       conditions: contrat?.conditions ?? "",
+      auto_renew: contrat?.auto_renew ?? false,
+      renewal_duration_months: contrat?.renewal_duration_months ?? 12,
     },
   });
   useUnsavedChanges(form.formState.isDirty);
 
   const proprioId = form.watch("proprietaire_id");
   const logementId = form.watch("logement_id");
+  const autoRenew = form.watch("auto_renew");
 
   // Auto-fill commission_rate from logement's offer tier (new contrats only)
   useEffect(() => {
@@ -326,6 +330,45 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
               placeholder="Conditions spécifiques du contrat..."
               {...form.register("conditions")}
             />
+          </div>
+
+          {/* Reconduction automatique */}
+          <div className="space-y-4 rounded-lg border p-4">
+            <div className="flex items-center space-x-3">
+              <Controller
+                name="auto_renew"
+                control={form.control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="auto_renew"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+              <Label htmlFor="auto_renew" className="cursor-pointer">
+                Reconduction automatique (tacite reconduction)
+              </Label>
+            </div>
+            {autoRenew && (
+              <div className="space-y-2 pl-7">
+                <Label htmlFor="renewal_duration_months">
+                  Durée de reconduction (mois)
+                </Label>
+                <Input
+                  id="renewal_duration_months"
+                  type="number"
+                  min="1"
+                  max="120"
+                  {...form.register("renewal_duration_months")}
+                  className="w-40"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Le contrat sera automatiquement reconduit de cette durée à son échéance.
+                  Une notification sera envoyée 30, 14 et 7 jours avant l'expiration.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

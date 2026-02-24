@@ -14,10 +14,20 @@ import {
   bulkMarkAsRead,
   bulkDeleteNotifications,
 } from "@/lib/actions/notifications";
+import { useRealtimeNotifications } from "@/lib/supabase/realtime";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Check, Trash2, CheckCheck, Bell, Loader2 } from "lucide-react";
+import {
+  Check,
+  Trash2,
+  CheckCheck,
+  Bell,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Users,
+} from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { toast } from "sonner";
@@ -43,9 +53,25 @@ export function NotificationsList({
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Sentinel element ref for IntersectionObserver
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // ---- Realtime subscription ----
+  const { latestNotification } = useRealtimeNotifications(userId);
+
+  useEffect(() => {
+    if (!latestNotification) return;
+    setNotifications((prev) => {
+      // Avoid duplicates
+      if (prev.some((n) => n.id === latestNotification.id)) return prev;
+      return [latestNotification, ...prev];
+    });
+    toast.info(latestNotification.title, {
+      description: latestNotification.message,
+    });
+  }, [latestNotification]);
 
   // ---- Infinite scroll via IntersectionObserver ----
   const loadMore = useCallback(async () => {
@@ -100,6 +126,26 @@ export function NotificationsList({
   const allSelected =
     notifications.length > 0 && selectedIds.size === notifications.length;
   const someSelected = selectedIds.size > 0;
+
+  // ---- Grouped notifications helpers ----
+  function toggleGroupExpand(groupKey: string) {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+  }
+
+  /**
+   * Parse group count from notification message.
+   * Messages like "3 missions vous ont ete assignees" contain a number.
+   */
+  function getGroupCount(notification: Notification): number | null {
+    if (!notification.group_key) return null;
+    const match = notification.message.match(/^(\d+)\s/);
+    return match ? parseInt(match[1], 10) : null;
+  }
 
   // ---- Bulk actions ----
   async function handleBulkMarkAsRead() {
@@ -159,7 +205,7 @@ export function NotificationsList({
           n.id === id ? { ...n, read_at: new Date().toISOString() } : n
         )
       );
-      toast.success("Notification marquée comme lue");
+      toast.success("Notification marquee comme lue");
     } catch {
       toast.error("Erreur lors du marquage");
     }
@@ -174,7 +220,7 @@ export function NotificationsList({
           read_at: n.read_at || new Date().toISOString(),
         }))
       );
-      toast.success("Toutes les notifications marquées comme lues");
+      toast.success("Toutes les notifications marquees comme lues");
     } catch {
       toast.error("Erreur lors du marquage");
     }
@@ -189,7 +235,7 @@ export function NotificationsList({
         next.delete(id);
         return next;
       });
-      toast.success("Notification supprimée");
+      toast.success("Notification supprimee");
     } catch {
       toast.error("Erreur lors de la suppression");
     }
@@ -221,11 +267,11 @@ export function NotificationsList({
       case "CONTRACT_EXPIRING":
         return "Contrat";
       case "RESERVATION_CREATED":
-        return "Réservation";
+        return "Reservation";
       case "TEAM_INVITATION":
         return "Invitation";
       default:
-        return "Système";
+        return "Systeme";
     }
   }
 
@@ -293,10 +339,10 @@ export function NotificationsList({
           <Checkbox
             checked={allSelected}
             onCheckedChange={toggleSelectAll}
-            aria-label="Tout sélectionner"
+            aria-label="Tout selectionner"
           />
           <span className="text-sm text-muted-foreground">
-            {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
+            {selectedIds.size} selectionne{selectedIds.size > 1 ? "s" : ""}
           </span>
           <div className="ml-auto flex gap-2">
             <Button
@@ -326,7 +372,7 @@ export function NotificationsList({
           variant="card"
           icon={Bell}
           title="Aucune notification"
-          description="Vous êtes à jour"
+          description="Vous etes a jour"
         />
       ) : (
         <div className="space-y-2">
@@ -336,10 +382,10 @@ export function NotificationsList({
               <Checkbox
                 checked={false}
                 onCheckedChange={toggleSelectAll}
-                aria-label="Tout sélectionner"
+                aria-label="Tout selectionner"
               />
               <span className="text-xs text-muted-foreground">
-                Tout sélectionner
+                Tout selectionner
               </span>
             </div>
           )}
@@ -350,6 +396,11 @@ export function NotificationsList({
             const missionType = getMissionType(notification);
             const categoryLabel = getCategoryLabel(notification);
             const isSelected = selectedIds.has(notification.id);
+            const groupCount = getGroupCount(notification);
+            const isGrouped = !!notification.group_key;
+            const isExpanded = notification.group_key
+              ? expandedGroups.has(notification.group_key)
+              : false;
 
             return (
               <Card
@@ -363,16 +414,33 @@ export function NotificationsList({
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => toggleSelect(notification.id)}
-                        aria-label={`Sélectionner la notification : ${notification.title}`}
+                        aria-label={`Selectionner la notification : ${notification.title}`}
                       />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      {/* Category badge */}
+                      {/* Category badge + group badge */}
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         <Badge variant="secondary" className="text-xs">
                           {categoryLabel}
                         </Badge>
+                        {isGrouped && groupCount && groupCount > 1 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs cursor-pointer gap-1"
+                            onClick={() =>
+                              toggleGroupExpand(notification.group_key!)
+                            }
+                          >
+                            <Users className="h-3 w-3" />
+                            {groupCount} elements
+                            {isExpanded ? (
+                              <ChevronUp className="h-3 w-3" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3" />
+                            )}
+                          </Badge>
+                        )}
                       </div>
                       {/* Title */}
                       {link !== "#" ? (
@@ -390,6 +458,24 @@ export function NotificationsList({
                       <div className="text-sm text-muted-foreground mt-1">
                         {renderMessage(notification, missionType)}
                       </div>
+
+                      {/* Expanded group details */}
+                      {isGrouped && isExpanded && (
+                        <div className="mt-2 pl-3 border-l-2 border-muted space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            Cle de groupe : {notification.group_key}
+                          </p>
+                          {notification.entity_type && notification.entity_id && (
+                            <Link
+                              href={getNotificationLink(notification)}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Voir le dernier element
+                            </Link>
+                          )}
+                        </div>
+                      )}
+
                       <p className="text-xs text-muted-foreground mt-2">
                         {formatDistanceToNow(
                           new Date(notification.created_at),
@@ -439,7 +525,7 @@ export function NotificationsList({
           {/* End of list indicator */}
           {!nextCursor && notifications.length > 0 && (
             <p className="text-center text-xs text-muted-foreground py-2">
-              Toutes les notifications ont été chargées
+              Toutes les notifications ont ete chargees
             </p>
           )}
         </div>

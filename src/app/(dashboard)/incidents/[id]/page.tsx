@@ -4,15 +4,19 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, INCIDENT_CATEGORY_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
 import { formatCurrencyDecimals } from "@/lib/format-currency";
 import { deleteIncident } from "@/lib/actions/incidents";
-import { Pencil } from "lucide-react";
+import { Pencil, History, Clock } from "lucide-react";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { UpdateIncidentStatusButton } from "@/components/shared/update-incident-status-button";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
+import { getActivityLogs } from "@/lib/actions/activity-logs";
+import { ActivityTimeline } from "@/components/shared/activity-timeline";
+import { checkIncidentSla } from "@/lib/actions/sla";
 
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -39,6 +43,12 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
     const { data } = await supabase.from("reservations").select("id, guest_name").eq("id", mission.reservation_id).eq("organisation_id", profile.organisation_id).single();
     reservation = data;
   }
+
+  // Fetch activity logs and SLA status in parallel
+  const [activityLogs, slaStatus] = await Promise.all([
+    getActivityLogs("INCIDENT", params.id),
+    checkIncidentSla(incident),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -67,6 +77,12 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between items-center"><span className="text-muted-foreground">Sévérité</span><StatusBadge value={incident.severity} label={INCIDENT_SEVERITY_LABELS[incident.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} /></div>
           <div className="flex justify-between items-center"><span className="text-muted-foreground">Statut</span><UpdateIncidentStatusButton incidentId={incident.id} currentStatus={incident.status as "OUVERT" | "EN_COURS" | "RESOLU" | "CLOS"} /></div>
+          {slaStatus.maxHours !== null && (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">SLA</span>
+              <SlaBadge slaStatus={slaStatus} />
+            </div>
+          )}
           {incident.category && <div className="flex justify-between"><span className="text-muted-foreground">Catégorie</span><span>{INCIDENT_CATEGORY_LABELS[incident.category as keyof typeof INCIDENT_CATEGORY_LABELS] ?? incident.category}</span></div>}
           {logement && <div className="flex justify-between"><span className="text-muted-foreground">Logement</span><Link href={`/logements/${logement.id}`} className="hover:underline">{logement.name}</Link></div>}
           {mission && <div className="flex justify-between"><span className="text-muted-foreground">Mission liée</span><Link href={`/missions/${mission.id}`} className="hover:underline">{MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS] ?? mission.type}</Link></div>}
@@ -93,6 +109,42 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         </Card>
       )}
       <PhotoSection organisationId={profile.organisation_id} entityType="INCIDENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={true} canDelete={true} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Historique
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ActivityTimeline logs={activityLogs} />
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function SlaBadge({ slaStatus }: { slaStatus: { isOverdue: boolean; hoursElapsed: number; maxHours: number | null } }) {
+  if (slaStatus.maxHours === null) return null;
+
+  const elapsed = Math.round(slaStatus.hoursElapsed);
+  const max = slaStatus.maxHours;
+  const ratio = elapsed / max;
+
+  let variant: "default" | "secondary" | "destructive" | "outline" = "secondary";
+  let colorClass = "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+
+  if (slaStatus.isOverdue) {
+    variant = "destructive";
+    colorClass = "";
+  } else if (ratio >= 0.75) {
+    colorClass = "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+  }
+
+  return (
+    <Badge variant={variant} className={`text-xs gap-1 ${slaStatus.isOverdue ? "" : colorClass}`}>
+      <Clock className="h-3 w-3" />
+      Délai: {elapsed}h / {max}h max
+    </Badge>
   );
 }

@@ -15,6 +15,11 @@ import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
 import { MissionStickyBar } from "@/components/missions/mission-sticky-bar";
 import { LiveTimer } from "@/components/missions/live-timer";
+import { PhotoSection } from "@/components/shared/photo-section";
+import { CommentsSection } from "@/components/missions/comments-section";
+import { checkMissionSla } from "@/lib/actions/sla";
+import { Badge } from "@/components/ui/badge";
+import type { MissionComment, SlaConfig } from "@/types/database";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -93,6 +98,42 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
       : Promise.resolve({ data: null }),
   ]);
 
+  // Fetch mission photos
+  const { data: missionAttachments } = await supabase
+    .from("attachments")
+    .select("*")
+    .eq("entity_type", "MISSION")
+    .eq("entity_id", params.id)
+    .eq("organisation_id", profile.organisation_id)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  // Fetch comments for this mission
+  const { data: comments } = await supabase
+    .from("mission_comments")
+    .select("*, author:profiles(full_name)")
+    .eq("mission_id", params.id)
+    .eq("organisation_id", profile.organisation_id)
+    .order("created_at");
+
+  // Fetch SLA configs for the organisation
+  const { data: slaConfigs } = await supabase
+    .from("sla_configs")
+    .select("*")
+    .eq("organisation_id", profile.organisation_id)
+    .eq("entity_type", "MISSION");
+
+  // Calculate SLA status
+  const slaStatus = await checkMissionSla(
+    {
+      type: mission.type,
+      status: mission.status,
+      scheduled_at: mission.scheduled_at,
+      completed_at: mission.completed_at,
+    },
+    (slaConfigs ?? []) as SlaConfig[]
+  );
+
   const logement = mission.logement as {
     id: string;
     name: string;
@@ -146,6 +187,27 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                 : `${mission.time_spent_minutes}min`}
             </span>
           </div>
+        </div>
+      )}
+
+      {/* SLA Indicator */}
+      {slaStatus.maxHours !== null && mission.status !== "TERMINE" && mission.status !== "ANNULE" && (
+        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm ${
+          slaStatus.isOverdue
+            ? "bg-red-50 border-red-200 text-red-700"
+            : slaStatus.percentElapsed !== null && slaStatus.percentElapsed > 75
+              ? "bg-orange-50 border-orange-200 text-orange-700"
+              : "bg-green-50 border-green-200 text-green-700"
+        }`}>
+          <Clock className="h-4 w-4 flex-shrink-0" />
+          <span className="font-medium">
+            Délai : {Math.round(slaStatus.hoursElapsed)}h / {slaStatus.maxHours}h max
+          </span>
+          {slaStatus.isOverdue && (
+            <Badge variant="destructive" className="ml-auto text-xs">
+              SLA dépassé (+{slaStatus.hoursOverdue}h)
+            </Badge>
+          )}
         </div>
       )}
 
@@ -782,6 +844,24 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           <ChecklistManager missionId={params.id} />
         </>
       )}
+
+      {/* Commentaires */}
+      <CommentsSection
+        missionId={params.id}
+        initialComments={(comments ?? []) as MissionComment[]}
+        currentUserName={profile.full_name}
+      />
+
+      {/* Photos de la mission */}
+      <PhotoSection
+        organisationId={profile.organisation_id}
+        entityType="MISSION"
+        entityId={params.id}
+        initialAttachments={missionAttachments ?? []}
+        canUpload={true}
+        canDelete={admin}
+        title="Photos de la mission"
+      />
 
       {/* Mobile sticky action bar */}
       <MissionStickyBar

@@ -44,7 +44,7 @@ export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
           </span>
         </Link>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <NotificationBell />
+          <NotificationBell userId={profile.id} />
           <ThemeToggle />
           <UserMenu profile={profile} />
         </div>

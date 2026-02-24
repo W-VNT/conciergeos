@@ -30,6 +30,13 @@ export type NotificationType =
   | 'TEAM_INVITATION'
   | 'RESERVATION_CREATED'
   | 'SYSTEM';
+export type MessageTemplateType = 'CONFIRMATION' | 'RAPPEL' | 'REMERCIEMENT' | 'ACCES' | 'CUSTOM';
+export type MessageChannel = 'EMAIL' | 'SMS';
+export type MessageStatus = 'PENDING' | 'SENT' | 'FAILED';
+export type RecurrenceFrequency = 'HEBDOMADAIRE' | 'BIMENSUEL' | 'MENSUEL';
+export type SlaEntityType = 'MISSION' | 'INCIDENT';
+export type ActivityAction = 'STATUS_CHANGED' | 'COMMENT_ADDED' | 'ASSIGNED' | 'CREATED' | 'UPDATED' | 'DELETED';
+export type EmailDigest = 'NONE' | 'QUOTIDIEN' | 'HEBDOMADAIRE';
 export type SeasonType = 'HAUTE' | 'BASSE' | 'MOYENNE';
 export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'CONSOMMABLE' | 'AUTRE';
 export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
@@ -93,6 +100,9 @@ export interface Contrat {
   status: ContractStatus;
   conditions: string | null;
   pdf_downloaded_at: string | null;
+  auto_renew: boolean;
+  renewal_duration_months: number;
+  renewal_notified_at: string | null;
   created_at: string;
   updated_at: string;
   // Joined
@@ -283,6 +293,9 @@ export interface Attachment {
   entity_id: string;
   storage_path: string;
   mime_type: string | null;
+  caption: string | null;
+  position: number;
+  is_main: boolean;
   created_at: string;
 }
 
@@ -309,6 +322,7 @@ export interface Notification {
   entity_type: EntityType | null;
   entity_id: string | null;
   read_at: string | null;
+  group_key: string | null;
   created_at: string;
   metadata: { mission_type?: string; [key: string]: string | undefined } | null;
 }
@@ -382,6 +396,106 @@ export interface IncidentResponseTemplate {
   content: string;
   created_at: string;
   updated_at: string;
+}
+
+// Mission Comments
+export interface MissionComment {
+  id: string;
+  organisation_id: string;
+  mission_id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  // Joined
+  author?: Profile | null;
+}
+
+// Mission Recurrences
+export interface MissionRecurrence {
+  id: string;
+  organisation_id: string;
+  logement_id: string;
+  type: MissionType;
+  frequency: RecurrenceFrequency;
+  day_of_week: number | null;
+  day_of_month: number | null;
+  scheduled_time: string;
+  assigned_to: string | null;
+  priority: MissionPriority;
+  notes: string | null;
+  active: boolean;
+  last_generated_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+  assignee?: Profile | null;
+}
+
+// SLA Configuration
+export interface SlaConfig {
+  id: string;
+  organisation_id: string;
+  entity_type: SlaEntityType;
+  subtype: string;
+  max_hours: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Activity Logs
+export interface ActivityLog {
+  id: string;
+  organisation_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  actor_id: string | null;
+  old_value: string | null;
+  new_value: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  // Joined
+  actor?: Profile | null;
+}
+
+// Message Templates
+export interface MessageTemplate {
+  id: string;
+  organisation_id: string;
+  name: string;
+  subject: string;
+  body: string;
+  type: MessageTemplateType;
+  channel: MessageChannel;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Guest Messages
+export interface GuestMessage {
+  id: string;
+  organisation_id: string;
+  reservation_id: string;
+  template_id: string | null;
+  channel: MessageChannel;
+  recipient: string;
+  subject: string | null;
+  body: string;
+  status: MessageStatus;
+  sent_at: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+// Guest Portal Tokens
+export interface GuestPortalToken {
+  id: string;
+  reservation_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
 }
 
 // Operator Capabilities for Auto-Assignment
@@ -535,4 +649,24 @@ export const EQUIPEMENT_ETAT_LABELS: Record<EquipementEtat, string> = {
   BON: 'Bon état',
   MOYEN: 'État moyen',
   A_REMPLACER: 'À remplacer',
+};
+
+export const MESSAGE_TEMPLATE_TYPE_LABELS: Record<MessageTemplateType, string> = {
+  CONFIRMATION: 'Confirmation',
+  RAPPEL: 'Rappel',
+  REMERCIEMENT: 'Remerciement',
+  ACCES: 'Accès',
+  CUSTOM: 'Personnalisé',
+};
+
+export const RECURRENCE_FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
+  HEBDOMADAIRE: 'Hebdomadaire',
+  BIMENSUEL: 'Bimensuel',
+  MENSUEL: 'Mensuel',
+};
+
+export const EMAIL_DIGEST_LABELS: Record<EmailDigest, string> = {
+  NONE: 'Aucun',
+  QUOTIDIEN: 'Quotidien',
+  HEBDOMADAIRE: 'Hebdomadaire',
 };

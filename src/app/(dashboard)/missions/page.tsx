@@ -8,7 +8,11 @@ import { Pagination } from "@/components/shared/pagination";
 import { MISSION_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
 import { MissionsTableWithSelection } from "@/components/missions/missions-table-with-selection";
 import { OperatorStatsSection } from "@/components/missions/operator-stats-section";
+import { RecurrencesSection } from "@/components/missions/recurrences-section";
+import { SlaConfigSection } from "@/components/missions/sla-config-section";
 import { getOperatorStats } from "@/lib/actions/operator-stats";
+import { checkMissionSla } from "@/lib/actions/sla";
+import type { SlaConfig, MissionRecurrence } from "@/types/database";
 
 export const metadata = { title: "Missions" };
 
@@ -64,11 +68,60 @@ export default async function MissionsPage({
   // Fetch operator stats for admins
   const operatorStats = admin ? await getOperatorStats(profile.organisation_id) : [];
 
+  // Fetch recurrences, logements, and SLA configs for admins
+  const [
+    { data: recurrences },
+    { data: logements },
+    { data: slaConfigs },
+  ] = admin
+    ? await Promise.all([
+        supabase
+          .from("mission_recurrences")
+          .select("*, logement:logements(name), assignee:profiles(full_name)")
+          .eq("organisation_id", profile.organisation_id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("logements")
+          .select("id, name")
+          .eq("organisation_id", profile.organisation_id)
+          .eq("status", "ACTIF")
+          .order("name"),
+        supabase
+          .from("sla_configs")
+          .select("*")
+          .eq("organisation_id", profile.organisation_id),
+      ])
+    : [{ data: null }, { data: null }, { data: null }];
+
+  // Compute SLA overdue status for each mission
+  const missionSlaConfigs = ((slaConfigs ?? []) as SlaConfig[]).filter(
+    (c) => c.entity_type === "MISSION"
+  );
+  const missionsWithSla = await Promise.all(
+    missions.map(async (m) => ({
+      ...m,
+      _slaOverdue: (await checkMissionSla(
+        { type: m.type, status: m.status, scheduled_at: m.scheduled_at, completed_at: m.completed_at },
+        missionSlaConfigs
+      )).isOverdue,
+    }))
+  );
+
   return (
     <div>
       <PageHeader title="Missions" createHref="/missions/new" createLabel="Nouvelle mission" />
       {admin && operatorStats.length > 0 && (
         <OperatorStatsSection stats={operatorStats} />
+      )}
+      {admin && (
+        <RecurrencesSection
+          initialRecurrences={(recurrences ?? []) as MissionRecurrence[]}
+          logements={(logements ?? []) as Array<{ id: string; name: string }>}
+          operators={(operators ?? []).map((op) => ({ id: op.id, full_name: op.full_name }))}
+        />
+      )}
+      {admin && (
+        <SlaConfigSection initialConfigs={(slaConfigs ?? []) as SlaConfig[]} />
       )}
       {/* Filtres mobile : chips scrollables */}
       <div className="md:hidden space-y-2 mb-4">
@@ -85,7 +138,7 @@ export default async function MissionsPage({
         <StatusFilter paramName="assigned_to" options={operatorOptions} placeholder="Tous les opérateurs" />
       </div>
       <MissionsTableWithSelection
-        missions={missions}
+        missions={missionsWithSla}
         organisationId={profile.organisation_id}
       />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />

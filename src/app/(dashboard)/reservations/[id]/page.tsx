@@ -8,9 +8,14 @@ import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS, MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/types/database";
 import { deleteReservation, terminateReservation } from "@/lib/actions/reservations";
+import { getMessagesForReservation, getMessageTemplates } from "@/lib/actions/guest-messaging";
+import { getPortalTokenForReservation } from "@/lib/actions/guest-portal";
 import { formatCurrencyDecimals as formatEur } from "@/lib/format-currency";
-import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle } from "lucide-react";
+import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle, Mail, Globe } from "lucide-react";
 import Link from "next/link";
+import { SendMessageDialog } from "@/components/messaging/send-message-dialog";
+import { PortalLinkSection } from "@/components/messaging/portal-link-section";
+import type { Reservation, Logement, MessageTemplate, GuestMessage, GuestPortalToken } from "@/types/database";
 
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -32,7 +37,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
 
   // Parallel fetches
-  const [{ data: missions }, { data: pastReservations }] = await Promise.all([
+  const [{ data: missions }, { data: pastReservations }, messages, templates, portalToken] = await Promise.all([
     supabase
       .from("missions")
       .select("id, type, status, scheduled_at")
@@ -49,7 +54,16 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           .order("check_in_date", { ascending: false })
           .limit(5)
       : Promise.resolve({ data: [] }),
+    getMessagesForReservation(params.id),
+    getMessageTemplates(),
+    getPortalTokenForReservation(params.id),
   ]);
+
+  const MESSAGE_STATUS_LABELS: Record<string, string> = {
+    PENDING: "En attente",
+    SENT: "Envoyé",
+    FAILED: "Échec",
+  };
 
   return (
     <div className="space-y-6">
@@ -243,6 +257,79 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           </CardContent>
         </Card>
       )}
+
+      {/* Portail Voyageur (R8) */}
+      {admin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Portail voyageur
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PortalLinkSection
+              reservationId={reservation.id}
+              existingToken={portalToken}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Messages voyageur (R3) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Messages voyageur
+            </CardTitle>
+            {admin && (
+              <SendMessageDialog
+                reservation={reservation as Reservation & { logement?: Logement | null }}
+                templates={templates}
+              />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {messages && messages.length > 0 ? (
+            <div className="space-y-3">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className="flex items-start justify-between p-3 rounded border text-sm"
+                >
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge
+                        value={msg.status}
+                        label={MESSAGE_STATUS_LABELS[msg.status] ?? msg.status}
+                      />
+                      <StatusBadge
+                        value={msg.channel === "EMAIL" ? "CHECKIN" : "CHECKOUT"}
+                        label={msg.channel}
+                      />
+                    </div>
+                    {msg.subject && (
+                      <p className="font-medium truncate">{msg.subject}</p>
+                    )}
+                    <p className="text-muted-foreground line-clamp-2">{msg.body}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {msg.recipient}
+                      {msg.sent_at && (
+                        <> &middot; Envoyé le {new Date(msg.sent_at).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Aucun message envoyé</p>
+          )}
+        </CardContent>
+      </Card>
 
       {reservation.notes && (
         <Card>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,8 @@ interface CalendarProps {
   reservations: Reservation[];
   logements: CalendarLogement[];
   operators: CalendarOperator[];
+  initialMonth?: number; // 1-indexed
+  initialYear?: number;
 }
 
 const MISSION_TYPE_COLORS: Record<MissionType, string> = {
@@ -63,8 +66,8 @@ const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const DAYS_SHORT = ["L", "M", "M", "J", "V", "S", "D"];
 const DAYS_FULL = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const MONTHS = [
-  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+  "Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre",
 ];
 
 function getWeekStart(date: Date): Date {
@@ -80,8 +83,25 @@ function isSameDay(a: Date, b: Date) {
   return a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
 }
 
-export default function Calendar({ missions, reservations, logements, operators }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export default function Calendar({
+  missions,
+  reservations,
+  logements,
+  operators,
+  initialMonth,
+  initialYear,
+}: CalendarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize from props (which come from searchParams on the server)
+  const now = new Date();
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (initialMonth && initialYear) {
+      return new Date(initialYear, initialMonth - 1, 1);
+    }
+    return new Date();
+  });
   const [view, setView] = useState<ViewType>("semaine");
 
   useEffect(() => {
@@ -89,6 +109,7 @@ export default function Calendar({ missions, reservations, logements, operators 
       setView("jour");
     }
   }, []);
+
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | "ALL">("ALL");
   const [filterLogement, setFilterLogement] = useState<string>("ALL");
   const [filterOperator, setFilterOperator] = useState<string>("ALL");
@@ -96,27 +117,80 @@ export default function Calendar({ missions, reservations, logements, operators 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  /**
+   * Navigate to a new date by updating URL searchParams.
+   * This triggers a server-side reload with only that month's data.
+   */
+  const navigateToMonth = useCallback(
+    (newDate: Date) => {
+      const m = newDate.getMonth() + 1; // 1-indexed
+      const y = newDate.getFullYear();
+      router.push(`/calendrier?month=${m}&year=${y}`, { scroll: false });
+    },
+    [router]
+  );
+
   // --- Navigation ---
   function goToPrev() {
     const d = new Date(currentDate);
-    if (view === "jour") d.setDate(d.getDate() - 1);
-    else if (view === "semaine") d.setDate(d.getDate() - 7);
-    else if (view === "mois") d.setMonth(d.getMonth() - 1);
-    else d.setFullYear(d.getFullYear() - 1);
-    setCurrentDate(d);
+    if (view === "jour") {
+      d.setDate(d.getDate() - 1);
+      // Only reload from server if we cross a month boundary
+      if (d.getMonth() !== currentDate.getMonth()) {
+        navigateToMonth(d);
+      }
+      setCurrentDate(d);
+    } else if (view === "semaine") {
+      d.setDate(d.getDate() - 7);
+      if (d.getMonth() !== currentDate.getMonth()) {
+        navigateToMonth(d);
+      }
+      setCurrentDate(d);
+    } else if (view === "mois") {
+      d.setMonth(d.getMonth() - 1);
+      navigateToMonth(d);
+      setCurrentDate(d);
+    } else {
+      d.setFullYear(d.getFullYear() - 1);
+      navigateToMonth(d);
+      setCurrentDate(d);
+    }
   }
 
   function goToNext() {
     const d = new Date(currentDate);
-    if (view === "jour") d.setDate(d.getDate() + 1);
-    else if (view === "semaine") d.setDate(d.getDate() + 7);
-    else if (view === "mois") d.setMonth(d.getMonth() + 1);
-    else d.setFullYear(d.getFullYear() + 1);
-    setCurrentDate(d);
+    if (view === "jour") {
+      d.setDate(d.getDate() + 1);
+      if (d.getMonth() !== currentDate.getMonth()) {
+        navigateToMonth(d);
+      }
+      setCurrentDate(d);
+    } else if (view === "semaine") {
+      d.setDate(d.getDate() + 7);
+      if (d.getMonth() !== currentDate.getMonth()) {
+        navigateToMonth(d);
+      }
+      setCurrentDate(d);
+    } else if (view === "mois") {
+      d.setMonth(d.getMonth() + 1);
+      navigateToMonth(d);
+      setCurrentDate(d);
+    } else {
+      d.setFullYear(d.getFullYear() + 1);
+      navigateToMonth(d);
+      setCurrentDate(d);
+    }
   }
 
   function goToToday() {
-    setCurrentDate(new Date());
+    const today = new Date();
+    if (
+      today.getMonth() !== currentDate.getMonth() ||
+      today.getFullYear() !== currentDate.getFullYear()
+    ) {
+      navigateToMonth(today);
+    }
+    setCurrentDate(today);
   }
 
   // --- Header label ---
@@ -130,9 +204,9 @@ export default function Calendar({ missions, reservations, logements, operators 
       const end = new Date(start);
       end.setDate(end.getDate() + 6);
       if (start.getMonth() === end.getMonth()) {
-        return `${start.getDate()} – ${end.getDate()} ${MONTHS[start.getMonth()]} ${start.getFullYear()}`;
+        return `${start.getDate()} \u2013 ${end.getDate()} ${MONTHS[start.getMonth()]} ${start.getFullYear()}`;
       }
-      return `${start.getDate()} ${MONTHS[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]} ${end.getFullYear()}`;
+      return `${start.getDate()} ${MONTHS[start.getMonth()]} \u2013 ${end.getDate()} ${MONTHS[end.getMonth()]} ${end.getFullYear()}`;
     }
     if (view === "annee") return `${year}`;
     return `${MONTHS[month]} ${year}`;
@@ -207,7 +281,7 @@ export default function Calendar({ missions, reservations, logements, operators 
     { key: "jour", label: "Jour" },
     { key: "semaine", label: "Semaine" },
     { key: "mois", label: "Mois", mobileClass: "hidden sm:flex" },
-    { key: "annee", label: "Année", mobileClass: "hidden sm:flex" },
+    { key: "annee", label: "Annee", mobileClass: "hidden sm:flex" },
   ];
 
   return (
@@ -215,13 +289,13 @@ export default function Calendar({ missions, reservations, logements, operators 
       {/* Controls */}
       <Card className="p-4">
         <div className="space-y-3">
-          {/* Row 1: Navigation centrée */}
+          {/* Row 1: Navigation centree */}
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="icon" onClick={goToPrev} aria-label={view === "jour" ? "Jour précédent" : view === "semaine" ? "Semaine précédente" : view === "mois" ? "Mois précédent" : "Année précédente"}>
+            <Button variant="outline" size="icon" onClick={goToPrev} aria-label={view === "jour" ? "Jour precedent" : view === "semaine" ? "Semaine precedente" : view === "mois" ? "Mois precedent" : "Annee precedente"}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h2 className="text-base font-semibold text-center">{getHeaderLabel()}</h2>
-            <Button variant="outline" size="icon" onClick={goToNext} aria-label={view === "jour" ? "Jour suivant" : view === "semaine" ? "Semaine suivante" : view === "mois" ? "Mois suivant" : "Année suivante"}>
+            <Button variant="outline" size="icon" onClick={goToNext} aria-label={view === "jour" ? "Jour suivant" : view === "semaine" ? "Semaine suivante" : view === "mois" ? "Mois suivant" : "Annee suivante"}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -278,11 +352,11 @@ export default function Calendar({ missions, reservations, logements, operators 
             <Select value={filterOperator} onValueChange={setFilterOperator}>
               <SelectTrigger className="!h-9 text-sm hidden sm:flex w-auto px-3">
                 <span className="truncate">
-                  {filterOperator === "ALL" ? "Filtrer par opérateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Opérateur"}
+                  {filterOperator === "ALL" ? "Filtrer par operateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Operateur"}
                 </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous les opérateurs</SelectItem>
+                <SelectItem value="ALL">Tous les operateurs</SelectItem>
                 {operators.map((o) => (
                   <SelectItem key={o.id} value={o.id}>{o.full_name}</SelectItem>
                 ))}
@@ -308,11 +382,11 @@ export default function Calendar({ missions, reservations, logements, operators 
             <Select value={filterOperator} onValueChange={setFilterOperator}>
               <SelectTrigger className="!h-9 text-sm flex-1">
                 <span className="truncate">
-                  {filterOperator === "ALL" ? "Opérateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Opérateur"}
+                  {filterOperator === "ALL" ? "Operateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Operateur"}
                 </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous les opérateurs</SelectItem>
+                <SelectItem value="ALL">Tous les operateurs</SelectItem>
                 {operators.map((o) => (
                   <SelectItem key={o.id} value={o.id}>{o.full_name}</SelectItem>
                 ))}
@@ -322,7 +396,7 @@ export default function Calendar({ missions, reservations, logements, operators 
         </div>
       </Card>
 
-      {/* ── VUE JOUR ── */}
+      {/* -- VUE JOUR -- */}
       {view === "jour" && (() => {
         const dayReservations = getReservationsForDate(currentDate);
         const dayMissions = getMissionsForDate(currentDate).sort(
@@ -346,7 +420,7 @@ export default function Calendar({ missions, reservations, logements, operators 
             {/* Reservations - all day banner */}
             {dayReservations.length > 0 && (
               <div className="p-3 border-b bg-muted/30">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Réservations</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Reservations</p>
                 <div className="space-y-1.5">
                   {dayReservations.map((r) => {
                     const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
@@ -367,9 +441,9 @@ export default function Calendar({ missions, reservations, logements, operators 
             {hasEvents ? (
               <div className="divide-y">
                 {HOURS.map((hour) => {
-                  const missions = missionsByHour[hour] || [];
-                  const now = new Date();
-                  const isCurrentHour = isToday(currentDate) && now.getHours() === hour;
+                  const hourMissions = missionsByHour[hour] || [];
+                  const nowDate = new Date();
+                  const isCurrentHour = isToday(currentDate) && nowDate.getHours() === hour;
 
                   return (
                     <div key={hour} className={`flex min-h-[3.5rem] ${isCurrentHour ? "bg-primary/5" : ""}`}>
@@ -377,7 +451,7 @@ export default function Calendar({ missions, reservations, logements, operators 
                         {String(hour).padStart(2, "0")}:00
                       </div>
                       <div className="flex-1 px-2 py-2 space-y-1">
-                        {missions.map((m) => {
+                        {hourMissions.map((m) => {
                           const logement = m.logement as { name: string } | null;
                           return (
                             <Link key={m.id} href={`/missions/${m.id}`} className="block">
@@ -400,14 +474,14 @@ export default function Calendar({ missions, reservations, logements, operators 
               <EmptyState
                 variant="inline"
                 icon={CalendarIcon}
-                title="Aucun événement ce jour"
+                title="Aucun evenement ce jour"
               />
             )}
           </Card>
         );
       })()}
 
-      {/* ── VUE SEMAINE ── */}
+      {/* -- VUE SEMAINE -- */}
       {view === "semaine" && (
         <Card className="p-2 sm:p-4">
           <div className="grid grid-cols-7 gap-px bg-border">
@@ -453,7 +527,7 @@ export default function Calendar({ missions, reservations, logements, operators 
         </Card>
       )}
 
-      {/* ── VUE MOIS ── */}
+      {/* -- VUE MOIS -- */}
       {view === "mois" && (
         <Card className="p-4">
           <div className="grid grid-cols-7 gap-px bg-border">
@@ -517,7 +591,7 @@ export default function Calendar({ missions, reservations, logements, operators 
         </Card>
       )}
 
-      {/* ── VUE ANNÉE ── */}
+      {/* -- VUE ANNEE -- */}
       {view === "annee" && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 12 }, (_, i) => {
@@ -539,8 +613,10 @@ export default function Calendar({ missions, reservations, logements, operators 
                 key={i}
                 className="p-3 cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => {
-                  setCurrentDate(new Date(year, i, 1));
+                  const newDate = new Date(year, i, 1);
+                  setCurrentDate(newDate);
                   setView("mois");
+                  navigateToMonth(newDate);
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -561,7 +637,7 @@ export default function Calendar({ missions, reservations, logements, operators 
                       <div key={idx} className={`text-[11px] text-center py-0.5 rounded-full ${
                         isCurrentDay ? "bg-primary text-primary-foreground font-semibold" : "text-foreground"
                       } ${day === null ? "invisible" : ""}`}>
-                        {day ?? "·"}
+                        {day ?? "\u00B7"}
                       </div>
                     );
                   })}
@@ -577,7 +653,7 @@ export default function Calendar({ missions, reservations, logements, operators 
         <Card className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-semibold mb-2">Réservations</h3>
+              <h3 className="text-sm font-semibold mb-2">Reservations</h3>
               <div className="flex flex-wrap gap-3">
                 {Object.entries(RESERVATION_STATUS_LABELS).map(([key, label]) => (
                   <div key={key} className="flex items-center gap-2">

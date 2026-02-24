@@ -10,12 +10,17 @@ import type { Mission } from "@/types/database";
 import { BulkAssignmentToolbar } from "./bulk-assignment-toolbar";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { User, ClipboardList } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate, formatTime } from "@/lib/format-date";
 
+interface MissionWithSla extends Mission {
+  _slaOverdue?: boolean;
+}
+
 interface Props {
-  missions: Mission[];
+  missions: MissionWithSla[];
   organisationId: string;
 }
 
@@ -91,9 +96,16 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                 </div>
               </Link>
 
-              {/* Footer : statut + bouton terminé */}
+              {/* Footer : statut + SLA + bouton terminé */}
               <div className="flex items-center justify-between pl-8 mt-2 pt-2 border-t">
-                <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
+                <div className="flex items-center gap-1.5">
+                  <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
+                  {m._slaOverdue && m.status !== "TERMINE" && m.status !== "ANNULE" && (
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                      SLA
+                    </Badge>
+                  )}
+                </div>
                 {m.status !== "TERMINE" && m.status !== "ANNULE" && (
                   <CompleteMissionButton missionId={m.id} />
                 )}
@@ -167,7 +179,14 @@ export function MissionsTableWithSelection({ missions, organisationId }: Props) 
                     <StatusBadge value={m.priority} label={MISSION_PRIORITY_LABELS[m.priority]} />
                   </TableCell>
                   <TableCell>
-                    <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
+                    <div className="flex items-center gap-1.5">
+                      <StatusBadge value={m.status} label={MISSION_STATUS_LABELS[m.status]} />
+                      {m._slaOverdue && m.status !== "TERMINE" && m.status !== "ANNULE" && (
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                          SLA
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {m.status !== "TERMINE" && m.status !== "ANNULE" && (

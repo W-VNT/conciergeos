@@ -1,72 +1,63 @@
-import { requireProfile } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { requireProfile, isAdmin } from "@/lib/auth";
+import { getCalendarData, getCalendarFilters } from "@/lib/actions/calendar";
 import Calendar from "@/components/calendrier/calendar";
-import type { Mission, Reservation } from "@/types/database";
+import { IcalExportButton } from "@/components/calendrier/ical-export-button";
 
 export const metadata = { title: "Calendrier" };
 export const dynamic = "force-dynamic";
 
-export default async function CalendrierPage() {
+interface CalendrierPageProps {
+  searchParams: { month?: string; year?: string };
+}
+
+export default async function CalendrierPage({
+  searchParams,
+}: CalendrierPageProps) {
   const profile = await requireProfile();
-  const supabase = await createClient();
 
-  // Get missions for the organisation, scoped by role
-  let missionsQuery = supabase
-    .from("missions")
-    .select(`
-      *,
-      logement:logements(name),
-      assignee:profiles(full_name)
-    `)
-    .eq("organisation_id", profile.organisation_id);
+  const now = new Date();
+  const month = searchParams.month
+    ? parseInt(searchParams.month, 10)
+    : now.getMonth() + 1; // 1-indexed
+  const year = searchParams.year
+    ? parseInt(searchParams.year, 10)
+    : now.getFullYear();
 
-  // OPERATEUR role: only see their own assigned missions
-  if (profile.role === "OPERATEUR") {
-    missionsQuery = missionsQuery.eq("assigned_to", profile.id);
-  }
+  // Validate month and year
+  const validMonth = month >= 1 && month <= 12 ? month : now.getMonth() + 1;
+  const validYear =
+    year >= 2020 && year <= 2100 ? year : now.getFullYear();
 
-  const { data: missions } = await missionsQuery
-    .order("scheduled_at", { ascending: true });
+  // Fetch data in parallel
+  const [{ missions, reservations }, { logements, operators }] =
+    await Promise.all([
+      getCalendarData(validMonth, validYear),
+      getCalendarFilters(),
+    ]);
 
-  // Get all reservations for the organisation
-  const { data: reservations } = await supabase
-    .from("reservations")
-    .select(`
-      *,
-      logement:logements(name)
-    `)
-    .eq("organisation_id", profile.organisation_id)
-    .order("check_in_date", { ascending: true });
-
-  // Fetch logements for filter dropdown
-  const { data: logements } = await supabase
-    .from("logements")
-    .select("id, name")
-    .eq("organisation_id", profile.organisation_id)
-    .order("name");
-
-  // Fetch operators for filter dropdown
-  const { data: operators } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .eq("organisation_id", profile.organisation_id)
-    .eq("role", "OPERATEUR")
-    .order("full_name");
+  const admin = isAdmin(profile);
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Calendrier</h1>
-        <p className="text-muted-foreground mt-2">
-          Vue mensuelle des missions et réservations
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Calendrier</h1>
+          <p className="text-muted-foreground mt-2">
+            Vue mensuelle des missions et reservations
+          </p>
+        </div>
+        {admin && (
+          <IcalExportButton organisationId={profile.organisation_id} />
+        )}
       </div>
 
       <Calendar
-        missions={(missions as Mission[]) || []}
-        reservations={(reservations as Reservation[]) || []}
-        logements={logements || []}
-        operators={operators || []}
+        missions={missions}
+        reservations={reservations}
+        logements={logements}
+        operators={operators}
+        initialMonth={validMonth}
+        initialYear={validYear}
       />
     </div>
   );

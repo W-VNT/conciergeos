@@ -36,6 +36,11 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+interface SlaConfigItem {
+  subtype: string;
+  max_hours: number;
+}
+
 interface Incident {
   id: string;
   description: string;
@@ -56,9 +61,20 @@ interface Prestataire {
 interface Props {
   incidents: Incident[];
   organisationId: string;
+  slaConfigs?: SlaConfigItem[];
 }
 
-export function IncidentsTableWithSelection({ incidents, organisationId }: Props) {
+function getSlaStatus(incident: Incident, slaConfigs: SlaConfigItem[]) {
+  const config = slaConfigs.find((c) => c.subtype === incident.severity);
+  if (!config) return null;
+  if (["RESOLU", "CLOS"].includes(incident.status)) return null;
+
+  const hoursElapsed = (Date.now() - new Date(incident.opened_at).getTime()) / (1000 * 60 * 60);
+  const isOverdue = hoursElapsed > config.max_hours;
+  return { isOverdue, hoursElapsed: Math.round(hoursElapsed), maxHours: config.max_hours };
+}
+
+export function IncidentsTableWithSelection({ incidents, organisationId, slaConfigs = [] }: Props) {
   const {
     selectedIds,
     toggleSelection,
@@ -254,6 +270,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
               <TableHead>Prestataire</TableHead>
               <TableHead>Ouvert le</TableHead>
               <TableHead>Statut</TableHead>
+              {slaConfigs.length > 0 && <TableHead>SLA</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -312,6 +329,23 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                       label={INCIDENT_STATUS_LABELS[incident.status as keyof typeof INCIDENT_STATUS_LABELS]}
                     />
                   </TableCell>
+                  {slaConfigs.length > 0 && (
+                    <TableCell>
+                      {(() => {
+                        const sla = getSlaStatus(incident, slaConfigs);
+                        if (!sla) return <span className="text-muted-foreground">—</span>;
+                        return sla.isOverdue ? (
+                          <Badge variant="destructive" className="text-xs whitespace-nowrap">
+                            {sla.hoursElapsed}h / {sla.maxHours}h
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs whitespace-nowrap">
+                            {sla.hoursElapsed}h / {sla.maxHours}h
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}
@@ -320,7 +354,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                 variant="table"
                 icon={AlertTriangle}
                 title="Aucun incident trouvé"
-                colSpan={8}
+                colSpan={slaConfigs.length > 0 ? 9 : 8}
               />
             )}
           </TableBody>

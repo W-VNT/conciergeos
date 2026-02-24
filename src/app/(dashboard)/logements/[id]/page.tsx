@@ -47,7 +47,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
   if (!logement) notFound();
 
   const [{ data: attachments }, { data: missions }, { data: incidents }, { data: reservations }] = await Promise.all([
-    supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).eq("organisation_id", profile.organisation_id).order("created_at", { ascending: false }),
+    supabase.from("attachments").select("*").eq("entity_type", "LOGEMENT").eq("entity_id", params.id).eq("organisation_id", profile.organisation_id).order("position", { ascending: true }).order("created_at", { ascending: true }),
     supabase.from("missions").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("scheduled_at", { ascending: false }).limit(100),
     supabase.from("incidents").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(100),
     supabase.from("reservations").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("check_in_date", { ascending: false }).limit(100),

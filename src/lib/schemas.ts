@@ -110,6 +110,8 @@ export const contratSchema = z.object({
   commission_rate: z.coerce.number().min(0, 'La commission doit être positive').max(100, 'La commission ne peut pas dépasser 100%'),
   status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE']).default('ACTIF'),
   conditions: z.string().max(10000, 'Conditions trop longues').default(''),
+  auto_renew: z.boolean().default(false),
+  renewal_duration_months: z.coerce.number().int().min(1).max(120).default(12),
 }).refine((data) => new Date(data.start_date) < new Date(data.end_date), {
   message: 'La date de fin doit être après la date de début',
   path: ['end_date'],
@@ -166,3 +168,54 @@ export const bulkAssignmentSchema = z.object({
 export const autoAssignmentSchema = z.object({
   mission_ids: z.array(z.string().uuid()).min(1, 'Au moins une mission doit être sélectionnée').max(100, 'Maximum 100 missions à la fois'),
 });
+
+// Mission Comments (MI1)
+export const missionCommentSchema = z.object({
+  mission_id: z.string().uuid('Mission invalide'),
+  content: z.string().min(1, 'Commentaire requis').max(5000, 'Commentaire trop long (5000 caractères max)'),
+});
+export type MissionCommentFormData = z.infer<typeof missionCommentSchema>;
+
+// Mission Recurrences (MI4)
+export const missionRecurrenceSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  type: z.enum(['CHECKIN', 'CHECKOUT', 'MENAGE', 'INTERVENTION', 'URGENCE']),
+  frequency: z.enum(['HEBDOMADAIRE', 'BIMENSUEL', 'MENSUEL']),
+  day_of_week: z.coerce.number().int().min(0).max(6).nullable().default(null),
+  day_of_month: z.coerce.number().int().min(1).max(28).nullable().default(null),
+  scheduled_time: z.string().regex(/^\d{2}:\d{2}$/, 'Format horaire invalide').default('09:00'),
+  assigned_to: z.string().default(''),
+  priority: z.enum(['NORMALE', 'HAUTE', 'CRITIQUE']).default('NORMALE'),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+  active: z.boolean().default(true),
+});
+export type MissionRecurrenceFormData = z.infer<typeof missionRecurrenceSchema>;
+
+// SLA Configs (MI9 + IN6)
+export const slaConfigSchema = z.object({
+  entity_type: z.enum(['MISSION', 'INCIDENT']),
+  subtype: z.string().min(1, 'Type requis'),
+  max_hours: z.coerce.number().int().min(1, 'Minimum 1 heure').max(8760, 'Maximum 1 an'),
+});
+export type SlaConfigFormData = z.infer<typeof slaConfigSchema>;
+
+// Message Templates (R3)
+export const messageTemplateSchema = z.object({
+  name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
+  subject: z.string().max(500, 'Sujet trop long').default(''),
+  body: z.string().min(1, 'Contenu requis').max(10000, 'Contenu trop long'),
+  type: z.enum(['CONFIRMATION', 'RAPPEL', 'REMERCIEMENT', 'ACCES', 'CUSTOM']).default('CUSTOM'),
+  channel: z.enum(['EMAIL', 'SMS']).default('EMAIL'),
+  active: z.boolean().default(true),
+});
+export type MessageTemplateFormData = z.infer<typeof messageTemplateSchema>;
+
+// Send Guest Message (R3)
+export const sendGuestMessageSchema = z.object({
+  reservation_id: z.string().uuid('Réservation invalide'),
+  template_id: z.string().default(''),
+  channel: z.enum(['EMAIL', 'SMS']).default('EMAIL'),
+  subject: z.string().max(500, 'Sujet trop long').default(''),
+  body: z.string().min(1, 'Message requis').max(10000, 'Message trop long'),
+});
+export type SendGuestMessageFormData = z.infer<typeof sendGuestMessageSchema>;
