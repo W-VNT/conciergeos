@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
             user_id: admin.id,
             type: "INCIDENT_CRITICAL",
             title: "Incident escaladé : MINEUR → MOYEN",
-            message: `L'incident "${incident.description.substring(0, 80)}" a été automatiquement escaladé de MINEUR à MOYEN après 48h sans résolution.`,
+            message: `L'incident "${(incident.description ?? "Sans description").substring(0, 80)}" a été automatiquement escaladé de MINEUR à MOYEN après 48h sans résolution.`,
             entity_type: "INCIDENT",
             entity_id: incident.id,
           });
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
             user_id: admin.id,
             type: "INCIDENT_CRITICAL",
             title: "Incident escaladé : MOYEN → CRITIQUE",
-            message: `L'incident "${incident.description.substring(0, 80)}" a été automatiquement escaladé de MOYEN à CRITIQUE après 72h sans résolution.`,
+            message: `L'incident "${(incident.description ?? "Sans description").substring(0, 80)}" a été automatiquement escaladé de MOYEN à CRITIQUE après 72h sans résolution.`,
             entity_type: "INCIDENT",
             entity_id: incident.id,
           });

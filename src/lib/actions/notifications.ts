@@ -139,6 +139,7 @@ export async function getNotificationsPaginated(
     .eq("user_id", profile.id)
     .eq("organisation_id", profile.organisation_id)
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(safeLimit);
 
   if (cursor) {

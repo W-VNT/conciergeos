@@ -91,6 +91,16 @@ export async function getPortalTokenForReservation(
   const profile = await requireProfile();
   const supabase = createClient();
 
+  // Verify reservation belongs to user's org first
+  const { data: reservation } = await supabase
+    .from("reservations")
+    .select("id")
+    .eq("id", reservationId)
+    .eq("organisation_id", profile.organisation_id)
+    .maybeSingle();
+
+  if (!reservation) return null;
+
   const { data } = await supabase
     .from("guest_portal_tokens")
     .select("*")

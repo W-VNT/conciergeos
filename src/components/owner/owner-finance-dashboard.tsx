@@ -87,7 +87,7 @@ export function OwnerFinanceDashboard({ monthlyData }: OwnerFinanceDashboardProp
   if (chartData.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
-        Aucune donnee mensuelle disponible
+        Aucune donnée mensuelle disponible
       </p>
     );
   }

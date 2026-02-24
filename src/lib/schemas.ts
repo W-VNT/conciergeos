@@ -79,6 +79,7 @@ export const prestataireSchema = z.object({
   address_line1: z.string().max(500, 'Adresse trop longue').default(''),
   postal_code: z.string().max(20, 'Code postal trop long').default(''),
   city: z.string().max(200, 'Ville trop longue').default(''),
+  zone: z.string().max(100, 'Zone trop longue').default(''),
   hourly_rate: z.coerce.number().min(0, 'Le taux horaire doit être positif').max(10000, 'Taux horaire trop élevé').nullable().default(null),
   reliability_score: z.coerce.number().min(1, 'Score minimum 1').max(5, 'Score maximum 5').nullable().default(null),
   notes: z.string().max(5000, 'Notes trop longues').default(''),
@@ -108,7 +109,7 @@ export const contratSchema = z.object({
   start_date: z.string().min(1, 'Date de début requise'),
   end_date: z.string().min(1, 'Date de fin requise'),
   commission_rate: z.coerce.number().min(0, 'La commission doit être positive').max(100, 'La commission ne peut pas dépasser 100%'),
-  status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE']).default('ACTIF'),
+  status: z.enum(['ACTIF', 'EXPIRE', 'RESILIE', 'SIGNE']).default('ACTIF'),
   conditions: z.string().max(10000, 'Conditions trop longues').default(''),
   auto_renew: z.boolean().default(false),
   renewal_duration_months: z.coerce.number().int().min(1).max(120).default(12),
@@ -182,7 +183,7 @@ export const missionRecurrenceSchema = z.object({
   type: z.enum(['CHECKIN', 'CHECKOUT', 'MENAGE', 'INTERVENTION', 'URGENCE']),
   frequency: z.enum(['HEBDOMADAIRE', 'BIMENSUEL', 'MENSUEL']),
   day_of_week: z.coerce.number().int().min(0).max(6).nullable().default(null),
-  day_of_month: z.coerce.number().int().min(1).max(28).nullable().default(null),
+  day_of_month: z.coerce.number().int().min(1).max(31).nullable().default(null),
   scheduled_time: z.string().regex(/^\d{2}:\d{2}$/, 'Format horaire invalide').default('09:00'),
   assigned_to: z.string().default(''),
   priority: z.enum(['NORMALE', 'HAUTE', 'CRITIQUE']).default('NORMALE'),
@@ -233,11 +234,17 @@ export const voyageurSchema = z.object({
 });
 export type VoyageurFormData = z.infer<typeof voyageurSchema>;
 
+// Helper: transform empty string to null (for optional UUID foreign keys)
+const nullableUuid = z.preprocess(
+  (val) => (val === '' || val === null || val === undefined ? null : val),
+  z.string().uuid().nullable().default(null)
+);
+
 // Devis Prestataire (IN8)
 export const devisSchema = z.object({
   prestataire_id: z.string().min(1, 'Prestataire requis'),
-  incident_id: z.string().default(''),
-  mission_id: z.string().default(''),
+  incident_id: nullableUuid,
+  mission_id: nullableUuid,
   montant: z.coerce.number().min(0, 'Le montant doit être positif'),
   description: z.string().min(1, 'Description requise').max(5000, 'Description trop longue'),
   notes: z.string().max(5000, 'Notes trop longues').default(''),
@@ -247,9 +254,9 @@ export type DevisFormData = z.infer<typeof devisSchema>;
 // Facture Prestataire (IN8)
 export const factureSchema = z.object({
   prestataire_id: z.string().min(1, 'Prestataire requis'),
-  devis_id: z.string().default(''),
-  mission_id: z.string().default(''),
-  incident_id: z.string().default(''),
+  devis_id: nullableUuid,
+  mission_id: nullableUuid,
+  incident_id: nullableUuid,
   numero_facture: z.string().max(100, 'Numéro trop long').default(''),
   montant: z.coerce.number().min(0, 'Le montant doit être positif'),
   date_emission: z.string().min(1, 'Date requise'),

@@ -271,7 +271,7 @@ export async function getOccupationByMonth(
       1,
       Math.ceil(
         (effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24),
-      ) + 1,
+      ),
     );
 
     months.push({

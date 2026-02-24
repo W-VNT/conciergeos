@@ -18,8 +18,9 @@ export async function rescheduleMission(
       return errorResponse("Non autorisé");
     }
 
-    // Validate missionId is a UUID-like string
-    if (!missionId || typeof missionId !== "string" || missionId.length < 10) {
+    // Validate missionId is a UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!missionId || !uuidRegex.test(missionId)) {
       return errorResponse("ID de mission invalide");
     }
 

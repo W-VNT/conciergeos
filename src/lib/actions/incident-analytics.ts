@@ -76,7 +76,7 @@ export async function getIncidentAnalytics(
   const logementMap = new Map<string, { name: string; count: number }>();
   for (const r of rows) {
     const rawLogement = r.logement;
-    const logement = (Array.isArray(rawLogement) ? rawLogement[0] : rawLogement) as { name: string } | null;
+    const logement = (Array.isArray(rawLogement) ? (rawLogement[0] ?? null) : rawLogement) as { name: string } | null;
     const name = logement?.name ?? "Logement inconnu";
     const entry = logementMap.get(r.logement_id) ?? { name, count: 0 };
     entry.count++;

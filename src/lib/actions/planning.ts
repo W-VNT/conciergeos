@@ -85,9 +85,7 @@ export async function getPlanningData(weekStart: string): Promise<PlanningData> 
   }
 
   return {
-    operators: Array.from(operatorMap.values()).filter(
-      (op) => op.missions.length > 0
-    ),
+    operators: Array.from(operatorMap.values()),
     unassigned,
   };
 }

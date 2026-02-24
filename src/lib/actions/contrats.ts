@@ -133,6 +133,8 @@ export async function duplicateContrat(id: string): Promise<ActionResponse<{ id:
         commission_rate: original.commission_rate,
         status: "ACTIF",
         conditions: original.conditions,
+        auto_renew: original.auto_renew ?? false,
+        renewal_duration_months: original.renewal_duration_months ?? 12,
       })
       .select("id")
       .single();

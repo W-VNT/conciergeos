@@ -60,9 +60,10 @@ export async function createGroupedNotification(
     .maybeSingle();
 
   if (existing) {
-    // Parse existing count from the message
+    // Get count from metadata (authoritative) with message regex as fallback
+    const metaCount = existing.metadata?.group_count ? parseInt(String(existing.metadata.group_count), 10) : 0;
     const countMatch = existing.message.match(/^(\d+)\s/);
-    const currentCount = countMatch ? parseInt(countMatch[1], 10) : 1;
+    const currentCount = metaCount || (countMatch ? parseInt(countMatch[1], 10) : 1);
     const newCount = currentCount + 1;
 
     const newMessage = `${newCount} ${params.pluralMessage}`;

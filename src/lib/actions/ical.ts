@@ -70,8 +70,10 @@ export async function verifyIcalToken(
     .update(organisationId)
     .digest("hex");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(token),
-    Buffer.from(expectedToken)
-  );
+  // Ensure both buffers have the same length to avoid timingSafeEqual crash
+  const tokenBuf = Buffer.from(token, "utf8");
+  const expectedBuf = Buffer.from(expectedToken, "utf8");
+  if (tokenBuf.length !== expectedBuf.length) return false;
+
+  return crypto.timingSafeEqual(tokenBuf, expectedBuf);
 }

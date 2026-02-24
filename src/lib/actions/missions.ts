@@ -169,9 +169,9 @@ export async function completeMission(id: string, coords?: { lat: number; lng: n
 
   // Calculate time_spent_minutes if the mission was started (has started_at)
   if (mission?.started_at) {
-    updateData.time_spent_minutes = Math.round(
+    updateData.time_spent_minutes = Math.max(0, Math.round(
       (now.getTime() - new Date(mission.started_at).getTime()) / 60000
-    );
+    ));
   }
 
   if (coords) {

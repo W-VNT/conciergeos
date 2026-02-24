@@ -68,6 +68,10 @@ export function isAdminOrManager(profile: Profile): boolean {
   return profile.role === 'ADMIN' || profile.role === 'MANAGER';
 }
 
+export function isOperateur(profile: Profile): boolean {
+  return profile.role === 'OPERATEUR';
+}
+
 export function isProprietaire(profile: Profile): boolean {
   return profile.role === 'PROPRIETAIRE';
 }
