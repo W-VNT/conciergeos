@@ -1,14 +1,18 @@
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
-import { getFinancialSummary, getRevenusByLogement, getAllRevenus } from "@/lib/actions/finances";
+import { getFinancialSummary, getRevenusByLogement, getAllRevenus, getMonthlyRevenues } from "@/lib/actions/finances";
+import { getOwnerFinanceDashboard } from "@/lib/actions/owner-analytics";
 import Link from "next/link";
 import { formatCurrencyDecimals } from "@/lib/format-currency";
 import { formatCurrency } from "@/lib/format-currency";
 import { ExportCSVButton } from "@/components/shared/export-csv-button";
+import { MonthlyChart } from "@/components/finances/monthly-chart";
+import { StatusFilter } from "@/components/shared/status-filter";
 
 export const metadata = { title: "Finances" };
 
@@ -21,6 +25,7 @@ interface FinancesPageProps {
 export default async function FinancesPage({ searchParams }: FinancesPageProps) {
   const profile = await requireProfile();
   if (!isAdmin(profile)) redirect("/dashboard");
+  const supabase = createClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -47,12 +52,38 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
     startDate.setDate(startDate.getDate() - 30);
   }
 
+  // Logement filter
+  const logementId = (searchParams.logement_id as string) || undefined;
+
+  // Fetch logements for filter dropdown
+  const { data: logements } = await supabase
+    .from("logements")
+    .select("id, name")
+    .eq("organisation_id", profile.organisation_id)
+    .eq("status", "ACTIF")
+    .order("name");
+
+  const logementOptions = (logements || []).map((l) => ({
+    value: l.id,
+    label: l.name,
+  }));
+
   // Get financial data
-  const [summary, revenusByLogement, detailedRevenus] = await Promise.all([
-    getFinancialSummary(startDate, endDate),
-    getRevenusByLogement(startDate, endDate),
-    getAllRevenus(startDate, endDate),
+  const [summary, monthlyData, revenusByLogement, detailedRevenus, ownerRevenues] = await Promise.all([
+    getFinancialSummary(startDate, endDate, logementId),
+    getMonthlyRevenues(startDate, endDate),
+    getRevenusByLogement(startDate, endDate, logementId),
+    getAllRevenus(startDate, endDate, logementId),
+    getOwnerFinanceDashboard(profile.organisation_id, startDate, endDate),
   ]);
+
+  // Transform monthly data for the chart
+  const chartData = (monthlyData || []).map((row: Record<string, unknown>) => ({
+    mois: String(row.mois ?? ""),
+    ca_brut: Number(row.ca_brut ?? row.total_brut ?? 0),
+    commissions: Number(row.commissions ?? row.total_commissions ?? 0),
+    marge: Number(row.marge ?? row.total_net ?? 0),
+  }));
 
   const fmtEur = formatCurrency;
 
@@ -74,6 +105,11 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
           <p className="text-muted-foreground mt-1">{rangeLabel}</p>
         </div>
         <div className="flex gap-2">
+          <StatusFilter
+            paramName="logement_id"
+            options={logementOptions}
+            placeholder="Tous les logements"
+          />
           <ExportCSVButton type="finances" />
           <DateFilter />
         </div>
@@ -106,6 +142,16 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
           icon={PiggyBank}
         />
       </div>
+
+      {/* Évolution mensuelle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Évolution mensuelle</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MonthlyChart data={chartData} />
+        </CardContent>
+      </Card>
 
       {/* Revenus par logement */}
       <Card>
@@ -172,6 +218,75 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
                     </td>
                     <td className="pt-3 text-right text-green-600">
                       {fmtEur(revenusByLogement.reduce((sum, i) => sum + i.total_net, 0))}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Revenus par propriétaire */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Revenus par propriétaire</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {ownerRevenues.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucun revenu propriétaire sur cette période
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b">
+                  <tr className="text-left">
+                    <th className="pb-2 font-medium">Propriétaire</th>
+                    <th className="pb-2 font-medium text-right">Logements</th>
+                    <th className="pb-2 font-medium text-right">CA Brut</th>
+                    <th className="pb-2 font-medium text-right">Commissions</th>
+                    <th className="pb-2 font-medium text-right">Net propriétaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ownerRevenues.map((owner) => (
+                    <tr key={owner.proprietaire_id} className="border-b last:border-0">
+                      <td className="py-3">
+                        <Link
+                          href={`/proprietaires/${owner.proprietaire_id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {owner.proprietaire_name}
+                        </Link>
+                      </td>
+                      <td className="py-3 text-right">{owner.nb_logements}</td>
+                      <td className="py-3 text-right font-medium">
+                        {fmtEur(owner.total_ca_brut)}
+                      </td>
+                      <td className="py-3 text-right text-muted-foreground">
+                        {fmtEur(owner.total_commissions)}
+                      </td>
+                      <td className="py-3 text-right font-medium text-green-600">
+                        {fmtEur(owner.total_net)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="border-t-2 font-bold">
+                  <tr>
+                    <td className="pt-3">Total</td>
+                    <td className="pt-3 text-right">
+                      {ownerRevenues.reduce((sum, o) => sum + o.nb_logements, 0)}
+                    </td>
+                    <td className="pt-3 text-right">
+                      {fmtEur(ownerRevenues.reduce((sum, o) => sum + o.total_ca_brut, 0))}
+                    </td>
+                    <td className="pt-3 text-right">
+                      {fmtEur(ownerRevenues.reduce((sum, o) => sum + o.total_commissions, 0))}
+                    </td>
+                    <td className="pt-3 text-right text-green-600">
+                      {fmtEur(ownerRevenues.reduce((sum, o) => sum + o.total_net, 0))}
                     </td>
                   </tr>
                 </tfoot>

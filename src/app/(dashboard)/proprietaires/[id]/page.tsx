@@ -12,6 +12,8 @@ import { InviteProprietaireButton } from "@/components/proprietaires/invite-prop
 import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { formatPhone } from "@/lib/utils";
+import { getProprietaireFinances } from "@/lib/actions/owner-analytics";
+import { formatCurrency } from "@/lib/format-currency";
 
 export default async function ProprietaireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -49,6 +51,10 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
       (existingInvitation.expires_at && new Date(existingInvitation.expires_at) < new Date());
     invitationStatus = isExpired ? "expired" : "pending";
   }
+
+  // Fetch finance summary for this proprietaire
+  const finances = await getProprietaireFinances(proprietaire.id, profile.organisation_id);
+  const fmtEur = formatCurrency;
 
   return (
     <div className="space-y-6">
@@ -125,6 +131,37 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
           </CardContent>
         </Card>
       </div>
+
+      {/* Finances */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Finances</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {finances.nb_reservations === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun revenu enregistré</p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">CA Brut</p>
+                <p className="text-lg font-semibold">{fmtEur(finances.total_ca_brut)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Commissions</p>
+                <p className="text-lg font-semibold">{fmtEur(finances.total_commissions)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Net propriétaire</p>
+                <p className="text-lg font-semibold text-green-600">{fmtEur(finances.total_net)}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Réservations</p>
+                <p className="text-lg font-semibold">{finances.nb_reservations}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

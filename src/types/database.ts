@@ -30,6 +30,7 @@ export type NotificationType =
   | 'TEAM_INVITATION'
   | 'RESERVATION_CREATED'
   | 'SYSTEM';
+export type SeasonType = 'HAUTE' | 'BASSE' | 'MOYENNE';
 export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'CONSOMMABLE' | 'AUTRE';
 export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
 export type FactureStatus = 'ATTENTE' | 'VALIDEE' | 'PAYEE' | 'REFUSEE';
@@ -116,6 +117,7 @@ export interface Reservation {
   status: ReservationStatus;
   payment_status: PaymentStatus | null;
   payment_date: string | null;
+  source: string | null;
   notes: string | null;
   access_instructions: string | null;
   created_at: string;
@@ -358,6 +360,18 @@ export interface MissionChecklistItem {
   created_at: string;
   // Joined
   item?: ChecklistTemplateItem;
+}
+
+export interface PricingSeason {
+  id: string;
+  organisation_id: string;
+  logement_id: string;
+  name: string;
+  start_month: number;
+  end_month: number;
+  price_per_night: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface IncidentResponseTemplate {

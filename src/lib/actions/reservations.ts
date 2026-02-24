@@ -70,6 +70,7 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
         status: parsed.status,
         payment_status: parsed.payment_status || null,
         payment_date: parsed.payment_date || null,
+        source: parsed.source || null,
         notes: parsed.notes || null,
         access_instructions: parsed.access_instructions || null,
       })
@@ -150,6 +151,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         status: parsed.status,
         payment_status: parsed.payment_status || null,
         payment_date: parsed.payment_date || null,
+        source: parsed.source || null,
         notes: parsed.notes || null,
         access_instructions: parsed.access_instructions || null,
       })

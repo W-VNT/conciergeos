@@ -6,17 +6,23 @@ import { requireProfile } from "@/lib/auth";
 /**
  * Get financial summary for a date range
  */
-export async function getFinancialSummary(startDate: Date, endDate: Date) {
+export async function getFinancialSummary(startDate: Date, endDate: Date, logementId?: string) {
   const profile = await requireProfile();
   const supabase = createClient();
 
   // Query revenus summary
-  const { data: revenus, error: revenusError } = await supabase
+  let revenusQuery = supabase
     .from("revenus")
     .select("montant_brut, montant_commission, montant_net")
     .eq("organisation_id", profile.organisation_id)
     .gte("date_checkin", startDate.toISOString().split("T")[0])
     .lte("date_checkin", endDate.toISOString().split("T")[0]);
+
+  if (logementId) {
+    revenusQuery = revenusQuery.eq("logement_id", logementId);
+  }
+
+  const { data: revenus, error: revenusError } = await revenusQuery;
 
   if (revenusError) throw new Error(revenusError.message);
 
@@ -25,13 +31,19 @@ export async function getFinancialSummary(startDate: Date, endDate: Date) {
   const revenusNet = revenus?.reduce((sum, r) => sum + Number(r.montant_net || 0), 0) ?? 0;
 
   // Query charges (for now, use incidents cost as placeholder until factures_prestataires is implemented)
-  const { data: incidents, error: incidentsError } = await supabase
+  let incidentsQuery = supabase
     .from("incidents")
     .select("cost")
     .eq("organisation_id", profile.organisation_id)
     .gte("opened_at", startDate.toISOString())
     .lte("opened_at", endDate.toISOString())
     .not("cost", "is", null);
+
+  if (logementId) {
+    incidentsQuery = incidentsQuery.eq("logement_id", logementId);
+  }
+
+  const { data: incidents, error: incidentsError } = await incidentsQuery;
 
   if (incidentsError) throw new Error(incidentsError.message);
 
@@ -72,7 +84,7 @@ export async function getMonthlyRevenues(startDate: Date, endDate: Date) {
 /**
  * Get revenues grouped by logement
  */
-export async function getRevenusByLogement(startDate?: Date, endDate?: Date) {
+export async function getRevenusByLogement(startDate?: Date, endDate?: Date, logementId?: string) {
   const profile = await requireProfile();
   const supabase = createClient();
 
@@ -86,6 +98,9 @@ export async function getRevenusByLogement(startDate?: Date, endDate?: Date) {
     .eq("organisation_id", profile.organisation_id)
     .order("date_checkin", { ascending: false });
 
+  if (logementId) {
+    query = query.eq("logement_id", logementId);
+  }
   if (startDate) {
     query = query.gte("date_checkin", startDate.toISOString().split("T")[0]);
   }
@@ -150,7 +165,7 @@ export async function getRevenusByLogement(startDate?: Date, endDate?: Date) {
 /**
  * Get all revenus (detailed list)
  */
-export async function getAllRevenus(startDate?: Date, endDate?: Date) {
+export async function getAllRevenus(startDate?: Date, endDate?: Date, logementId?: string) {
   const profile = await requireProfile();
   const supabase = createClient();
 
@@ -165,6 +180,9 @@ export async function getAllRevenus(startDate?: Date, endDate?: Date) {
     .eq("organisation_id", profile.organisation_id)
     .order("date_checkin", { ascending: false });
 
+  if (logementId) {
+    query = query.eq("logement_id", logementId);
+  }
   if (startDate) {
     query = query.gte("date_checkin", startDate.toISOString().split("T")[0]);
   }

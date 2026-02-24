@@ -3,10 +3,35 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, DollarSign, Percent, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Clock,
+  DollarSign,
+  Percent,
+  TrendingUp,
+  AlertTriangle,
+  BarChart3,
+  Hotel,
+  CalendarDays,
+  Timer,
+  Home,
+} from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
 import { formatCurrency } from "@/lib/format-currency";
 import Link from "next/link";
+import {
+  getRevenueAnalytics,
+  getOccupationByLogement,
+  getOccupationByMonth,
+  getRevenueByPlatform,
+} from "@/lib/actions/analytics";
 
 export const metadata = { title: "Analytics" };
 
@@ -59,13 +84,17 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     startDate.setDate(startDate.getDate() - 30);
   }
 
-  // Parallelize analytics queries
+  // Parallelize ALL analytics queries (existing + new R9/R10)
   const [
     { data: resolvedIncidents },
     { data: costData },
     { data: allIncidents },
     { data: logements },
     { data: reservations },
+    revenueAnalytics,
+    occupationByLogement,
+    occupationByMonth,
+    revenueByPlatform,
   ] = await Promise.all([
     // Resolved incidents for avg calculation
     supabase
@@ -109,6 +138,18 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
       .eq("status", "CONFIRMEE")
       .gte("check_out_date", startDate.toISOString())
       .lte("check_in_date", endDate.toISOString()),
+
+    // R9: Revenue analytics
+    getRevenueAnalytics(startDate, endDate, profile.organisation_id),
+
+    // R10: Occupation by logement
+    getOccupationByLogement(startDate, endDate, profile.organisation_id),
+
+    // R10: Occupation by month
+    getOccupationByMonth(startDate, endDate, profile.organisation_id),
+
+    // R10: Revenue by platform
+    getRevenueByPlatform(startDate, endDate, profile.organisation_id),
   ]);
 
   // Calculate average resolution time
@@ -168,6 +209,14 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   // Format range label for display
   const rangeLabel = range === "7d" ? "7 derniers jours" : range === "90d" ? "90 derniers jours" : range === "custom" ? "Période personnalisée" : "30 derniers jours";
 
+  // Platform color mapping for bar display
+  const platformColors: Record<string, string> = {
+    AIRBNB: "bg-rose-500",
+    BOOKING: "bg-blue-500",
+    DIRECT: "bg-emerald-500",
+    AUTRE: "bg-gray-400",
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -178,7 +227,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         <DateFilter />
       </div>
 
-      {/* Advanced KPIs */}
+      {/* Existing KPIs */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="Résolution moyenne"
@@ -206,7 +255,35 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         />
       </div>
 
-      {/* Additional Analytics */}
+      {/* R9: Revenue KPIs */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="RevPAR"
+          value={formatCurrency(revenueAnalytics.revPAR)}
+          description="Revenu par chambre disponible"
+          icon={Hotel}
+        />
+        <KpiCard
+          title="ADR"
+          value={formatCurrency(revenueAnalytics.adr)}
+          description="Tarif journalier moyen"
+          icon={DollarSign}
+        />
+        <KpiCard
+          title="Durée moy. séjour"
+          value={`${revenueAnalytics.avgStayDuration} nuits`}
+          description="Moyenne par réservation"
+          icon={Timer}
+        />
+        <KpiCard
+          title="Logements actifs"
+          value={revenueAnalytics.activeLogements}
+          description="Nombre de logements en activité"
+          icon={Home}
+        />
+      </div>
+
+      {/* Existing Additional Analytics */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Top Logements by Incidents */}
         {topLogements.length > 0 && (
@@ -277,6 +354,161 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
           </CardContent>
         </Card>
       </div>
+
+      {/* R10: Revenue by Platform */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-500" />
+            Revenus par plateforme
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {revenueByPlatform.some((p) => p.count > 0) ? (
+            <div className="space-y-4">
+              {revenueByPlatform.map((platform) => (
+                <div key={platform.platform} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${platformColors[platform.platform] ?? "bg-gray-400"}`} />
+                      <span className="text-sm font-medium">{platform.platformLabel}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-muted-foreground">
+                        {platform.count} réservation{platform.count > 1 ? "s" : ""}
+                      </span>
+                      <span className="font-semibold">{formatCurrency(platform.totalAmount)}</span>
+                      <span className="text-muted-foreground w-12 text-right">{platform.percentage}%</span>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${platformColors[platform.platform] ?? "bg-gray-400"}`}
+                      style={{ width: `${platform.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucune donnée de réservation pour cette période
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* R10: Occupation by Logement */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Home className="h-5 w-5 text-indigo-500" />
+            Occupation par logement
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {occupationByLogement.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Logement</TableHead>
+                  <TableHead className="text-right">Nuits occupées</TableHead>
+                  <TableHead className="text-right">Nuits disponibles</TableHead>
+                  <TableHead className="text-right">Taux d&apos;occupation</TableHead>
+                  <TableHead className="text-right">Revenus</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {occupationByLogement.map((row) => (
+                  <TableRow key={row.logementId}>
+                    <TableCell>
+                      <Link
+                        href={`/logements/${row.logementId}`}
+                        className="font-medium hover:underline"
+                      >
+                        {row.logementName}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">{row.occupiedNights}</TableCell>
+                    <TableCell className="text-right">{row.availableNights}</TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        className={
+                          row.occupationRate >= 75
+                            ? "text-green-600 font-semibold"
+                            : row.occupationRate >= 50
+                              ? "text-yellow-600 font-semibold"
+                              : "text-red-600 font-semibold"
+                        }
+                      >
+                        {row.occupationRate}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(row.revenue)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucun logement actif
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* R10: Occupation by Month */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-purple-500" />
+            Occupation par mois
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {occupationByMonth.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Mois</TableHead>
+                  <TableHead className="text-right">Nuits occupées</TableHead>
+                  <TableHead className="text-right">Nuits totales</TableHead>
+                  <TableHead className="text-right">Taux d&apos;occupation</TableHead>
+                  <TableHead className="text-right">Revenus</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {occupationByMonth.map((row) => (
+                  <TableRow key={row.month}>
+                    <TableCell className="font-medium">{row.monthLabel}</TableCell>
+                    <TableCell className="text-right">{row.occupiedNights}</TableCell>
+                    <TableCell className="text-right">{row.totalNights}</TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        className={
+                          row.occupationRate >= 75
+                            ? "text-green-600 font-semibold"
+                            : row.occupationRate >= 50
+                              ? "text-yellow-600 font-semibold"
+                              : "text-red-600 font-semibold"
+                        }
+                      >
+                        {row.occupationRate}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(row.revenue)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucune donnée pour cette période
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -161,6 +161,12 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 label={BOOKING_PLATFORM_LABELS[reservation.platform as keyof typeof BOOKING_PLATFORM_LABELS]}
               />
             </div>
+            {reservation.source && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Source</span>
+                <span>{reservation.source}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">Statut</span>
               <StatusBadge

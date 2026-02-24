@@ -53,6 +53,7 @@ export function ReservationForm({ reservation, logements }: Props) {
       payment_date: reservation?.payment_date
         ? new Date(reservation.payment_date).toISOString().split("T")[0]
         : "",
+      source: reservation?.source ?? "",
       notes: reservation?.notes ?? "",
       access_instructions: reservation?.access_instructions ?? "",
     },
@@ -170,7 +171,7 @@ export function ReservationForm({ reservation, logements }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="platform">Plateforme</Label>
               <Controller name="platform" control={form.control} render={({ field }) => (
@@ -187,6 +188,15 @@ export function ReservationForm({ reservation, logements }: Props) {
                   </SelectContent>
                 </Select>
               )} />
+            </div>
+
+            <div>
+              <Label htmlFor="source">Source</Label>
+              <Input
+                id="source"
+                placeholder="Ex: Site web, Recommandation..."
+                {...form.register("source")}
+              />
             </div>
 
             <div>

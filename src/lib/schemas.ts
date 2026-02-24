@@ -132,6 +132,7 @@ export const reservationSchema = z.object({
   status: z.enum(['EN_ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE']).default('CONFIRMEE'),
   payment_status: z.enum(['EN_ATTENTE', 'PARTIEL', 'PAYE', 'REMBOURSE']).default('EN_ATTENTE'),
   payment_date: z.string().default(''),
+  source: z.string().max(200, 'Source trop longue').default(''),
   notes: z.string().max(5000, 'Notes trop longues (5000 caractères max)').default(''),
   access_instructions: z.string().max(5000, 'Instructions trop longues (5000 caractères max)').default(''),
 }).refine((data) => new Date(data.check_in_date) < new Date(data.check_out_date), {
@@ -139,6 +140,16 @@ export const reservationSchema = z.object({
   path: ['check_out_date'],
 });
 export type ReservationFormData = z.infer<typeof reservationSchema>;
+
+// Pricing Seasons
+export const pricingSeasonSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  name: z.string().min(1, 'Nom requis').max(100, 'Nom trop long'),
+  start_month: z.coerce.number().int().min(1).max(12),
+  end_month: z.coerce.number().int().min(1).max(12),
+  price_per_night: z.coerce.number().min(0, 'Le prix doit être positif').max(100000, 'Prix trop élevé'),
+});
+export type PricingSeasonFormData = z.infer<typeof pricingSeasonSchema>;
 
 // Operator Capabilities (for auto-assignment)
 export const operatorCapabilitiesSchema = z.object({

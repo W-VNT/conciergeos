@@ -3,13 +3,15 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { SPECIALTY_LABELS, STATUT_JURIDIQUE_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
 import { formatCurrency } from "@/lib/format-currency";
 import { deletePrestataire } from "@/lib/actions/prestataires";
-import { Pencil, Star } from "lucide-react";
+import { getPrestataireStats } from "@/lib/actions/prestataire-stats";
+import { Pencil, Star, BarChart3, CheckCircle, Clock, Euro } from "lucide-react";
 import Link from "next/link";
 
 export default async function PrestataireDetailPage({ params }: { params: { id: string } }) {
@@ -20,7 +22,10 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
   const { data: prestataire } = await supabase.from("prestataires").select("*").eq("id", params.id).eq("organisation_id", profile.organisation_id).single();
   if (!prestataire) notFound();
 
-  const { data: incidents } = await supabase.from("incidents").select("id, severity, status, description, opened_at").eq("prestataire_id", prestataire.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(10);
+  const [{ data: incidents }, prestataireStats] = await Promise.all([
+    supabase.from("incidents").select("id, severity, status, description, opened_at").eq("prestataire_id", prestataire.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(10),
+    getPrestataireStats(prestataire.id, profile.organisation_id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -91,6 +96,40 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
           </CardContent>
         </Card>
       </div>
+
+      {/* Statistiques */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Statistiques
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              title="Incidents assignés"
+              value={prestataireStats.total_incidents}
+              icon={BarChart3}
+            />
+            <KpiCard
+              title="Incidents résolus"
+              value={prestataireStats.incidents_resolved}
+              icon={CheckCircle}
+            />
+            <KpiCard
+              title="Temps moyen de résolution"
+              value={prestataireStats.avg_resolution_hours > 0 ? `${prestataireStats.avg_resolution_hours} h` : "—"}
+              icon={Clock}
+            />
+            <KpiCard
+              title="Coût total incidents"
+              value={prestataireStats.total_cost > 0 ? formatCurrency(prestataireStats.total_cost) : "—"}
+              icon={Euro}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

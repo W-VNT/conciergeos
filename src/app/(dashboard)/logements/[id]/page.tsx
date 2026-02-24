@@ -3,12 +3,14 @@ import { requireProfile, isAdmin, getProfile } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import { formatCurrency } from "@/lib/format-currency";
 import { deleteLogement, duplicateLogement, archiveLogement, reactivateLogement } from "@/lib/actions/logements";
-import { Pencil, AlertTriangle, KeyRound, Wifi, Copy, Archive, RotateCcw } from "lucide-react";
+import { getLogementAnalytics } from "@/lib/actions/logement-analytics";
+import { Pencil, AlertTriangle, KeyRound, Wifi, Copy, Archive, RotateCcw, BarChart3, Euro, CalendarCheck, Clock, AlertCircle } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,6 +19,7 @@ import { SyncIcalButton } from "@/components/shared/sync-ical-button";
 import { InventaireSection } from "@/components/logements/inventaire-section";
 import { ChecklistTemplateSection } from "@/components/logements/checklist-template-section";
 import { HistoriqueMaintenance } from "@/components/logements/historique-maintenance";
+import { PricingSeasonSection } from "@/components/logements/pricing-season-section";
 import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UrlTabs } from "@/components/shared/url-tabs";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +52,8 @@ export default async function LogementDetailPage({ params }: { params: { id: str
     supabase.from("incidents").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("opened_at", { ascending: false }).limit(100),
     supabase.from("reservations").select("*").eq("logement_id", params.id).eq("organisation_id", profile.organisation_id).order("check_in_date", { ascending: false }).limit(100),
   ]);
+
+  const analytics = await getLogementAnalytics(params.id, profile.organisation_id);
 
   const prop = logement.proprietaire as { id: string; full_name: string } | null;
 
@@ -174,7 +179,55 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         </Card>
       </div>
 
+      {/* Performance KPIs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <KpiCard
+              title="Taux d'occupation"
+              value={`${analytics.taux_occupation} %`}
+              description="Derniers 90 jours"
+              icon={CalendarCheck}
+            />
+            <KpiCard
+              title="Revenu moyen / réservation"
+              value={formatCurrency(analytics.revenu_moyen_reservation)}
+              icon={Euro}
+            />
+            <KpiCard
+              title="CA total"
+              value={formatCurrency(analytics.ca_total)}
+              icon={Euro}
+            />
+            <KpiCard
+              title="Réservations"
+              value={analytics.nombre_reservations}
+              description="Toutes périodes"
+              icon={CalendarCheck}
+            />
+            <KpiCard
+              title="Missions en retard"
+              value={analytics.missions_en_retard}
+              icon={Clock}
+            />
+            <KpiCard
+              title="Incidents ouverts"
+              value={analytics.incidents_ouverts}
+              icon={AlertCircle}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
+
+      <PricingSeasonSection logementId={params.id} isAdmin={admin} />
 
       <UrlTabs defaultValue="inventaire">
         <Card className="p-2 mb-6">
