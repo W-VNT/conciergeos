@@ -76,7 +76,7 @@ export function BottomTabBar() {
                   onClick={() => setQuickActionOpen(true)}
                   className="flex flex-col items-center justify-center"
                 >
-                  <div className="flex items-center justify-center h-10 w-10 -mt-3 rounded-full bg-primary text-primary-foreground shadow-lg">
+                  <div className="flex items-center justify-center h-12 w-12 -mt-4 rounded-full bg-primary text-primary-foreground shadow-lg">
                     <Plus className="h-5 w-5" />
                   </div>
                 </button>

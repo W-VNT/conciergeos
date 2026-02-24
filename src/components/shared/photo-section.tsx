@@ -272,6 +272,7 @@ export function PhotoSection({
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               multiple
               className="hidden"
               onChange={handleUpload}
@@ -316,7 +317,7 @@ export function PhotoSection({
 
                 {/* Drag handle */}
                 {canUpload && (
-                  <div className="absolute top-1 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 z-10 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
                     <GripVertical className="h-5 w-5 text-white drop-shadow-md" />
                   </div>
                 )}
@@ -332,20 +333,20 @@ export function PhotoSection({
                 </div>
 
                 {/* Overlay actions */}
-                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="absolute top-1 right-1 flex gap-1.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
                   {/* Set as main button */}
                   {canUpload && !att.is_main && (
                     <button
                       onClick={() => handleSetMain(att)}
                       disabled={settingMain === att.id}
-                      className="h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-amber-500 transition-colors after:content-[''] after:absolute after:-inset-[6px]"
+                      className="relative h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-amber-500 transition-colors after:content-[''] after:absolute after:-inset-1"
                       aria-label="Definir comme photo principale"
                       title="Definir comme photo principale"
                     >
                       {settingMain === att.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <Star className="h-3 w-3" />
+                        <Star className="h-3.5 w-3.5" />
                       )}
                     </button>
                   )}
@@ -354,10 +355,10 @@ export function PhotoSection({
                   {canDelete && (
                     <button
                       onClick={() => handleDelete(att)}
-                      className="h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition-colors after:content-[''] after:absolute after:-inset-[6px]"
+                      className="relative h-8 w-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition-colors after:content-[''] after:absolute after:-inset-1"
                       aria-label="Supprimer la photo"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>

@@ -13,11 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Contrat, Proprietaire, Logement, OfferTier } from "@/types/database";
 import { CONTRACT_TYPE_LABELS, CONTRACT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
@@ -151,9 +152,7 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
               </PopoverContent>
             </Popover>
             {form.formState.errors.proprietaire_id && (
-              <p className="text-destructive text-sm">
-                {form.formState.errors.proprietaire_id.message}
-              </p>
+              <FormError message={form.formState.errors.proprietaire_id.message} />
             )}
           </div>
 
@@ -243,9 +242,7 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
                 {...form.register("start_date")}
               />
               {form.formState.errors.start_date && (
-                <p className="text-destructive text-sm">
-                  {form.formState.errors.start_date.message}
-                </p>
+                <FormError message={form.formState.errors.start_date.message} />
               )}
             </div>
 
@@ -259,9 +256,7 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
                 {...form.register("end_date")}
               />
               {form.formState.errors.end_date && (
-                <p className="text-destructive text-sm">
-                  {form.formState.errors.end_date.message}
-                </p>
+                <FormError message={form.formState.errors.end_date.message} />
               )}
             </div>
           </div>
@@ -291,9 +286,7 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
               )
             )}
             {form.formState.errors.commission_rate && (
-              <p className="text-destructive text-sm">
-                {form.formState.errors.commission_rate.message}
-              </p>
+              <FormError message={form.formState.errors.commission_rate.message} />
             )}
           </div>
 
@@ -374,13 +367,16 @@ export function ContratForm({ contrat, proprietaires, logements, offerConfigs = 
       </Card>
 
       {/* Actions */}
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer le contrat"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => window.history.back()}>
-          Annuler
-        </Button>
+      <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t md:static md:border-0 md:pt-0 md:pb-0">
+        <div className="flex gap-3">
+          <Button type="submit" disabled={loading} className="flex-1 md:flex-none">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer le contrat"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => window.history.back()} className="flex-1 md:flex-none">
+            Annuler
+          </Button>
+        </div>
       </div>
     </form>
   );

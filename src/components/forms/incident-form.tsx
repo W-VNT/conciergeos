@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -83,7 +85,7 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
                   <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
                 </Select>
               )} />
-              {form.formState.errors.logement_id && <p className="text-sm text-destructive">{form.formState.errors.logement_id.message}</p>}
+              {form.formState.errors.logement_id && <FormError message={form.formState.errors.logement_id.message} />}
             </div>
             <div className="space-y-2">
               <Label>Sévérité</Label>
@@ -127,7 +129,7 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="description">Description *</Label>
               <Textarea id="description" rows={3} {...form.register("description")} />
-              {form.formState.errors.description && <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>}
+              {form.formState.errors.description && <FormError message={form.formState.errors.description.message} />}
             </div>
             <div className="space-y-2">
               <Label htmlFor="cost">Coût (EUR)</Label>
@@ -142,7 +144,12 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
               <Textarea id="notes" rows={3} placeholder="Ajoutez des informations de suivi, contacts, actions effectuées..." {...form.register("notes")} />
             </div>
           </div>
-          <Button type="submit" disabled={loading}>{loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}</Button>
+          <div className="sticky bottom-0 bg-background pt-3 pb-1 -mx-6 px-6 border-t md:static md:border-0 md:mx-0 md:px-0 md:pt-0 md:pb-0">
+            <Button type="submit" disabled={loading} className="w-full md:w-auto">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

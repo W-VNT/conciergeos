@@ -142,7 +142,7 @@ export function AvatarUpload({
 
           {/* Upload overlay */}
           {!isLoading && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity rounded-full">
               <Camera className={`${iconSizeClasses[size]} text-white`} />
             </div>
           )}
@@ -172,6 +172,7 @@ export function AvatarUpload({
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/jpg"
+        capture="user"
         className="hidden"
         onChange={handleFileSelect}
         disabled={isLoading}

@@ -46,7 +46,7 @@ export function BulkActionsToolbar({
             <Button
               key={index}
               variant={action.variant || "outline"}
-              size="sm"
+              size="default"
               onClick={action.onClick}
               disabled={action.disabled}
             >
@@ -56,7 +56,7 @@ export function BulkActionsToolbar({
           );
         })}
 
-        <Button variant="ghost" size="sm" onClick={onClear}>
+        <Button variant="ghost" size="icon" onClick={onClear} aria-label="Désélectionner">
           <X className="h-4 w-4" />
         </Button>
       </div>

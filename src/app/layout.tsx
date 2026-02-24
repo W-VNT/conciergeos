@@ -7,7 +7,10 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#171717" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,

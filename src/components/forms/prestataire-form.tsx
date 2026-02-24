@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -121,7 +122,7 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
               <div className="space-y-2">
                 <Label htmlFor="full_name">Nom complet *</Label>
                 <Input id="full_name" {...form.register("full_name")} />
-                {form.formState.errors.full_name && <p className="text-sm text-destructive">{form.formState.errors.full_name.message}</p>}
+                {form.formState.errors.full_name && <FormError message={form.formState.errors.full_name.message} />}
               </div>
               <div className="space-y-2">
                 <Label>Statut juridique</Label>

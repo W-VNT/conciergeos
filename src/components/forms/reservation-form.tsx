@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Reservation, Logement } from "@/types/database";
 import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Info } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
 
 interface Props {
   reservation?: Reservation;
@@ -98,7 +99,7 @@ export function ReservationForm({ reservation, logements }: Props) {
               </Label>
               <Input id="guest_name" {...form.register("guest_name")} />
               {form.formState.errors.guest_name && (
-                <p className="text-destructive text-sm mt-1">{form.formState.errors.guest_name.message}</p>
+                <FormError message={form.formState.errors.guest_name.message} />
               )}
             </div>
 
@@ -143,30 +144,30 @@ export function ReservationForm({ reservation, logements }: Props) {
               </Select>
             )} />
             {form.formState.errors.logement_id && (
-              <p className="text-destructive text-sm mt-1">{form.formState.errors.logement_id.message}</p>
+              <FormError message={form.formState.errors.logement_id.message} />
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Arrivée <span className="text-destructive">*</span></Label>
-              <div className="flex gap-2 mt-1">
+              <div className="flex flex-col sm:flex-row gap-2 mt-1">
                 <Input id="check_in_date" type="date" className="flex-1" {...form.register("check_in_date")} />
-                <Input id="check_in_time" type="time" className="w-28" {...form.register("check_in_time")} />
+                <Input id="check_in_time" type="time" className="w-full sm:w-28" {...form.register("check_in_time")} />
               </div>
               {form.formState.errors.check_in_date && (
-                <p className="text-destructive text-sm mt-1">{form.formState.errors.check_in_date.message}</p>
+                <FormError message={form.formState.errors.check_in_date.message} />
               )}
             </div>
 
             <div>
               <Label>Départ <span className="text-destructive">*</span></Label>
-              <div className="flex gap-2 mt-1">
+              <div className="flex flex-col sm:flex-row gap-2 mt-1">
                 <Input id="check_out_date" type="date" className="flex-1" {...form.register("check_out_date")} />
-                <Input id="check_out_time" type="time" className="w-28" {...form.register("check_out_time")} />
+                <Input id="check_out_time" type="time" className="w-full sm:w-28" {...form.register("check_out_time")} />
               </div>
               {form.formState.errors.check_out_date && (
-                <p className="text-destructive text-sm mt-1">{form.formState.errors.check_out_date.message}</p>
+                <FormError message={form.formState.errors.check_out_date.message} />
               )}
             </div>
           </div>
@@ -312,13 +313,16 @@ export function ReservationForm({ reservation, logements }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer la réservation"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => window.history.back()}>
-          Annuler
-        </Button>
+      <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t md:static md:border-0 md:pt-0 md:pb-0">
+        <div className="flex gap-3">
+          <Button type="submit" disabled={loading} className="flex-1 md:flex-none">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer la réservation"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => window.history.back()} className="flex-1 md:flex-none">
+            Annuler
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -85,7 +87,7 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
                   <SelectContent>{logements.map((l) => (<SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>))}</SelectContent>
                 </Select>
               )} />
-              {form.formState.errors.logement_id && <p className="text-sm text-destructive">{form.formState.errors.logement_id.message}</p>}
+              {form.formState.errors.logement_id && <FormError message={form.formState.errors.logement_id.message} />}
             </div>
             <div className="space-y-2">
               <Label>Assigné à</Label>
@@ -128,11 +130,11 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
             </div>
             <div className="space-y-2">
               <Label>Date et heure planifiées *</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input id="scheduled_date" type="date" className="flex-1" {...form.register("scheduled_date")} />
-                <Input id="scheduled_time" type="time" className="w-28" {...form.register("scheduled_time")} />
+                <Input id="scheduled_time" type="time" className="w-full sm:w-28" {...form.register("scheduled_time")} />
               </div>
-              {form.formState.errors.scheduled_date && <p className="text-sm text-destructive">{form.formState.errors.scheduled_date.message}</p>}
+              {form.formState.errors.scheduled_date && <FormError message={form.formState.errors.scheduled_date.message} />}
             </div>
             {isEdit && (
               <div className="space-y-2">
@@ -145,7 +147,12 @@ export function MissionForm({ mission, logements, profiles, isAdmin: admin, curr
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" {...form.register("notes")} />
           </div>
-          <Button type="submit" disabled={loading}>{loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}</Button>
+          <div className="sticky bottom-0 bg-background pt-3 pb-1 -mx-6 px-6 border-t md:static md:border-0 md:mx-0 md:px-0 md:pt-0 md:pb-0">
+            <Button type="submit" disabled={loading} className="w-full md:w-auto">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

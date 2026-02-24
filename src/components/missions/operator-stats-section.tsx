@@ -52,7 +52,26 @@ export function OperatorStatsSection({ stats }: OperatorStatsSectionProps) {
       </CardHeader>
       {open && (
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Mobile: card list */}
+          <div className="md:hidden divide-y">
+            {stats.map((s) => (
+              <div key={s.operator_id} className="px-4 py-3 space-y-2">
+                <p className="font-medium">{s.operator_name}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <span className="text-muted-foreground">Terminées</span>
+                  <span className="text-right">{s.missions_completed}</span>
+                  <span className="text-muted-foreground">Temps moy.</span>
+                  <span className="text-right">{formatMinutes(s.avg_time_minutes)}</span>
+                  <span className="text-muted-foreground">Taux retard</span>
+                  <span className="text-right">{getLateRateBadge(s.late_rate)}</span>
+                  <span className="text-muted-foreground">En cours</span>
+                  <span className="text-right">{s.missions_pending}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-t text-left text-muted-foreground">

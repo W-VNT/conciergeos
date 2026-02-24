@@ -24,7 +24,7 @@ export function BackButton({ href, label = "Retour", variant = "ghost" }: BackBu
   return (
     <Button
       variant={variant}
-      size="sm"
+      size="default"
       onClick={handleClick}
       className="gap-2"
     >

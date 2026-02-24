@@ -156,7 +156,7 @@ export function SendMessageDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Envoyer un message</DialogTitle>
           <DialogDescription>
@@ -226,7 +226,7 @@ export function SendMessageDialog({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Rédigez votre message..."
-              rows={8}
+              rows={5}
               required
               disabled={isReplacing}
             />

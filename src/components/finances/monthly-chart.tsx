@@ -93,20 +93,21 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+    <div className="h-[250px] sm:h-[350px]">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 11 }}
           tickLine={false}
           axisLine={false}
         />
         <YAxis
           tickFormatter={(v) => formatEur(v)}
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 11 }}
           tickLine={false}
           axisLine={false}
-          width={80}
+          width={65}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend
@@ -133,5 +134,6 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
         />
       </BarChart>
     </ResponsiveContainer>
+    </div>
   );
 }

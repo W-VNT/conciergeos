@@ -24,28 +24,46 @@ export function Pagination({ totalCount, pageSize = 20 }: PaginationProps) {
     router.replace(`${pathname}?${params.toString()}`);
   }
 
+  const hasNext = currentPage < totalPages;
+
   return (
-    <div className="flex items-center justify-between mt-4">
-      <p className="text-sm text-muted-foreground">
-        Page {currentPage} sur {totalPages} ({totalCount} résultats)
-      </p>
-      <div className="flex gap-2">
+    <div className="mt-4 space-y-2">
+      {/* Mobile: load more button */}
+      {hasNext && (
         <Button
           variant="outline"
-          size="sm"
-          disabled={currentPage <= 1}
-          onClick={() => goTo(currentPage - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={currentPage >= totalPages}
+          className="w-full sm:hidden"
           onClick={() => goTo(currentPage + 1)}
         >
-          <ChevronRight className="h-4 w-4" />
+          Page suivante ({currentPage + 1}/{totalPages})
         </Button>
+      )}
+
+      {/* Desktop: prev/next with counter */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Page {currentPage} sur {totalPages} ({totalCount} résultats)
+        </p>
+        <div className="hidden sm:flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={currentPage <= 1}
+            onClick={() => goTo(currentPage - 1)}
+            aria-label="Page précédente"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!hasNext}
+            onClick={() => goTo(currentPage + 1)}
+            aria-label="Page suivante"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

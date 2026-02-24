@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -132,7 +133,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
               <Label htmlFor="name">Nom du logement *</Label>
               <Input id="name" {...form.register("name")} />
               {form.formState.errors.name && (
-                <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                <FormError message={form.formState.errors.name.message} />
               )}
             </div>
             <div className="space-y-2">
@@ -185,7 +186,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
               <Label htmlFor="address_line1">Adresse</Label>
               <Input id="address_line1" {...form.register("address_line1")} />
               {form.formState.errors.address_line1 && (
-                <p className="text-sm text-destructive">{form.formState.errors.address_line1.message}</p>
+                <FormError message={form.formState.errors.address_line1.message} />
               )}
             </div>
             <div className="space-y-2">
@@ -194,7 +195,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="postal_code">Code postal</Label>
-              <Input id="postal_code" {...form.register("postal_code")} />
+              <Input id="postal_code" inputMode="numeric" {...form.register("postal_code")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Pays</Label>
@@ -292,7 +293,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="wifi_password">Mot de passe WiFi</Label>
-              <Input id="wifi_password" {...form.register("wifi_password")} />
+              <Input id="wifi_password" type="text" autoComplete="off" {...form.register("wifi_password")} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -338,7 +339,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
               placeholder="Ex: 60"
             />
             {form.formState.errors.menage_price && (
-              <p className="text-sm text-destructive">{form.formState.errors.menage_price.message}</p>
+              <FormError message={form.formState.errors.menage_price.message} />
             )}
             <p className="text-sm text-muted-foreground">
               Coût du ménage spécifique à ce logement. Laissez vide pour utiliser le tarif par défaut.
@@ -353,7 +354,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
               placeholder="https://www.airbnb.com/calendar/ical/..."
             />
             {form.formState.errors.ical_url && (
-              <p className="text-sm text-destructive">{form.formState.errors.ical_url.message}</p>
+              <FormError message={form.formState.errors.ical_url.message} />
             )}
             <p className="text-sm text-muted-foreground">
               Pour synchroniser automatiquement les réservations depuis Airbnb, Booking.com, etc.
@@ -363,7 +364,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" {...form.register("notes")} />
             {form.formState.errors.notes && (
-              <p className="text-sm text-destructive">{form.formState.errors.notes.message}</p>
+              <FormError message={form.formState.errors.notes.message} />
             )}
           </div>
           <div className="space-y-2">
@@ -376,12 +377,15 @@ export function LogementForm({ logement, proprietaires }: Props) {
               )}
             />
             {form.formState.errors.tags && (
-              <p className="text-sm text-destructive">{form.formState.errors.tags.message}</p>
+              <FormError message={form.formState.errors.tags.message} />
             )}
           </div>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}
-          </Button>
+          <div className="sticky bottom-0 bg-background pt-3 pb-1 -mx-6 px-6 border-t md:static md:border-0 md:mx-0 md:px-0 md:pt-0 md:pb-0">
+            <Button type="submit" disabled={loading} className="w-full md:w-auto">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Enregistrement..." : isEdit ? "Mettre à jour" : "Créer"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

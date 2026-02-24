@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/shared/form-error";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -124,7 +125,7 @@ export function ProprietaireForm({ proprietaire }: Props) {
                 <Label htmlFor="full_name">Nom complet *</Label>
                 <Input id="full_name" {...form.register("full_name")} />
                 {form.formState.errors.full_name && (
-                  <p className="text-sm text-destructive">{form.formState.errors.full_name.message}</p>
+                  <FormError message={form.formState.errors.full_name.message} />
                 )}
               </div>
               <div className="space-y-2">
@@ -186,7 +187,7 @@ export function ProprietaireForm({ proprietaire }: Props) {
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" {...form.register("email")} />
                 {form.formState.errors.email && (
-                  <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                  <FormError message={form.formState.errors.email.message} />
                 )}
               </div>
             </div>

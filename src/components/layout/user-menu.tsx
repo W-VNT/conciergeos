@@ -89,7 +89,7 @@ export function UserMenu({ profile }: UserMenuProps) {
         {/* Avatar with online status */}
         <div className="relative">
           <div
-            className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden flex items-center justify-center ${
+            className={`h-10 w-10 rounded-full overflow-hidden flex items-center justify-center ${
               profile.avatar_url ? "bg-transparent" : `${getAvatarColor(profile.full_name)} text-white`
             }`}
           >
@@ -106,7 +106,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             )}
           </div>
           {/* Online status indicator */}
-          <div className="absolute bottom-0 right-0 h-2.5 w-2.5 sm:h-3 sm:w-3 bg-green-500 border-2 border-background rounded-full" />
+          <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
         </div>
 
         {/* Name and role (hidden on mobile) */}
@@ -127,7 +127,7 @@ export function UserMenu({ profile }: UserMenuProps) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-popover rounded-lg shadow-lg border border-border z-50" role="menu">
+        <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-popover rounded-lg shadow-lg border border-border z-50" role="menu">
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-border">
             <div className="flex items-center gap-3">
@@ -168,7 +168,7 @@ export function UserMenu({ profile }: UserMenuProps) {
                 setIsOpen(false);
                 router.push("/account");
               }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-accent transition-colors text-left"
             >
               <Settings className="h-4 w-4 text-muted-foreground" />
               Mon profil
@@ -179,7 +179,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             <button
               role="menuitem"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-accent transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-accent transition-colors text-left"
             >
               <LogOut className="h-4 w-4" />
               Déconnexion

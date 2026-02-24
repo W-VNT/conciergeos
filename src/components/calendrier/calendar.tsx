@@ -365,9 +365,24 @@ export default function Calendar({
           </div>
 
           {/* Row 3: Filters on mobile */}
-          <div className="flex items-center gap-2 sm:hidden">
+          <div className="flex flex-wrap items-center gap-2 sm:hidden">
+            {view !== "jour" && (
+              <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                <SelectTrigger className="!h-9 text-sm flex-1 min-w-0">
+                  <span className="truncate">
+                    {filterStatus === "ALL" ? "Statut" : RESERVATION_STATUS_LABELS[filterStatus as keyof typeof RESERVATION_STATUS_LABELS]}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tous les statuts</SelectItem>
+                  {Object.entries(RESERVATION_STATUS_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={filterLogement} onValueChange={setFilterLogement}>
-              <SelectTrigger className="!h-9 text-sm flex-1">
+              <SelectTrigger className="!h-9 text-sm flex-1 min-w-0">
                 <span className="truncate">
                   {filterLogement === "ALL" ? "Logement" : logements.find((l) => l.id === filterLogement)?.name ?? "Logement"}
                 </span>
@@ -380,7 +395,7 @@ export default function Calendar({
               </SelectContent>
             </Select>
             <Select value={filterOperator} onValueChange={setFilterOperator}>
-              <SelectTrigger className="!h-9 text-sm flex-1">
+              <SelectTrigger className="!h-9 text-sm flex-1 min-w-0">
                 <span className="truncate">
                   {filterOperator === "ALL" ? "Operateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Operateur"}
                 </span>
@@ -498,12 +513,12 @@ export default function Calendar({
                     {day.getDate()}
                   </span>
                 </div>
-                <div className="space-y-1 min-h-[60px] sm:min-h-[120px]">
+                <div className="space-y-1 min-h-[80px] sm:min-h-[120px]">
                   {getReservationsForDate(day).map((r) => {
                     const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
                     return (
                       <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-[11px] p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                        <div className={`text-xs p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
                           <div className="font-medium truncate">{logement?.name}</div>
                         </div>
                       </Link>
@@ -511,7 +526,7 @@ export default function Calendar({
                   })}
                   {getMissionsForDate(day).map((m) => (
                     <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                      <div className={`text-[11px] p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
+                      <div className={`text-xs p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
                         <div className="font-medium truncate flex items-center gap-0.5 sm:gap-1">
                           <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
                           <span className="hidden sm:inline">{formatTime(m.scheduled_at)}</span>
