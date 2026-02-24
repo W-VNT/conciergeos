@@ -48,6 +48,7 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
       address_line1: prestataire?.address_line1 ?? "",
       postal_code: prestataire?.postal_code ?? "",
       city: prestataire?.city ?? "",
+      zone: prestataire?.zone ?? "",
       hourly_rate: prestataire?.hourly_rate ?? null,
       reliability_score: prestataire?.reliability_score ?? null,
       notes: prestataire?.notes ?? "",
@@ -217,6 +218,10 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
                     <SelectContent>{Object.entries(SPECIALTY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
                   </Select>
                 )} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="zone">Zone d&apos;intervention</Label>
+                <Input id="zone" {...form.register("zone")} placeholder="Ex: Paris 1-5, Banlieue sud" />
               </div>
               <div className="space-y-2"><Label htmlFor="hourly_rate">Taux horaire (EUR)</Label><Input id="hourly_rate" type="number" step="0.01" {...form.register("hourly_rate")} /></div>
               <div className="space-y-2"><Label htmlFor="reliability_score">Fiabilité (1-5)</Label><Input id="reliability_score" type="number" min="1" max="5" {...form.register("reliability_score")} /></div>
