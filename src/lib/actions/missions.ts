@@ -72,7 +72,10 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
       notes: parsed.notes || null,
     };
 
-    if (parsed.status === "TERMINE") {
+    if (parsed.status === "EN_COURS") {
+      updateData.started_at = new Date().toISOString();
+      updateData.completed_at = null;
+    } else if (parsed.status === "TERMINE") {
       updateData.completed_at = new Date().toISOString();
     } else {
       updateData.completed_at = null;
@@ -100,7 +103,11 @@ export async function startMission(id: string) {
 
   const { error } = await supabase
     .from("missions")
-    .update({ status: "EN_COURS", completed_at: null })
+    .update({
+      status: "EN_COURS",
+      completed_at: null,
+      started_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .eq("status", "A_FAIRE")
     .eq("organisation_id", profile.organisation_id);
@@ -115,12 +122,32 @@ export async function completeMission(id: string) {
   const profile = await requireProfile();
   const supabase = createClient();
 
+  // Fetch the mission first to read started_at for time calculation
+  const { data: mission, error: fetchError } = await supabase
+    .from("missions")
+    .select("started_at")
+    .eq("id", id)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  const now = new Date();
+  const updateData: Record<string, unknown> = {
+    status: "TERMINE",
+    completed_at: now.toISOString(),
+  };
+
+  // Calculate time_spent_minutes if the mission was started (has started_at)
+  if (mission?.started_at) {
+    updateData.time_spent_minutes = Math.round(
+      (now.getTime() - new Date(mission.started_at).getTime()) / 60000
+    );
+  }
+
   const { error } = await supabase
     .from("missions")
-    .update({
-      status: "TERMINE",
-      completed_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq("id", id)
     .in("status", ["EN_COURS", "A_FAIRE"])
     .eq("organisation_id", profile.organisation_id);

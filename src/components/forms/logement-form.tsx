@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { TagInput } from "@/components/shared/tag-input";
 import { MapPin, Loader2, ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -54,6 +55,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
       max_guests: logement?.max_guests ?? null,
       ical_url: logement?.ical_url ?? "",
       menage_price: logement?.menage_price ?? null,
+      tags: logement?.tags ?? [],
       notes: logement?.notes ?? "",
       status: logement?.status ?? "ACTIF",
     },
@@ -362,6 +364,19 @@ export function LogementForm({ logement, proprietaires }: Props) {
             <Textarea id="notes" {...form.register("notes")} />
             {form.formState.errors.notes && (
               <p className="text-sm text-destructive">{form.formState.errors.notes.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <Controller
+              name="tags"
+              control={form.control}
+              render={({ field }) => (
+                <TagInput value={field.value} onChange={field.onChange} />
+              )}
+            />
+            {form.formState.errors.tags && (
+              <p className="text-sm text-destructive">{form.formState.errors.tags.message}</p>
             )}
           </div>
           <Button type="submit" disabled={loading}>

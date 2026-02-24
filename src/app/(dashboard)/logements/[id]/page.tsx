@@ -6,10 +6,12 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LOGEMENT_STATUS_LABELS, OFFER_TIER_LABELS } from "@/types/database";
-import { deleteLogement } from "@/lib/actions/logements";
-import { Pencil, AlertTriangle, KeyRound, Wifi } from "lucide-react";
+import { formatCurrency } from "@/lib/format-currency";
+import { deleteLogement, duplicateLogement, archiveLogement, reactivateLogement } from "@/lib/actions/logements";
+import { Pencil, AlertTriangle, KeyRound, Wifi, Copy, Archive, RotateCcw } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { SyncIcalButton } from "@/components/shared/sync-ical-button";
 import { InventaireSection } from "@/components/logements/inventaire-section";
@@ -67,15 +69,43 @@ export default async function LogementDetailPage({ params }: { params: { id: str
         {admin && (
           <>
             <Button variant="outline" asChild><Link href={`/logements/${logement.id}/edit`}><Pencil className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Modifier</span></Link></Button>
-            <DeleteConfirmDialog
-              entityType="logement"
-              entityName={logement.name}
-              deleteAction={async () => {
+            <form action={async () => {
+              "use server";
+              const result = await duplicateLogement(logement.id);
+              if (result.success && result.data?.id) {
+                redirect(`/logements/${result.data.id}`);
+              }
+            }}>
+              <Button type="submit" variant="outline"><Copy className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Dupliquer</span></Button>
+            </form>
+            {logement.status !== "ARCHIVE" ? (
+              <form action={async () => {
                 "use server";
-                return await deleteLogement(logement.id);
-              }}
-              redirectPath="/logements"
-            />
+                await archiveLogement(logement.id);
+                redirect(`/logements/${logement.id}`);
+              }}>
+                <Button type="submit" variant="outline" className="text-orange-600 hover:text-orange-700"><Archive className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Archiver</span></Button>
+              </form>
+            ) : (
+              <>
+                <form action={async () => {
+                  "use server";
+                  await reactivateLogement(logement.id);
+                  redirect(`/logements/${logement.id}`);
+                }}>
+                  <Button type="submit" variant="outline" className="text-green-600 hover:text-green-700"><RotateCcw className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Réactiver</span></Button>
+                </form>
+                <DeleteConfirmDialog
+                  entityType="logement"
+                  entityName={logement.name}
+                  deleteAction={async () => {
+                    "use server";
+                    return await deleteLogement(logement.id);
+                  }}
+                  redirectPath="/logements"
+                />
+              </>
+            )}
           </>
         )}
       </PageHeader>
@@ -97,6 +127,16 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             <div className="flex justify-between"><span className="text-muted-foreground">Offre</span><StatusBadge value={logement.offer_tier} label={OFFER_TIER_LABELS[logement.offer_tier as keyof typeof OFFER_TIER_LABELS]} /></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Statut</span><StatusBadge value={logement.status} label={LOGEMENT_STATUS_LABELS[logement.status as keyof typeof LOGEMENT_STATUS_LABELS]} /></div>
             {prop && <div className="flex justify-between"><span className="text-muted-foreground">Propriétaire</span><Link href={`/proprietaires/${prop.id}`} className="hover:underline">{prop.full_name}</Link></div>}
+            {logement.tags && (logement.tags as string[]).length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-muted-foreground">Tags</span>
+                <div className="flex flex-wrap gap-1">
+                  {(logement.tags as string[]).map((tag: string) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -106,7 +146,7 @@ export default async function LogementDetailPage({ params }: { params: { id: str
             <div className="flex justify-between"><span className="text-muted-foreground">Chambres</span><span>{logement.bedrooms ?? "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Lits</span><span>{logement.beds ?? "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Capacité max</span><span>{logement.max_guests ? `${logement.max_guests} voyageurs` : "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Prix ménage</span><span>{logement.menage_price != null ? `${logement.menage_price} €` : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Prix ménage</span><span>{logement.menage_price != null ? formatCurrency(logement.menage_price) : "—"}</span></div>
           </CardContent>
         </Card>
 

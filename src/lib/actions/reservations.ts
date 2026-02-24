@@ -68,6 +68,8 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
         platform: parsed.platform,
         amount: parsed.amount,
         status: parsed.status,
+        payment_status: parsed.payment_status || null,
+        payment_date: parsed.payment_date || null,
         notes: parsed.notes || null,
         access_instructions: parsed.access_instructions || null,
       })
@@ -146,6 +148,8 @@ export async function updateReservation(id: string, data: ReservationFormData): 
         platform: parsed.platform,
         amount: parsed.amount,
         status: parsed.status,
+        payment_status: parsed.payment_status || null,
+        payment_date: parsed.payment_date || null,
         notes: parsed.notes || null,
         access_instructions: parsed.access_instructions || null,
       })
@@ -154,7 +158,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
-    // Status changed to CONFIRMEE → create missions + revenu
+    // Status changed to CONFIRMEE → create missions + revenu (also handles EN_ATTENTE → CONFIRMEE)
     if (currentReservation?.status !== "CONFIRMEE" && parsed.status === "CONFIRMEE") {
       await createMissionsForReservation(
         id,

@@ -18,7 +18,9 @@ export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED';
 export type ContractType = 'EXCLUSIF' | 'SIMPLE';
 export type ContractStatus = 'ACTIF' | 'EXPIRE' | 'RESILIE' | 'SIGNE';
 export type BookingPlatform = 'AIRBNB' | 'BOOKING' | 'DIRECT' | 'AUTRE';
-export type ReservationStatus = 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
+export type ReservationStatus = 'EN_ATTENTE' | 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
+export type IncidentCategory = 'PLOMBERIE' | 'ELECTRICITE' | 'SERRURERIE' | 'NUISIBLES' | 'MENAGE' | 'BRUIT' | 'EQUIPEMENT' | 'AUTRE';
+export type PaymentStatus = 'EN_ATTENTE' | 'PARTIEL' | 'PAYE' | 'REMBOURSE';
 export type NotificationType =
   | 'MISSION_ASSIGNED'
   | 'MISSION_URGENT'
@@ -112,6 +114,8 @@ export interface Reservation {
   platform: BookingPlatform;
   amount: number | null;
   status: ReservationStatus;
+  payment_status: PaymentStatus | null;
+  payment_date: string | null;
   notes: string | null;
   access_instructions: string | null;
   created_at: string;
@@ -184,6 +188,7 @@ export interface Logement {
   ical_url: string | null;
   ical_last_synced_at: string | null;
   menage_price: number | null;
+  tags: string[] | null;
   notes: string | null;
   status: LogementStatus;
   created_at: string;
@@ -215,6 +220,7 @@ export interface Mission {
   priority: MissionPriority;
   scheduled_at: string;
   completed_at: string | null;
+  started_at: string | null;
   time_spent_minutes: number | null;
   notes: string | null;
   created_at: string;
@@ -253,6 +259,7 @@ export interface Incident {
   prestataire_id: string | null;
   severity: IncidentSeverity;
   status: IncidentStatus;
+  category: IncidentCategory | null;
   description: string;
   cost: number | null;
   notes: string | null;
@@ -351,6 +358,16 @@ export interface MissionChecklistItem {
   created_at: string;
   // Joined
   item?: ChecklistTemplateItem;
+}
+
+export interface IncidentResponseTemplate {
+  id: string;
+  organisation_id: string;
+  name: string;
+  category: IncidentCategory | null;
+  content: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Operator Capabilities for Auto-Assignment
@@ -468,9 +485,28 @@ export const BOOKING_PLATFORM_LABELS: Record<BookingPlatform, string> = {
 };
 
 export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
+  EN_ATTENTE: 'En attente',
   CONFIRMEE: 'Confirmée',
   ANNULEE: 'Annulée',
   TERMINEE: 'Terminée',
+};
+
+export const INCIDENT_CATEGORY_LABELS: Record<IncidentCategory, string> = {
+  PLOMBERIE: 'Plomberie',
+  ELECTRICITE: 'Électricité',
+  SERRURERIE: 'Serrurerie',
+  NUISIBLES: 'Nuisibles',
+  MENAGE: 'Ménage',
+  BRUIT: 'Bruit / Voisinage',
+  EQUIPEMENT: 'Équipement',
+  AUTRE: 'Autre',
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  EN_ATTENTE: 'En attente',
+  PARTIEL: 'Partiel',
+  PAYE: 'Payé',
+  REMBOURSE: 'Remboursé',
 };
 
 export const EQUIPEMENT_CATEGORIE_LABELS: Record<EquipementCategorie, string> = {

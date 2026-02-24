@@ -38,6 +38,21 @@ export default async function CalendrierPage() {
     .eq("organisation_id", profile.organisation_id)
     .order("check_in_date", { ascending: true });
 
+  // Fetch logements for filter dropdown
+  const { data: logements } = await supabase
+    .from("logements")
+    .select("id, name")
+    .eq("organisation_id", profile.organisation_id)
+    .order("name");
+
+  // Fetch operators for filter dropdown
+  const { data: operators } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("organisation_id", profile.organisation_id)
+    .eq("role", "OPERATEUR")
+    .order("full_name");
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -50,6 +65,8 @@ export default async function CalendrierPage() {
       <Calendar
         missions={(missions as Mission[]) || []}
         reservations={(reservations as Reservation[]) || []}
+        logements={logements || []}
+        operators={operators || []}
       />
     </div>
   );

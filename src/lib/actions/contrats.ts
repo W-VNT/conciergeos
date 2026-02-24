@@ -95,6 +95,53 @@ export async function deleteContrat(id: string): Promise<ActionResponse> {
   }
 }
 
+export async function duplicateContrat(id: string): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const profile = await requireProfile();
+    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
+
+    const supabase = createClient();
+    const { data: original } = await supabase
+      .from("contrats")
+      .select("*")
+      .eq("id", id)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+
+    if (!original) return errorResponse("Contrat non trouvé") as ActionResponse<{ id: string }>;
+
+    // New dates: start = today, end = today + same duration
+    const origStart = new Date(original.start_date);
+    const origEnd = new Date(original.end_date);
+    const durationMs = origEnd.getTime() - origStart.getTime();
+    const newStart = new Date();
+    const newEnd = new Date(newStart.getTime() + durationMs);
+
+    const { data: created, error } = await supabase
+      .from("contrats")
+      .insert({
+        organisation_id: profile.organisation_id,
+        proprietaire_id: original.proprietaire_id,
+        logement_id: original.logement_id,
+        type: original.type,
+        start_date: newStart.toISOString().split("T")[0],
+        end_date: newEnd.toISOString().split("T")[0],
+        commission_rate: original.commission_rate,
+        status: "ACTIF",
+        conditions: original.conditions,
+      })
+      .select("id")
+      .single();
+
+    if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
+
+    revalidatePath("/contrats");
+    return successResponse("Contrat dupliqué avec succès", { id: created.id });
+  } catch (err) {
+    return errorResponse((err as Error).message ?? "Erreur lors de la duplication du contrat") as ActionResponse<{ id: string }>;
+  }
+}
+
 export async function markContratAsSigned(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();

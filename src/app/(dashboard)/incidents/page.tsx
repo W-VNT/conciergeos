@@ -5,7 +5,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusFilter } from "@/components/shared/status-filter";
 import { ChipFilter } from "@/components/shared/chip-filter";
 import { Pagination } from "@/components/shared/pagination";
-import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
+import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_CATEGORY_LABELS } from "@/types/database";
 import { IncidentsTableWithSelection } from "@/components/incidents/incidents-table-with-selection";
 
 export const metadata = { title: "Incidents" };
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
 
-export default async function IncidentsPage({ searchParams }: { searchParams: { q?: string; status?: string; severity?: string; page?: string } }) {
+export default async function IncidentsPage({ searchParams }: { searchParams: { q?: string; status?: string; severity?: string; category?: string; page?: string } }) {
   const profile = await requireProfile();
   const supabase = createClient();
   const page = Number(searchParams.page ?? "1");
@@ -26,10 +26,12 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
   }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.severity) query = query.eq("severity", searchParams.severity);
+  if (searchParams.category) query = query.eq("category", searchParams.category);
   const { data, count } = await query;
 
   const statusOptions = Object.entries(INCIDENT_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
   const severityOptions = Object.entries(INCIDENT_SEVERITY_LABELS).map(([v, l]) => ({ value: v, label: l }));
+  const categoryOptions = Object.entries(INCIDENT_CATEGORY_LABELS).map(([v, l]) => ({ value: v, label: l }));
 
   return (
     <div>
@@ -39,12 +41,14 @@ export default async function IncidentsPage({ searchParams }: { searchParams: { 
         <SearchInput placeholder="Rechercher dans description..." />
         <ChipFilter options={statusOptions} placeholder="Tous les statuts" />
         <ChipFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />
+        <ChipFilter paramName="category" options={categoryOptions} placeholder="Toutes les catégories" />
       </div>
       {/* Filtres desktop : dropdowns */}
       <div className="hidden md:flex flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans description..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="severity" options={severityOptions} placeholder="Toutes les sévérités" />
+        <StatusFilter paramName="category" options={categoryOptions} placeholder="Toutes les catégories" />
       </div>
       <IncidentsTableWithSelection
         incidents={data || []}

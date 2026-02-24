@@ -6,6 +6,7 @@ import { StatusFilter } from "@/components/shared/status-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { STATUT_JURIDIQUE_LABELS } from "@/types/database";
 import { ProprietairesTableWithSelection } from "@/components/proprietaires/proprietaires-table-with-selection";
+import { ExportCSVButton } from "@/components/shared/export-csv-button";
 
 export const metadata = { title: "Propriétaires" };
 export const dynamic = "force-dynamic";
@@ -45,6 +46,7 @@ export default async function ProprietairesPage({
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher un propriétaire..." />
         <StatusFilter paramName="statut_juridique" options={statutOptions} placeholder="Tous les statuts juridiques" />
+        <ExportCSVButton type="proprietaires" />
       </div>
       <ProprietairesTableWithSelection proprietaires={data || []} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />

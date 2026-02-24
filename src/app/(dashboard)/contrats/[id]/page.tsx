@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS, OFFER_TIER_LABELS } from "@/types/database";
 import type { Proprietaire, Logement, OfferTierConfig } from "@/types/database";
-import { deleteContrat } from "@/lib/actions/contrats";
+import { deleteContrat, duplicateContrat } from "@/lib/actions/contrats";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
-import { Pencil, FileText } from "lucide-react";
+import { Pencil, FileText, Copy } from "lucide-react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
@@ -111,6 +112,19 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
         entityName={`Contrat ${CONTRACT_TYPE_LABELS[contrat.type as keyof typeof CONTRACT_TYPE_LABELS]}`}
       >
         <ContratPDFButton data={pdfData} />
+        {admin && (
+          <form
+            action={async () => {
+              "use server";
+              const result = await duplicateContrat(contrat.id);
+              if (result.success && result.data?.id) redirect(`/contrats/${result.data.id}`);
+            }}
+          >
+            <Button variant="outline" size="sm" type="submit">
+              <Copy className="h-4 w-4 mr-2" /> Renouveler
+            </Button>
+          </form>
+        )}
         {admin && contrat.status !== "SIGNE" && (
           <>
             <SignContratButton contratId={contrat.id} />

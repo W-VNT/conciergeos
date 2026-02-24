@@ -4,7 +4,11 @@ import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
-import { getFinancialSummary, getRevenusByLogement } from "@/lib/actions/finances";
+import { getFinancialSummary, getRevenusByLogement, getAllRevenus } from "@/lib/actions/finances";
+import Link from "next/link";
+import { formatCurrencyDecimals } from "@/lib/format-currency";
+import { formatCurrency } from "@/lib/format-currency";
+import { ExportCSVButton } from "@/components/shared/export-csv-button";
 
 export const metadata = { title: "Finances" };
 
@@ -44,11 +48,13 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
   }
 
   // Get financial data
-  const summary = await getFinancialSummary(startDate, endDate);
-  const revenusByLogement = await getRevenusByLogement(startDate, endDate);
+  const [summary, revenusByLogement, detailedRevenus] = await Promise.all([
+    getFinancialSummary(startDate, endDate),
+    getRevenusByLogement(startDate, endDate),
+    getAllRevenus(startDate, endDate),
+  ]);
 
-  const fmtEur = (v: number) =>
-    new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+  const fmtEur = formatCurrency;
 
   // Format range label for display
   const rangeLabel =
@@ -67,7 +73,10 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
           <h1 className="text-2xl font-bold">Finances</h1>
           <p className="text-muted-foreground mt-1">{rangeLabel}</p>
         </div>
-        <DateFilter />
+        <div className="flex gap-2">
+          <ExportCSVButton type="finances" />
+          <DateFilter />
+        </div>
       </div>
 
       {/* KPIs financiers */}
@@ -172,17 +181,76 @@ export default async function FinancesPage({ searchParams }: FinancesPageProps) 
         </CardContent>
       </Card>
 
-      {/* Note pour Phase 3 */}
-      {process.env.NODE_ENV === "development" && (
-        <Card className="border-dashed">
-          <CardContent className="p-6">
+      {/* Revenus détaillés */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Revenus détaillés</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {detailedRevenus.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              <strong>Phase 3:</strong> Gestion des factures prestataires et export
-              comptable (CSV/PDF) à venir
+              Aucun revenu détaillé sur cette période
             </p>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b">
+                  <tr className="text-left">
+                    <th className="pb-2 font-medium">Logement</th>
+                    <th className="pb-2 font-medium">Voyageur</th>
+                    <th className="pb-2 font-medium">Plateforme</th>
+                    <th className="pb-2 font-medium">Check-in</th>
+                    <th className="pb-2 font-medium">Check-out</th>
+                    <th className="pb-2 font-medium text-right">Brut</th>
+                    <th className="pb-2 font-medium text-right">Commission</th>
+                    <th className="pb-2 font-medium text-right">Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detailedRevenus.map((rev) => {
+                    const logement = Array.isArray(rev.logement) ? rev.logement[0] : rev.logement;
+                    const reservation = Array.isArray(rev.reservation) ? rev.reservation[0] : rev.reservation;
+                    return (
+                      <tr key={rev.id} className="border-b last:border-0">
+                        <td className="py-3">
+                          {logement ? (
+                            <Link href={`/logements/${logement.id}`} className="hover:underline font-medium">
+                              {logement.name}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="py-3">
+                          {reservation?.guest_name ?? <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="py-3">
+                          {reservation?.platform ?? <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="py-3 whitespace-nowrap">
+                          {rev.date_checkin ? new Date(rev.date_checkin).toLocaleDateString("fr-FR") : "—"}
+                        </td>
+                        <td className="py-3 whitespace-nowrap">
+                          {rev.date_checkout ? new Date(rev.date_checkout).toLocaleDateString("fr-FR") : "—"}
+                        </td>
+                        <td className="py-3 text-right font-medium whitespace-nowrap">
+                          {formatCurrencyDecimals(Number(rev.montant_brut || 0))}
+                        </td>
+                        <td className="py-3 text-right text-muted-foreground whitespace-nowrap">
+                          {formatCurrencyDecimals(Number(rev.montant_commission || 0))}
+                        </td>
+                        <td className="py-3 text-right font-medium text-green-600 whitespace-nowrap">
+                          {formatCurrencyDecimals(Number(rev.montant_net || 0))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

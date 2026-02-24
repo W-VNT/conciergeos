@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Mail, Clock, CheckCircle2 } from "lucide-react";
+import { Mail, Clock, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -13,18 +13,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { inviteProprietaire } from "@/lib/actions/team";
+import { inviteProprietaire, resendInvitation } from "@/lib/actions/team";
 import { toast } from "sonner";
 
 interface Props {
   proprietaireId: string;
   email: string;
   name: string;
-  status: "none" | "pending" | "connected";
+  status: "none" | "pending" | "expired" | "connected";
+  invitationId?: string;
 }
 
-export function InviteProprietaireButton({ proprietaireId, email, name, status }: Props) {
+export function InviteProprietaireButton({ proprietaireId, email, name, status, invitationId }: Props) {
   const [open, setOpen] = useState(false);
+  const [resendOpen, setResendOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleConfirm() {
@@ -39,6 +41,19 @@ export function InviteProprietaireButton({ proprietaireId, email, name, status }
     });
   }
 
+  function handleResend() {
+    if (!invitationId) return;
+    startTransition(async () => {
+      const result = await resendInvitation(invitationId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(result.message || "Invitation relancée avec succès");
+      }
+      setResendOpen(false);
+    });
+  }
+
   if (status === "connected") {
     return (
       <Button variant="outline" disabled>
@@ -48,12 +63,37 @@ export function InviteProprietaireButton({ proprietaireId, email, name, status }
     );
   }
 
-  if (status === "pending") {
+  if (status === "pending" || status === "expired") {
     return (
-      <Button variant="outline" disabled>
-        <Clock className="h-4 w-4 mr-2" />
-        Invitation envoyée
-      </Button>
+      <>
+        <Button variant="outline" disabled className="cursor-default">
+          <Clock className="h-4 w-4 mr-2" />
+          {status === "expired" ? "Invitation expirée" : "Invitation envoyée"}
+        </Button>
+        {invitationId && (
+          <Button variant="outline" onClick={() => setResendOpen(true)} disabled={isPending}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Relancer
+          </Button>
+        )}
+
+        <AlertDialog open={resendOpen} onOpenChange={setResendOpen}>
+          <AlertDialogContent className="max-w-sm rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Relancer l&apos;invitation ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Un nouvel email d&apos;invitation sera envoyé à <strong>{email}</strong> avec un nouveau lien valable 7 jours.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleResend} disabled={isPending}>
+                {isPending ? "Envoi…" : "Relancer l'invitation"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 

@@ -19,9 +19,21 @@ import { formatTime } from "@/lib/format-date";
 
 type ViewType = "jour" | "semaine" | "mois" | "annee";
 
+interface CalendarLogement {
+  id: string;
+  name: string;
+}
+
+interface CalendarOperator {
+  id: string;
+  full_name: string;
+}
+
 interface CalendarProps {
   missions: Mission[];
   reservations: Reservation[];
+  logements: CalendarLogement[];
+  operators: CalendarOperator[];
 }
 
 const MISSION_TYPE_COLORS: Record<MissionType, string> = {
@@ -41,6 +53,7 @@ const MISSION_TYPE_BORDER_COLORS: Record<MissionType, string> = {
 };
 
 const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
+  EN_ATTENTE: "bg-amber-500/10 border-amber-400 text-amber-900 dark:text-amber-200",
   CONFIRMEE: "bg-emerald-500/10 border-emerald-400 text-emerald-900 dark:text-emerald-200",
   ANNULEE: "bg-red-500/10 border-red-400 text-red-700 dark:text-red-300 line-through",
   TERMINEE: "bg-blue-500/10 border-blue-400 text-blue-800 dark:text-blue-200",
@@ -67,7 +80,7 @@ function isSameDay(a: Date, b: Date) {
   return a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
 }
 
-export default function Calendar({ missions, reservations }: CalendarProps) {
+export default function Calendar({ missions, reservations, logements, operators }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>("semaine");
 
@@ -77,6 +90,8 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
     }
   }, []);
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | "ALL">("ALL");
+  const [filterLogement, setFilterLogement] = useState<string>("ALL");
+  const [filterOperator, setFilterOperator] = useState<string>("ALL");
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -125,11 +140,23 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
 
   // --- Filtered data ---
   const filteredReservations = useMemo(() => {
-    return reservations.filter((r) => filterStatus === "ALL" || r.status === filterStatus);
-  }, [reservations, filterStatus]);
+    return reservations.filter((r) => {
+      if (filterStatus !== "ALL" && r.status !== filterStatus) return false;
+      if (filterLogement !== "ALL" && r.logement_id !== filterLogement) return false;
+      return true;
+    });
+  }, [reservations, filterStatus, filterLogement]);
+
+  const filteredMissions = useMemo(() => {
+    return missions.filter((m) => {
+      if (filterLogement !== "ALL" && m.logement_id !== filterLogement) return false;
+      if (filterOperator !== "ALL" && m.assigned_to !== filterOperator) return false;
+      return true;
+    });
+  }, [missions, filterLogement, filterOperator]);
 
   function getMissionsForDate(date: Date): Mission[] {
-    return missions.filter((m) => isSameDay(new Date(m.scheduled_at), date));
+    return filteredMissions.filter((m) => isSameDay(new Date(m.scheduled_at), date));
   }
 
   function getReservationsForDate(date: Date): Reservation[] {
@@ -235,6 +262,62 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
                 </SelectContent>
               </Select>
             )}
+            <Select value={filterLogement} onValueChange={setFilterLogement}>
+              <SelectTrigger className="!h-9 text-sm hidden sm:flex w-auto px-3">
+                <span className="truncate">
+                  {filterLogement === "ALL" ? "Filtrer par logement" : logements.find((l) => l.id === filterLogement)?.name ?? "Logement"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous les logements</SelectItem>
+                {logements.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterOperator} onValueChange={setFilterOperator}>
+              <SelectTrigger className="!h-9 text-sm hidden sm:flex w-auto px-3">
+                <span className="truncate">
+                  {filterOperator === "ALL" ? "Filtrer par opérateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Opérateur"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous les opérateurs</SelectItem>
+                {operators.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Row 3: Filters on mobile */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <Select value={filterLogement} onValueChange={setFilterLogement}>
+              <SelectTrigger className="!h-9 text-sm flex-1">
+                <span className="truncate">
+                  {filterLogement === "ALL" ? "Logement" : logements.find((l) => l.id === filterLogement)?.name ?? "Logement"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous les logements</SelectItem>
+                {logements.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterOperator} onValueChange={setFilterOperator}>
+              <SelectTrigger className="!h-9 text-sm flex-1">
+                <span className="truncate">
+                  {filterOperator === "ALL" ? "Opérateur" : operators.find((o) => o.id === filterOperator)?.full_name ?? "Opérateur"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous les opérateurs</SelectItem>
+                {operators.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </Card>
@@ -446,7 +529,7 @@ export default function Calendar({ missions, reservations }: CalendarProps) {
             for (let d = 1; d <= daysInThisMonth; d++) miniDays.push(d);
             while (miniDays.length % 7 !== 0) miniDays.push(null);
 
-            const monthMissions = missions.filter((m) => {
+            const monthMissions = filteredMissions.filter((m) => {
               const d = new Date(m.scheduled_at);
               return d.getFullYear() === year && d.getMonth() === i;
             });

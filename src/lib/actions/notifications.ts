@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { successResponse, errorResponse } from "@/lib/action-response";
+import type { Notification } from "@/types/database";
 
 export async function getUnreadNotifications() {
   const profile = await requireProfile();
@@ -117,4 +119,103 @@ export async function deleteNotification(notificationId: string) {
   }
 
   revalidatePath("/notifications");
+}
+
+// ---------------------------------------------------------------------------
+// NO3 — Cursor-based pagination
+// ---------------------------------------------------------------------------
+
+export async function getNotificationsPaginated(
+  cursor?: string,
+  limit: number = 20
+) {
+  const profile = await requireProfile();
+  const supabase = createClient();
+  const safeLimit = Math.min(Math.max(1, limit), 100);
+
+  let query = supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", profile.id)
+    .eq("organisation_id", profile.organisation_id)
+    .order("created_at", { ascending: false })
+    .limit(safeLimit);
+
+  if (cursor) {
+    query = query.lt("created_at", cursor);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching paginated notifications:", error);
+    return { notifications: [] as Notification[], nextCursor: null };
+  }
+
+  const notifications = (data || []) as Notification[];
+  const nextCursor =
+    notifications.length === safeLimit
+      ? notifications[notifications.length - 1].created_at
+      : null;
+
+  return { notifications, nextCursor };
+}
+
+// ---------------------------------------------------------------------------
+// NO4 — Bulk actions
+// ---------------------------------------------------------------------------
+
+const bulkIdsSchema = z
+  .array(z.string().uuid())
+  .min(1, "Au moins un identifiant requis")
+  .max(100, "Maximum 100 éléments à la fois");
+
+export async function bulkMarkAsRead(ids: string[]) {
+  const parsed = bulkIdsSchema.safeParse(ids);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.issues[0].message);
+  }
+
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .in("id", parsed.data)
+    .eq("user_id", profile.id)
+    .eq("organisation_id", profile.organisation_id);
+
+  if (error) {
+    console.error("Error bulk marking notifications as read:", error);
+    return errorResponse("Impossible de marquer les notifications comme lues");
+  }
+
+  revalidatePath("/notifications");
+  return successResponse("Notifications marquées comme lues");
+}
+
+export async function bulkDeleteNotifications(ids: string[]) {
+  const parsed = bulkIdsSchema.safeParse(ids);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.issues[0].message);
+  }
+
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .in("id", parsed.data)
+    .eq("user_id", profile.id)
+    .eq("organisation_id", profile.organisation_id);
+
+  if (error) {
+    console.error("Error bulk deleting notifications:", error);
+    return errorResponse("Impossible de supprimer les notifications");
+  }
+
+  revalidatePath("/notifications");
+  return successResponse("Notifications supprimées");
 }

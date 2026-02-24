@@ -6,13 +6,11 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
-import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS, MISSION_TYPE_LABELS, MISSION_STATUS_LABELS } from "@/types/database";
+import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS, MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/types/database";
 import { deleteReservation, terminateReservation } from "@/lib/actions/reservations";
+import { formatCurrencyDecimals as formatEur } from "@/lib/format-currency";
 import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle } from "lucide-react";
 import Link from "next/link";
-
-const formatEur = (amount: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
 
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -179,16 +177,26 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5" />
-              Montant
+              Montant & Paiement
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <p className="text-2xl font-bold">{formatEur(reservation.amount)}</p>
             {nights > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground">
                 Soit {formatEur(reservation.amount / nights)} / nuit
               </p>
             )}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Paiement :</span>
+              <StatusBadge
+                value={reservation.payment_status ?? "EN_ATTENTE"}
+                label={PAYMENT_STATUS_LABELS[(reservation.payment_status ?? "EN_ATTENTE") as keyof typeof PAYMENT_STATUS_LABELS]}
+              />
+              {reservation.payment_date && (
+                <span className="text-muted-foreground">le {new Date(reservation.payment_date).toLocaleDateString("fr-FR")}</span>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

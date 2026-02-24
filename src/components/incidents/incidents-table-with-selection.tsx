@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
+import { INCIDENT_STATUS_LABELS, INCIDENT_SEVERITY_LABELS, INCIDENT_CATEGORY_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { BulkActionsToolbar, type BulkAction } from "@/components/shared/bulk-actions-toolbar";
 import { CheckCircle, UserPlus, Trash2, AlertTriangle } from "lucide-react";
@@ -41,6 +41,7 @@ interface Incident {
   description: string;
   severity: string;
   status: string;
+  category?: string | null;
   opened_at: string;
   logement?: { name: string } | null;
   prestataire?: { full_name: string } | null;
@@ -202,6 +203,11 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                   value={incident.severity}
                   label={INCIDENT_SEVERITY_LABELS[incident.severity as keyof typeof INCIDENT_SEVERITY_LABELS]}
                 />
+                {incident.category && (
+                  <Badge variant="outline" className="text-xs">
+                    {INCIDENT_CATEGORY_LABELS[incident.category as keyof typeof INCIDENT_CATEGORY_LABELS] ?? incident.category}
+                  </Badge>
+                )}
                 {isLate && <Badge variant="destructive" className="text-xs">En retard</Badge>}
                 <StatusBadge
                   value={incident.status}
@@ -242,6 +248,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                 />
               </TableHead>
               <TableHead>Sévérité</TableHead>
+              <TableHead>Catégorie</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Logement</TableHead>
               <TableHead>Prestataire</TableHead>
@@ -280,6 +287,13 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                     />
                   </TableCell>
                   <TableCell>
+                    {incident.category ? (
+                      <Badge variant="outline" className="text-xs">
+                        {INCIDENT_CATEGORY_LABELS[incident.category as keyof typeof INCIDENT_CATEGORY_LABELS] ?? incident.category}
+                      </Badge>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Link href={`/incidents/${incident.id}`} className="font-medium hover:underline">
                         {incident.description?.slice(0, 50)}
@@ -306,7 +320,7 @@ export function IncidentsTableWithSelection({ incidents, organisationId }: Props
                 variant="table"
                 icon={AlertTriangle}
                 title="Aucun incident trouvé"
-                colSpan={7}
+                colSpan={8}
               />
             )}
           </TableBody>

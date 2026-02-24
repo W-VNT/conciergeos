@@ -14,6 +14,7 @@ import { bulkCancelReservations, bulkDeleteReservations } from "@/lib/actions/re
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format-date";
+import { formatCurrencyDecimals as formatEur } from "@/lib/format-currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-const formatEur = (amount: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
 
 interface Reservation {
   id: string;

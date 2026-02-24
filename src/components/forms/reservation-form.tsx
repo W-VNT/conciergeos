@@ -15,7 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Reservation, Logement } from "@/types/database";
-import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
+import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Info } from "lucide-react";
 
@@ -49,6 +49,10 @@ export function ReservationForm({ reservation, logements }: Props) {
       platform: reservation?.platform ?? "DIRECT",
       amount: reservation?.amount ?? null,
       status: reservation?.status ?? "CONFIRMEE",
+      payment_status: reservation?.payment_status ?? "EN_ATTENTE",
+      payment_date: reservation?.payment_date
+        ? new Date(reservation.payment_date).toISOString().split("T")[0]
+        : "",
       notes: reservation?.notes ?? "",
       access_instructions: reservation?.access_instructions ?? "",
     },
@@ -206,6 +210,31 @@ export function ReservationForm({ reservation, logements }: Props) {
                   </SelectContent>
                 </Select>
               )} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="payment_status">Statut paiement</Label>
+              <Controller name="payment_status" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="payment_status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+            </div>
+
+            <div>
+              <Label htmlFor="payment_date">Date de paiement</Label>
+              <Input id="payment_date" type="date" {...form.register("payment_date")} />
             </div>
           </div>
 

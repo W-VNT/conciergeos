@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MISSION_TYPE_LABELS, MISSION_STATUS_LABELS, MISSION_PRIORITY_LABELS, EQUIPEMENT_ETAT_LABELS } from "@/types/database";
+import { formatCurrencyDecimals } from "@/lib/format-currency";
 import { deleteMission } from "@/lib/actions/missions";
 import { CompleteMissionButton } from "@/components/shared/complete-mission-button";
 import { Pencil, AlertTriangle, KeyRound, MapPin, CalendarClock, CheckCircle2, Clock, Wifi, Package, ChevronDown, Navigation } from "lucide-react";
@@ -13,6 +14,7 @@ import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import Link from "next/link";
 import { ChecklistManager } from "@/components/missions/checklist-manager";
 import { MissionStickyBar } from "@/components/missions/mission-sticky-bar";
+import { LiveTimer } from "@/components/missions/live-timer";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -126,6 +128,26 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
         backHref="/missions"
         entityName={MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS]}
       />
+
+      {/* Timer en cours / Temps total */}
+      {mission.status === "EN_COURS" && mission.started_at && (
+        <div className="flex items-center gap-2 -mt-2 mb-1">
+          <LiveTimer startedAt={mission.started_at} />
+          <span className="text-sm text-muted-foreground">En cours</span>
+        </div>
+      )}
+      {mission.status === "TERMINE" && mission.time_spent_minutes != null && (
+        <div className="flex items-center gap-2 -mt-2 mb-1">
+          <div className="inline-flex items-center gap-1.5 rounded-md bg-green-50 border border-green-200 px-2.5 py-1">
+            <Clock className="h-3.5 w-3.5 text-green-600" />
+            <span className="text-sm text-green-700">
+              Temps : {Math.floor(mission.time_spent_minutes / 60) > 0
+                ? `${Math.floor(mission.time_spent_minutes / 60)}h ${String(mission.time_spent_minutes % 60).padStart(2, "0")}min`
+                : `${mission.time_spent_minutes}min`}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Desktop: all actions in top bar */}
       <div className="hidden md:flex gap-2 -mt-2 mb-2">
@@ -325,13 +347,15 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                   {mission.time_spent_minutes && (
                     <>
                       <span className="text-muted-foreground">Temps passé</span>
-                      <span className="text-right">{mission.time_spent_minutes} min</span>
+                      <span className="text-right">{Math.floor(mission.time_spent_minutes / 60) > 0
+                        ? `${Math.floor(mission.time_spent_minutes / 60)}h ${String(mission.time_spent_minutes % 60).padStart(2, "0")}min`
+                        : `${mission.time_spent_minutes}min`}</span>
                     </>
                   )}
                   {logement?.menage_price && (
                     <>
                       <span className="text-muted-foreground">Prix ménage</span>
-                      <span className="text-right font-medium">{new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(logement.menage_price)}</span>
+                      <span className="text-right font-medium">{formatCurrencyDecimals(logement.menage_price)}</span>
                     </>
                   )}
                 </div>
@@ -509,7 +533,9 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                   {mission.time_spent_minutes && (
                     <>
                       <span className="text-muted-foreground">Temps passé</span>
-                      <span className="text-right">{mission.time_spent_minutes} min</span>
+                      <span className="text-right">{Math.floor(mission.time_spent_minutes / 60) > 0
+                        ? `${Math.floor(mission.time_spent_minutes / 60)}h ${String(mission.time_spent_minutes % 60).padStart(2, "0")}min`
+                        : `${mission.time_spent_minutes}min`}</span>
                     </>
                   )}
                 </div>
@@ -648,7 +674,9 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                   {mission.time_spent_minutes && (
                     <>
                       <span className="text-muted-foreground">Temps passé</span>
-                      <span className="text-right">{mission.time_spent_minutes} min</span>
+                      <span className="text-right">{Math.floor(mission.time_spent_minutes / 60) > 0
+                        ? `${Math.floor(mission.time_spent_minutes / 60)}h ${String(mission.time_spent_minutes % 60).padStart(2, "0")}min`
+                        : `${mission.time_spent_minutes}min`}</span>
                     </>
                   )}
                 </div>
@@ -691,7 +719,9 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
                 {mission.time_spent_minutes && (
                   <>
                     <span className="text-muted-foreground">Temps passé</span>
-                    <span className="text-right">{mission.time_spent_minutes} min</span>
+                    <span className="text-right">{Math.floor(mission.time_spent_minutes / 60) > 0
+                        ? `${Math.floor(mission.time_spent_minutes / 60)}h ${String(mission.time_spent_minutes % 60).padStart(2, "0")}min`
+                        : `${mission.time_spent_minutes}min`}</span>
                   </>
                 )}
               </div>

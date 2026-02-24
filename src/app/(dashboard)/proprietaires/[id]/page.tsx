@@ -29,14 +29,26 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
     .eq("proprietaire_id", proprietaire.id)
     .maybeSingle();
 
-  const { data: pendingInvitation } = await supabase
+  // Fetch pending or expired invitations so we can offer resend
+  const { data: existingInvitation } = await supabase
     .from("invitations")
-    .select("id")
+    .select("id, status, expires_at")
     .eq("proprietaire_id", proprietaire.id)
-    .eq("status", "PENDING")
+    .in("status", ["PENDING", "EXPIRED"])
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  const invitationStatus = existingProfile ? "connected" : pendingInvitation ? "pending" : "none";
+  let invitationStatus: "connected" | "pending" | "expired" | "none" = "none";
+  if (existingProfile) {
+    invitationStatus = "connected";
+  } else if (existingInvitation) {
+    // Check if a PENDING invitation has actually expired
+    const isExpired =
+      existingInvitation.status === "EXPIRED" ||
+      (existingInvitation.expires_at && new Date(existingInvitation.expires_at) < new Date());
+    invitationStatus = isExpired ? "expired" : "pending";
+  }
 
   return (
     <div className="space-y-6">
@@ -55,6 +67,7 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
                 email={proprietaire.email}
                 name={proprietaire.full_name}
                 status={invitationStatus}
+                invitationId={existingInvitation?.id}
               />
             )}
             <Button variant="outline" asChild>

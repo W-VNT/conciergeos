@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { SPECIALTY_LABELS, STATUT_JURIDIQUE_LABELS, INCIDENT_SEVERITY_LABELS } from "@/types/database";
+import { formatCurrency } from "@/lib/format-currency";
 import { deletePrestataire } from "@/lib/actions/prestataires";
 import { Pencil, Star } from "lucide-react";
 import Link from "next/link";
@@ -52,7 +53,7 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
             <div className="flex justify-between"><span className="text-muted-foreground">Statut juridique</span><span>{STATUT_JURIDIQUE_LABELS[prestataire.statut_juridique as keyof typeof STATUT_JURIDIQUE_LABELS] ?? "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Spécialité</span><StatusBadge value={prestataire.specialty} label={SPECIALTY_LABELS[prestataire.specialty as keyof typeof SPECIALTY_LABELS]} /></div>
             {prestataire.siret && <div className="flex justify-between"><span className="text-muted-foreground">SIRET</span><code className="bg-muted px-2 py-0.5 rounded">{prestataire.siret}</code></div>}
-            <div className="flex justify-between"><span className="text-muted-foreground">Taux horaire</span><span>{prestataire.hourly_rate ? `${prestataire.hourly_rate}€/h` : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Taux horaire</span><span>{prestataire.hourly_rate ? `${formatCurrency(prestataire.hourly_rate)}/h` : "—"}</span></div>
             <div className="flex justify-between items-center"><span className="text-muted-foreground">Fiabilité</span>
               {prestataire.reliability_score ? (
                 <div className="flex items-center gap-1">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-4 w-4 ${i < prestataire.reliability_score! ? "fill-yellow-400 text-yellow-400" : "text-muted"}`} />))}</div>

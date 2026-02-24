@@ -17,12 +17,25 @@ export const dynamic = "force-dynamic";
 export default async function MissionsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string; type?: string; page?: string };
+  searchParams: { q?: string; status?: string; type?: string; assigned_to?: string; page?: string };
 }) {
   const profile = await requireProfile();
   const supabase = createClient();
   const page = Number(searchParams.page ?? "1");
   const from = (page - 1) * PAGE_SIZE;
+
+  // Fetch operators (OPERATEUR + ADMIN) for the assignee filter
+  const { data: operators } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("organisation_id", profile.organisation_id)
+    .in("role", ["OPERATEUR", "ADMIN"])
+    .order("full_name");
+
+  const operatorOptions = (operators || []).map((op) => ({
+    value: op.id,
+    label: op.full_name,
+  }));
 
   let query = supabase
     .from("missions")
@@ -37,6 +50,7 @@ export default async function MissionsPage({
   }
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.type) query = query.eq("type", searchParams.type);
+  if (searchParams.assigned_to) query = query.eq("assigned_to", searchParams.assigned_to);
 
   const { data, count } = await query;
   const missions = data || [];
@@ -52,12 +66,14 @@ export default async function MissionsPage({
         <SearchInput placeholder="Rechercher dans les notes..." />
         <ChipFilter options={statusOptions} placeholder="Tous les statuts" />
         <ChipFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
+        <ChipFilter paramName="assigned_to" options={operatorOptions} placeholder="Tous les opérateurs" />
       </div>
       {/* Filtres desktop : dropdowns */}
       <div className="hidden md:flex flex-row gap-3 mb-4">
         <SearchInput placeholder="Rechercher dans les notes..." />
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
+        <StatusFilter paramName="assigned_to" options={operatorOptions} placeholder="Tous les opérateurs" />
       </div>
       <MissionsTableWithSelection
         missions={missions}

@@ -19,7 +19,7 @@ export const revalidate = 0;
 export default async function LogementsPage({
   searchParams: searchParamsPromise,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; offer_tier?: string; city?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; offer_tier?: string; city?: string; tag?: string; page?: string }>;
 }) {
   const searchParams = await searchParamsPromise;
   const profile = await requireProfile();
@@ -42,17 +42,21 @@ export default async function LogementsPage({
   if (searchParams.status) query = query.eq("status", searchParams.status);
   if (searchParams.offer_tier) query = query.eq("offer_tier", searchParams.offer_tier);
   if (searchParams.city) query = query.eq("city", searchParams.city);
+  if (searchParams.tag) query = query.contains("tags", [searchParams.tag]);
 
-  const [{ data, count }, { data: allLogements }] = await Promise.all([
+  const [{ data, count }, { data: allLogements }, { data: allTags }] = await Promise.all([
     query,
     supabase.from("logements").select("city").eq("organisation_id", profile.organisation_id).not("city", "is", null),
+    supabase.from("logements").select("tags").eq("organisation_id", profile.organisation_id).not("tags", "is", null),
   ]);
 
   const cities = Array.from(new Set((allLogements ?? []).map((l) => l.city as string))).sort();
+  const tags = Array.from(new Set((allTags ?? []).flatMap((l) => (l.tags as string[]) || []))).sort();
 
   const statusOptions = Object.entries(LOGEMENT_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }));
   const offerOptions = Object.entries(OFFER_TIER_LABELS).map(([v, l]) => ({ value: v, label: l }));
   const cityOptions = cities.map((c) => ({ value: c, label: c }));
+  const tagOptions = tags.map((t) => ({ value: t, label: t }));
 
   return (
     <div>
@@ -69,6 +73,9 @@ export default async function LogementsPage({
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="offer_tier" options={offerOptions} placeholder="Toutes les offres" />
         <StatusFilter paramName="city" options={cityOptions} placeholder="Toutes les villes" />
+        {tagOptions.length > 0 && (
+          <StatusFilter paramName="tag" options={tagOptions} placeholder="Tous les tags" />
+        )}
       </div>
       <LogementsTableWithSelection logements={data || []} canBulkDelete={admin} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />

@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
+import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, INCIDENT_CATEGORY_LABELS, MISSION_TYPE_LABELS } from "@/types/database";
+import { formatCurrencyDecimals } from "@/lib/format-currency";
 import { deleteIncident } from "@/lib/actions/incidents";
 import { Pencil } from "lucide-react";
 import Link from "next/link";
@@ -66,12 +67,13 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between items-center"><span className="text-muted-foreground">Sévérité</span><StatusBadge value={incident.severity} label={INCIDENT_SEVERITY_LABELS[incident.severity as keyof typeof INCIDENT_SEVERITY_LABELS]} /></div>
           <div className="flex justify-between items-center"><span className="text-muted-foreground">Statut</span><UpdateIncidentStatusButton incidentId={incident.id} currentStatus={incident.status as "OUVERT" | "EN_COURS" | "RESOLU" | "CLOS"} /></div>
+          {incident.category && <div className="flex justify-between"><span className="text-muted-foreground">Catégorie</span><span>{INCIDENT_CATEGORY_LABELS[incident.category as keyof typeof INCIDENT_CATEGORY_LABELS] ?? incident.category}</span></div>}
           {logement && <div className="flex justify-between"><span className="text-muted-foreground">Logement</span><Link href={`/logements/${logement.id}`} className="hover:underline">{logement.name}</Link></div>}
           {mission && <div className="flex justify-between"><span className="text-muted-foreground">Mission liée</span><Link href={`/missions/${mission.id}`} className="hover:underline">{MISSION_TYPE_LABELS[mission.type as keyof typeof MISSION_TYPE_LABELS] ?? mission.type}</Link></div>}
           {reservation && <div className="flex justify-between"><span className="text-muted-foreground">Réservation</span><Link href={`/reservations/${reservation.id}`} className="hover:underline">{reservation.guest_name}</Link></div>}
           {prestataire && <div className="flex justify-between"><span className="text-muted-foreground">Prestataire</span><Link href={`/prestataires/${prestataire.id}`} className="hover:underline">{prestataire.full_name}</Link></div>}
           <div><span className="text-muted-foreground">Description</span><p className="mt-1">{incident.description}</p></div>
-          {incident.cost != null && <div className="flex justify-between"><span className="text-muted-foreground">Coût</span><span>{new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(incident.cost)}</span></div>}
+          {incident.cost != null && <div className="flex justify-between"><span className="text-muted-foreground">Coût</span><span>{formatCurrencyDecimals(incident.cost)}</span></div>}
           {incident.expected_resolution_date && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Résolution prévue</span>

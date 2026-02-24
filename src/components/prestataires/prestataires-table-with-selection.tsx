@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { SortableHeader } from "@/components/shared/sortable-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SPECIALTY_LABELS } from "@/types/database";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
@@ -28,8 +29,10 @@ interface Prestataire {
   id: string;
   full_name: string;
   specialty: string;
+  statut_juridique: string | null;
   phone: string | null;
   city: string | null;
+  hourly_rate: number | null;
   reliability_score: number | null;
 }
 
@@ -114,8 +117,12 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
             <Link href={`/prestataires/${p.id}`} className="block pl-8">
               <p className="font-medium text-sm">{p.full_name}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {p.phone ?? "—"}{p.city && ` · ${p.city}`}
+                {p.phone ?? "\u2014"}{p.city && ` \u00b7 ${p.city}`}
               </p>
+              <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                {p.hourly_rate != null && <span>{p.hourly_rate} \u20AC/h</span>}
+                {p.statut_juridique && <span>{p.statut_juridique}</span>}
+              </div>
             </Link>
           </div>
         ))}
@@ -123,7 +130,7 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
           <EmptyState
             variant="inline"
             icon={Wrench}
-            title="Aucun prestataire trouvé"
+            title="Aucun prestataire trouv\u00e9"
             action={{ label: "Ajouter un prestataire", href: "/prestataires/new" }}
           />
         )}
@@ -140,11 +147,21 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead>Nom</TableHead>
-              <TableHead>Spécialité</TableHead>
-              <TableHead>Téléphone</TableHead>
+              <TableHead>
+                <SortableHeader label="Nom" column="full_name" />
+              </TableHead>
+              <TableHead>Sp\u00e9cialit\u00e9</TableHead>
+              <TableHead>T\u00e9l\u00e9phone</TableHead>
               <TableHead>Ville</TableHead>
-              <TableHead>Fiabilité</TableHead>
+              <TableHead>
+                <SortableHeader label="Taux horaire" column="hourly_rate" />
+              </TableHead>
+              <TableHead>
+                <SortableHeader label="Fiabilit\u00e9" column="score" />
+              </TableHead>
+              <TableHead>
+                <SortableHeader label="Statut juridique" column="statut_juridique" />
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -170,8 +187,11 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
                     label={SPECIALTY_LABELS[prestataire.specialty as keyof typeof SPECIALTY_LABELS]}
                   />
                 </TableCell>
-                <TableCell>{prestataire.phone ?? "—"}</TableCell>
-                <TableCell>{prestataire.city ?? "—"}</TableCell>
+                <TableCell>{prestataire.phone ?? "\u2014"}</TableCell>
+                <TableCell>{prestataire.city ?? "\u2014"}</TableCell>
+                <TableCell>
+                  {prestataire.hourly_rate != null ? `${prestataire.hourly_rate} \u20AC/h` : "\u2014"}
+                </TableCell>
                 <TableCell>
                   {prestataire.reliability_score ? (
                     <div className="flex items-center gap-1">
@@ -179,17 +199,18 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
                       <span className="text-sm">{prestataire.reliability_score}/5</span>
                     </div>
                   ) : (
-                    "—"
+                    "\u2014"
                   )}
                 </TableCell>
+                <TableCell>{prestataire.statut_juridique ?? "\u2014"}</TableCell>
               </TableRow>
             ))}
             {prestataires.length === 0 && (
               <EmptyState
                 variant="table"
                 icon={Wrench}
-                title="Aucun prestataire trouvé"
-                colSpan={6}
+                title="Aucun prestataire trouv\u00e9"
+                colSpan={8}
               />
             )}
           </TableBody>
@@ -204,7 +225,7 @@ export function PrestatairesTableWithSelection({ prestataires }: Props) {
               Supprimer {selectedCount} prestataire{selectedCount > 1 ? "s" : ""} ?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Les prestataires seront définitivement supprimés.
+              Cette action est irr\u00e9versible. Les prestataires seront d\u00e9finitivement supprim\u00e9s.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

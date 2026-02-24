@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Notification } from "@/types/database";
-import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { markAsRead, markAllAsRead, deleteNotification } from "@/lib/actions/notifications";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  getNotificationsPaginated,
+  bulkMarkAsRead,
+  bulkDeleteNotifications,
+} from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Check, Trash2, CheckCheck, Bell } from "lucide-react";
+import { Check, Trash2, CheckCheck, Bell, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { toast } from "sonner";
@@ -18,42 +25,142 @@ import { MISSION_TYPE_LABELS } from "@/types/database";
 
 interface Props {
   initialNotifications: Notification[];
+  initialNextCursor: string | null;
   userId: string;
 }
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+const PAGE_SIZE = 20;
 
-export function NotificationsList({ initialNotifications, userId }: Props) {
+export function NotificationsList({
+  initialNotifications,
+  initialNextCursor,
+  userId,
+}: Props) {
   const [notifications, setNotifications] = useState(initialNotifications);
+  const [nextCursor, setNextCursor] = useState<string | null>(
+    initialNextCursor
+  );
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
-  const pollNotifications = useCallback(async () => {
+  // Sentinel element ref for IntersectionObserver
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // ---- Infinite scroll via IntersectionObserver ----
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
     try {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (data) setNotifications(data as Notification[]);
+      const result = await getNotificationsPaginated(nextCursor, PAGE_SIZE);
+      setNotifications((prev) => [...prev, ...result.notifications]);
+      setNextCursor(result.nextCursor);
     } catch {
-      // Silent fail — next poll will retry
+      toast.error("Erreur lors du chargement des notifications");
+    } finally {
+      setLoadingMore(false);
     }
-  }, [userId]);
+  }, [nextCursor, loadingMore]);
 
   useEffect(() => {
-    const interval = setInterval(pollNotifications, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [pollNotifications]);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  // ---- Selection helpers ----
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === notifications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(notifications.map((n) => n.id)));
+    }
+  }
+
+  const allSelected =
+    notifications.length > 0 && selectedIds.size === notifications.length;
+  const someSelected = selectedIds.size > 0;
+
+  // ---- Bulk actions ----
+  async function handleBulkMarkAsRead() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const result = await bulkMarkAsRead(ids);
+      if (result.success) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            selectedIds.has(n.id)
+              ? { ...n, read_at: n.read_at || new Date().toISOString() }
+              : n
+          )
+        );
+        setSelectedIds(new Set());
+        toast.success(result.message);
+      } else {
+        toast.error(result.error || "Erreur lors du marquage");
+      }
+    } catch {
+      toast.error("Erreur lors du marquage");
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const result = await bulkDeleteNotifications(ids);
+      if (result.success) {
+        setNotifications((prev) =>
+          prev.filter((n) => !selectedIds.has(n.id))
+        );
+        setSelectedIds(new Set());
+        toast.success(result.message);
+      } else {
+        toast.error(result.error || "Erreur lors de la suppression");
+      }
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
+  // ---- Single-item actions ----
   async function handleMarkAsRead(id: string) {
     try {
       await markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
+        prev.map((n) =>
+          n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+        )
       );
       toast.success("Notification marquée comme lue");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors du marquage");
     }
   }
@@ -62,10 +169,13 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
     try {
       await markAllAsRead();
       setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() }))
+        prev.map((n) => ({
+          ...n,
+          read_at: n.read_at || new Date().toISOString(),
+        }))
       );
       toast.success("Toutes les notifications marquées comme lues");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors du marquage");
     }
   }
@@ -74,18 +184,26 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
     try {
       await deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       toast.success("Notification supprimée");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la suppression");
     }
   }
 
-  // Extract mission type from metadata (new) or message text (legacy)
+  // ---- Render helpers ----
   function getMissionType(notification: Notification): string | null {
     if (notification.metadata?.mission_type) {
       return notification.metadata.mission_type;
     }
-    if (notification.type === "MISSION_ASSIGNED" || notification.type === "MISSION_URGENT") {
+    if (
+      notification.type === "MISSION_ASSIGNED" ||
+      notification.type === "MISSION_URGENT"
+    ) {
       const match = notification.message.match(/de type (\w+)/i);
       return match ? match[1] : null;
     }
@@ -111,11 +229,14 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
     }
   }
 
-  function renderMessage(notification: Notification, missionType: string | null): React.ReactNode {
+  function renderMessage(
+    notification: Notification,
+    missionType: string | null
+  ): React.ReactNode {
     if (missionType) {
-      const label = MISSION_TYPE_LABELS[missionType as keyof typeof MISSION_TYPE_LABELS];
+      const label =
+        MISSION_TYPE_LABELS[missionType as keyof typeof MISSION_TYPE_LABELS];
       if (label) {
-        // Remove "de type XXXX" from the message text and show badge inline
         const simplified = notification.message
           .replace(/une mission de type \w+\s*/i, "")
           .replace(/^(\w)/, (c) => c.toUpperCase());
@@ -152,15 +273,51 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
 
   return (
     <div className="space-y-4">
-      {unreadCount > 0 && (
+      {/* Top bar: unread count + mark all as read */}
+      {unreadCount > 0 && !someSelected && (
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            {unreadCount} notification{unreadCount > 1 ? "s" : ""} non lue{unreadCount > 1 ? "s" : ""}
+            {unreadCount} notification{unreadCount > 1 ? "s" : ""} non lue
+            {unreadCount > 1 ? "s" : ""}
           </p>
           <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
             <CheckCheck className="h-4 w-4 mr-2" />
             Tout marquer comme lu
           </Button>
+        </div>
+      )}
+
+      {/* Bulk actions toolbar */}
+      {someSelected && (
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={toggleSelectAll}
+            aria-label="Tout sélectionner"
+          />
+          <span className="text-sm text-muted-foreground">
+            {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
+          </span>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkMarkAsRead}
+              disabled={bulkLoading}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Marquer comme lu
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer ({selectedIds.size})
+            </Button>
+          </div>
         </div>
       )}
 
@@ -173,41 +330,74 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
         />
       ) : (
         <div className="space-y-2">
+          {/* Select all row (when nothing selected yet) */}
+          {!someSelected && notifications.length > 0 && (
+            <div className="flex items-center gap-3 px-4 py-1">
+              <Checkbox
+                checked={false}
+                onCheckedChange={toggleSelectAll}
+                aria-label="Tout sélectionner"
+              />
+              <span className="text-xs text-muted-foreground">
+                Tout sélectionner
+              </span>
+            </div>
+          )}
+
           {notifications.map((notification) => {
             const isUnread = !notification.read_at;
             const link = getNotificationLink(notification);
             const missionType = getMissionType(notification);
             const categoryLabel = getCategoryLabel(notification);
+            const isSelected = selectedIds.has(notification.id);
 
             return (
               <Card
                 key={notification.id}
-                className={isUnread ? "border-l-4 border-l-primary bg-primary/5" : ""}
+                className={`${isUnread ? "border-l-4 border-l-primary bg-primary/5" : ""} ${isSelected ? "ring-2 ring-primary/30" : ""}`}
               >
                 <CardContent className="p-4">
                   <div className="flex gap-4">
+                    {/* Checkbox */}
+                    <div className="flex items-start pt-0.5">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(notification.id)}
+                        aria-label={`Sélectionner la notification : ${notification.title}`}
+                      />
+                    </div>
+
                     <div className="flex-1 min-w-0">
                       {/* Category badge */}
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <Badge variant="secondary" className="text-xs">{categoryLabel}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {categoryLabel}
+                        </Badge>
                       </div>
                       {/* Title */}
                       {link !== "#" ? (
                         <Link href={link} className="block hover:underline">
-                          <h3 className="font-semibold text-sm">{notification.title}</h3>
+                          <h3 className="font-semibold text-sm">
+                            {notification.title}
+                          </h3>
                         </Link>
                       ) : (
-                        <h3 className="font-semibold text-sm">{notification.title}</h3>
+                        <h3 className="font-semibold text-sm">
+                          {notification.title}
+                        </h3>
                       )}
                       {/* Message with optional inline mission type badge */}
                       <div className="text-sm text-muted-foreground mt-1">
                         {renderMessage(notification, missionType)}
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {formatDistanceToNow(new Date(notification.created_at), {
-                          addSuffix: true,
-                          locale: fr,
-                        })}
+                        {formatDistanceToNow(
+                          new Date(notification.created_at),
+                          {
+                            addSuffix: true,
+                            locale: fr,
+                          }
+                        )}
                       </p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
@@ -235,6 +425,23 @@ export function NotificationsList({ initialNotifications, userId }: Props) {
               </Card>
             );
           })}
+
+          {/* Sentinel element for IntersectionObserver */}
+          <div ref={sentinelRef} className="h-1" />
+
+          {/* Loading indicator */}
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {/* End of list indicator */}
+          {!nextCursor && notifications.length > 0 && (
+            <p className="text-center text-xs text-muted-foreground py-2">
+              Toutes les notifications ont été chargées
+            </p>
+          )}
         </div>
       )}
     </div>

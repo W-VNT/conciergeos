@@ -10,6 +10,7 @@ import { CONTRACT_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/types/database";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
+import { ExportCSVButton } from "@/components/shared/export-csv-button";
 
 export const metadata = { title: "Contrats" };
 
@@ -68,6 +69,7 @@ export default async function ContratsPage({
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="type" options={typeOptions} placeholder="Tous les types" />
         <StatusFilter paramName="proprietaire_id" options={proprietaireOptions} placeholder="Tous les propriétaires" />
+        <ExportCSVButton type="contrats" filters={{ status: searchParams.status, type: searchParams.type }} />
       </div>
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">

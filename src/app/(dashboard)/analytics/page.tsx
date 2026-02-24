@@ -5,6 +5,7 @@ import { KpiCard } from "@/components/shared/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, DollarSign, Percent, TrendingUp, AlertTriangle, BarChart3 } from "lucide-react";
 import { DateFilter, type DateRange } from "@/components/dashboard/date-filter";
+import { formatCurrency } from "@/lib/format-currency";
 import Link from "next/link";
 
 export const metadata = { title: "Analytics" };
@@ -187,7 +188,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         />
         <KpiCard
           title="Coût incidents"
-          value={`${totalCost.toFixed(0)}€`}
+          value={formatCurrency(totalCost)}
           description={`${costData?.length ?? 0} incident(s) facturé(s)`}
           icon={DollarSign}
         />
@@ -199,7 +200,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         />
         <KpiCard
           title="Revenus"
-          value={`${totalRevenue.toFixed(0)}€`}
+          value={formatCurrency(totalRevenue)}
           description={`${reservations?.length ?? 0} réservation(s)`}
           icon={TrendingUp}
         />
@@ -269,7 +270,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <span className="text-sm text-muted-foreground">Coût moyen / incident</span>
                 <span className="text-lg font-semibold">
-                  {costData && costData.length > 0 ? `${(totalCost / costData.length).toFixed(0)}€` : "0€"}
+                  {costData && costData.length > 0 ? formatCurrency(totalCost / costData.length) : formatCurrency(0)}
                 </span>
               </div>
             </div>

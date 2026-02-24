@@ -48,6 +48,7 @@ export const logementSchema = z.object({
     (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
     z.number().min(0, 'Le prix doit être positif').max(10000, 'Prix trop élevé (10 000€ max)').nullable().default(null)
   ),
+  tags: z.array(z.string().max(50, 'Tag trop long')).max(20, 'Maximum 20 tags').default([]),
   notes: z.string().max(5000, 'Notes trop longues').default(''),
   status: z.enum(['ACTIF', 'PAUSE', 'ARCHIVE']).default('ACTIF'),
 });
@@ -91,6 +92,7 @@ export const incidentSchema = z.object({
   prestataire_id: z.string().default(''),
   severity: z.enum(['MINEUR', 'MOYEN', 'CRITIQUE']).default('MINEUR'),
   status: z.enum(['OUVERT', 'EN_COURS', 'RESOLU', 'CLOS']).default('OUVERT'),
+  category: z.enum(['PLOMBERIE', 'ELECTRICITE', 'SERRURERIE', 'NUISIBLES', 'MENAGE', 'BRUIT', 'EQUIPEMENT', 'AUTRE']).default('AUTRE'),
   description: z.string().min(1, 'Description requise').max(5000, 'Description trop longue (5000 caractères max)'),
   cost: z.coerce.number().min(0, 'Le coût doit être positif').nullable().default(null),
   notes: z.string().max(5000, 'Notes trop longues').default(''),
@@ -127,7 +129,9 @@ export const reservationSchema = z.object({
   check_out_time: timeString.default('11:00'),
   platform: z.enum(['AIRBNB', 'BOOKING', 'DIRECT', 'AUTRE']).default('DIRECT'),
   amount: z.coerce.number().min(0, 'Le montant doit être positif').nullable().default(null),
-  status: z.enum(['CONFIRMEE', 'ANNULEE', 'TERMINEE']).default('CONFIRMEE'),
+  status: z.enum(['EN_ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE']).default('CONFIRMEE'),
+  payment_status: z.enum(['EN_ATTENTE', 'PARTIEL', 'PAYE', 'REMBOURSE']).default('EN_ATTENTE'),
+  payment_date: z.string().default(''),
   notes: z.string().max(5000, 'Notes trop longues (5000 caractères max)').default(''),
   access_instructions: z.string().max(5000, 'Instructions trop longues (5000 caractères max)').default(''),
 }).refine((data) => new Date(data.check_in_date) < new Date(data.check_out_date), {

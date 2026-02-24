@@ -6,6 +6,7 @@ import { StatusFilter } from "@/components/shared/status-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { RESERVATION_STATUS_LABELS, BOOKING_PLATFORM_LABELS } from "@/types/database";
 import { ReservationsTableWithSelection } from "@/components/reservations/reservations-table-with-selection";
+import { ExportCSVButton } from "@/components/shared/export-csv-button";
 
 export const metadata = { title: "Réservations" };
 
@@ -61,6 +62,7 @@ export default async function ReservationsPage({
         <StatusFilter options={statusOptions} placeholder="Tous les statuts" />
         <StatusFilter paramName="platform" options={platformOptions} placeholder="Toutes les plateformes" />
         <StatusFilter paramName="logement_id" options={logementOptions} placeholder="Tous les logements" />
+        <ExportCSVButton type="reservations" filters={{ status: searchParams.status, platform: searchParams.platform }} />
       </div>
       <ReservationsTableWithSelection reservations={data || []} />
       <Pagination totalCount={count ?? 0} pageSize={PAGE_SIZE} />

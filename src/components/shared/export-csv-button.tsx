@@ -3,13 +3,33 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import { exportMissionsCSV, exportIncidentsCSV } from "@/lib/actions/export-csv";
+import {
+  exportMissionsCSV,
+  exportIncidentsCSV,
+  exportReservationsCSV,
+  exportContratsCSV,
+  exportFinancesCSV,
+  exportPrestatairesCSV,
+  exportProprietairesCSV,
+} from "@/lib/actions/export-csv";
 import { toast } from "sonner";
 
+type ExportType = "missions" | "incidents" | "reservations" | "contrats" | "finances" | "prestataires" | "proprietaires";
+
 interface Props {
-  type: "missions" | "incidents";
+  type: ExportType;
   filters?: Record<string, string | undefined>;
 }
+
+const exportFns: Record<ExportType, (filters?: Record<string, string | undefined>) => Promise<string>> = {
+  missions: exportMissionsCSV,
+  incidents: exportIncidentsCSV,
+  reservations: exportReservationsCSV,
+  contrats: exportContratsCSV,
+  finances: exportFinancesCSV,
+  prestataires: exportPrestatairesCSV,
+  proprietaires: exportProprietairesCSV,
+};
 
 export function ExportCSVButton({ type, filters }: Props) {
   const [loading, setLoading] = useState(false);
@@ -17,10 +37,7 @@ export function ExportCSVButton({ type, filters }: Props) {
   async function handleExport() {
     setLoading(true);
     try {
-      const csv =
-        type === "missions"
-          ? await exportMissionsCSV(filters)
-          : await exportIncidentsCSV(filters);
+      const csv = await exportFns[type](filters);
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);

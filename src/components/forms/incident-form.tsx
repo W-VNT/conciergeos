@@ -15,7 +15,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Incident, Logement, Prestataire } from "@/types/database";
-import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS } from "@/types/database";
+import { INCIDENT_SEVERITY_LABELS, INCIDENT_STATUS_LABELS, INCIDENT_CATEGORY_LABELS } from "@/types/database";
 
 interface Props {
   incident?: Incident;
@@ -40,6 +40,7 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
       prestataire_id: incident?.prestataire_id ?? "",
       severity: incident?.severity ?? "MINEUR",
       status: incident?.status ?? "OUVERT",
+      category: incident?.category ?? "AUTRE",
       description: incident?.description ?? "",
       cost: incident?.cost ?? null,
       notes: incident?.notes ?? "",
@@ -90,6 +91,15 @@ export function IncidentForm({ incident, logements, prestataires, defaultLogemen
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{Object.entries(INCIDENT_SEVERITY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
+                </Select>
+              )} />
+            </div>
+            <div className="space-y-2">
+              <Label>Catégorie</Label>
+              <Controller name="category" control={form.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(INCIDENT_CATEGORY_LABELS).map(([k, v]) => (<SelectItem key={k} value={k}>{v}</SelectItem>))}</SelectContent>
                 </Select>
               )} />
             </div>

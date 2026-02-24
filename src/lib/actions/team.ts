@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { sendInvitationEmail } from "@/lib/email";
+import { successResponse, errorResponse } from "@/lib/action-response";
 
 export async function getTeamMembers() {
   try {
@@ -547,5 +548,96 @@ export async function inviteProprietaire(data: {
   } catch (error) {
     console.error("Invite proprietaire error:", error);
     return { error: "Une erreur est survenue" };
+  }
+}
+
+/**
+ * Resend an existing invitation with a new token and extended expiry
+ */
+export async function resendInvitation(invitationId: string) {
+  try {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return errorResponse("Non authentifié");
+
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("organisation_id, role, full_name, organisation:organisations(name)")
+      .eq("id", user.id)
+      .single();
+
+    if (!currentProfile || currentProfile.role !== "ADMIN") {
+      return errorResponse("Accès refusé - Admin uniquement");
+    }
+
+    // Fetch invitation scoped to organisation
+    const { data: invitation, error: fetchError } = await supabase
+      .from("invitations")
+      .select("*")
+      .eq("id", invitationId)
+      .eq("organisation_id", currentProfile.organisation_id)
+      .single();
+
+    if (fetchError || !invitation) {
+      return errorResponse("Invitation non trouvée");
+    }
+
+    if (invitation.status === "ACCEPTED") {
+      return errorResponse("Cette invitation a déjà été acceptée");
+    }
+
+    if (invitation.status === "CANCELLED") {
+      return errorResponse("Cette invitation a été annulée");
+    }
+
+    // Generate new token and expiry
+    const newToken = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Update invitation with new token and expiry, reset status to PENDING
+    const { error: updateError } = await supabase
+      .from("invitations")
+      .update({
+        token: newToken,
+        expires_at: expiresAt.toISOString(),
+        status: "PENDING",
+      })
+      .eq("id", invitationId)
+      .eq("organisation_id", currentProfile.organisation_id);
+
+    if (updateError) {
+      console.error("Resend invitation update error:", updateError);
+      return errorResponse("Erreur lors de la mise à jour de l'invitation");
+    }
+
+    // Re-send the invitation email
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/accept-invitation?token=${newToken}`;
+
+    const emailResult = await sendInvitationEmail({
+      email: invitation.email,
+      inviteeName: invitation.invited_name || null,
+      organisationName: (currentProfile.organisation as any)?.name || "l'organisation",
+      inviterName: currentProfile.full_name || "Un administrateur",
+      invitationUrl,
+      role: invitation.role,
+    });
+
+    if (emailResult.error) {
+      console.error("Resend invitation email error:", emailResult.error);
+      // Don't fail if email fails, the invitation was already updated
+    }
+
+    // Revalidate relevant paths
+    revalidatePath("/organisation");
+    if (invitation.proprietaire_id) {
+      revalidatePath(`/proprietaires/${invitation.proprietaire_id}`);
+    }
+
+    return successResponse("Invitation relancée avec succès");
+  } catch (error) {
+    console.error("Resend invitation error:", error);
+    return errorResponse("Une erreur est survenue");
   }
 }

@@ -77,3 +77,148 @@ export async function exportIncidentsCSV(filters?: { status?: string; severity?:
   const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
   return csv;
 }
+
+export async function exportReservationsCSV(filters?: { status?: string; platform?: string }) {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  let query = supabase
+    .from("reservations")
+    .select("*, logement:logements(name)")
+    .eq("organisation_id", profile.organisation_id)
+    .order("check_in_date", { ascending: false });
+
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.platform) query = query.eq("platform", filters.platform);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const headers = ["ID", "Voyageur", "Logement", "Plateforme", "Arrivée", "Départ", "Montant", "Statut", "Paiement"];
+  const rows = (data ?? []).map((r: Record<string, unknown>) => [
+    r.id as string,
+    sanitizeCell((r.guest_name as string) ?? ""),
+    sanitizeCell((r.logement as Record<string, string> | null)?.name ?? ""),
+    r.platform as string,
+    r.check_in_date as string,
+    r.check_out_date as string,
+    String(r.amount ?? ""),
+    r.status as string,
+    (r.payment_status as string) ?? "",
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+}
+
+export async function exportContratsCSV(filters?: { status?: string; type?: string }) {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  let query = supabase
+    .from("contrats")
+    .select("*, proprietaire:proprietaires(full_name), logement:logements(name)")
+    .eq("organisation_id", profile.organisation_id)
+    .order("start_date", { ascending: false });
+
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.type) query = query.eq("type", filters.type);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const headers = ["ID", "Propriétaire", "Logement", "Type", "Début", "Fin", "Commission %", "Statut"];
+  const rows = (data ?? []).map((c: Record<string, unknown>) => [
+    c.id as string,
+    sanitizeCell((c.proprietaire as Record<string, string> | null)?.full_name ?? ""),
+    sanitizeCell((c.logement as Record<string, string> | null)?.name ?? ""),
+    c.type as string,
+    c.start_date as string,
+    c.end_date as string,
+    String(c.commission_rate ?? ""),
+    c.status as string,
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+}
+
+export async function exportFinancesCSV() {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("revenus")
+    .select("*, logement:logements(name), reservation:reservations(guest_name, platform)")
+    .eq("organisation_id", profile.organisation_id)
+    .order("date_checkin", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  const headers = ["ID", "Logement", "Voyageur", "Plateforme", "Check-in", "Check-out", "Brut", "Commission", "Net"];
+  const rows = (data ?? []).map((r: Record<string, unknown>) => [
+    r.id as string,
+    sanitizeCell((r.logement as Record<string, string> | null)?.name ?? ""),
+    sanitizeCell((r.reservation as Record<string, string> | null)?.guest_name ?? ""),
+    (r.reservation as Record<string, string> | null)?.platform ?? "",
+    r.date_checkin as string,
+    r.date_checkout as string,
+    String(r.montant_brut ?? ""),
+    String(r.montant_commission ?? ""),
+    String(r.montant_net ?? ""),
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+}
+
+export async function exportPrestatairesCSV() {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("prestataires")
+    .select("*")
+    .eq("organisation_id", profile.organisation_id)
+    .order("full_name");
+
+  if (error) throw new Error(error.message);
+
+  const headers = ["ID", "Nom", "Spécialité", "Statut juridique", "Téléphone", "Email", "Ville", "Taux horaire", "Score"];
+  const rows = (data ?? []).map((p: Record<string, unknown>) => [
+    p.id as string,
+    sanitizeCell((p.full_name as string) ?? ""),
+    p.specialty as string,
+    p.statut_juridique as string,
+    (p.phone as string) ?? "",
+    (p.email as string) ?? "",
+    sanitizeCell((p.city as string) ?? ""),
+    String(p.hourly_rate ?? ""),
+    String(p.reliability_score ?? ""),
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+}
+
+export async function exportProprietairesCSV() {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("proprietaires")
+    .select("*")
+    .eq("organisation_id", profile.organisation_id)
+    .order("full_name");
+
+  if (error) throw new Error(error.message);
+
+  const headers = ["ID", "Nom", "Statut juridique", "Téléphone", "Email", "Ville", "SIRET"];
+  const rows = (data ?? []).map((p: Record<string, unknown>) => [
+    p.id as string,
+    sanitizeCell((p.full_name as string) ?? ""),
+    p.statut_juridique as string,
+    (p.phone as string) ?? "",
+    (p.email as string) ?? "",
+    sanitizeCell((p.city as string) ?? ""),
+    (p.siret as string) ?? "",
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+}
