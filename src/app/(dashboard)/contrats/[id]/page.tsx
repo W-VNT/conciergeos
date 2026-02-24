@@ -15,6 +15,7 @@ import Link from "next/link";
 import { PhotoSection } from "@/components/shared/photo-section";
 import { ContratPDFButton } from "@/components/contrats/contrat-pdf-button";
 import { SignContratButton } from "@/components/contrats/sign-contrat-button";
+import { VersionHistory } from "@/components/contrats/version-history";
 
 export const dynamic = "force-dynamic";
 
@@ -295,6 +296,8 @@ export default async function ContratDetailPage({ params }: { params: { id: stri
         canDelete={admin}
         title="Documents annexes"
       />
+
+      <VersionHistory contratId={params.id} />
 
       <Card>
         <CardHeader>

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { SendMessageDialog } from "@/components/messaging/send-message-dialog";
 import { PortalLinkSection } from "@/components/messaging/portal-link-section";
 import { VoyageurCard } from "@/components/reservations/voyageur-card";
+import { ReservationHistory } from "@/components/reservations/reservation-history";
 import type { Reservation, Logement, MessageTemplate, GuestMessage, GuestPortalToken, Voyageur } from "@/types/database";
 
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
@@ -392,6 +393,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           )}
         </CardContent>
       </Card>
+
+      {/* Historique des modifications (R21) */}
+      <ReservationHistory reservationId={reservation.id} />
 
       {pastReservations && pastReservations.length > 0 && (
         <Card>

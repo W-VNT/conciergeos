@@ -16,6 +16,8 @@ import { getProprietaireFinances } from "@/lib/actions/owner-analytics";
 import { formatCurrency } from "@/lib/format-currency";
 import { AdminOwnerMessages } from "@/components/owner/admin-owner-messages";
 import { getAdminOwnerMessages } from "@/lib/actions/owner-portal";
+import { PaymentsSection } from "@/components/proprietaires/payments-section";
+import { ProprietaireDocumentsSection } from "@/components/proprietaires/documents-section";
 
 export default async function ProprietaireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -167,6 +169,12 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
           )}
         </CardContent>
       </Card>
+
+      {/* Documents */}
+      <ProprietaireDocumentsSection proprietaireId={proprietaire.id} />
+
+      {/* Paiements */}
+      <PaymentsSection proprietaireId={proprietaire.id} />
 
       {/* Messages */}
       <AdminOwnerMessages

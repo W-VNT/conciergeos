@@ -10,9 +10,10 @@ import {
   markAsRead,
   markAllAsRead,
   deleteNotification,
-  getNotificationsPaginated,
+  getNotificationsPaginatedFiltered,
   bulkMarkAsRead,
   bulkDeleteNotifications,
+  type NotificationFilter,
 } from "@/lib/actions/notifications";
 import { useRealtimeNotifications } from "@/lib/supabase/realtime";
 import Link from "next/link";
@@ -37,6 +38,7 @@ interface Props {
   initialNotifications: Notification[];
   initialNextCursor: string | null;
   userId: string;
+  filter?: NotificationFilter;
 }
 
 const PAGE_SIZE = 20;
@@ -45,6 +47,7 @@ export function NotificationsList({
   initialNotifications,
   initialNextCursor,
   userId,
+  filter = "all",
 }: Props) {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [nextCursor, setNextCursor] = useState<string | null>(
@@ -78,7 +81,11 @@ export function NotificationsList({
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const result = await getNotificationsPaginated(nextCursor, PAGE_SIZE);
+      const result = await getNotificationsPaginatedFiltered(
+        filter,
+        nextCursor,
+        PAGE_SIZE
+      );
       setNotifications((prev) => [...prev, ...result.notifications]);
       setNextCursor(result.nextCursor);
     } catch {
@@ -86,7 +93,7 @@ export function NotificationsList({
     } finally {
       setLoadingMore(false);
     }
-  }, [nextCursor, loadingMore]);
+  }, [nextCursor, loadingMore, filter]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;

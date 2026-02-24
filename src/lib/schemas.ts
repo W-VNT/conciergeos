@@ -265,3 +265,103 @@ export const factureSchema = z.object({
   notes: z.string().max(5000, 'Notes trop longues').default(''),
 });
 export type FactureFormData = z.infer<typeof factureSchema>;
+
+// ── Sprint 5 Schemas ──────────────────────────────────────────
+
+// État des lieux (R17)
+export const etatDesLieuxSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  reservation_id: z.string().default(''),
+  type: z.enum(['ENTREE', 'SORTIE']),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+});
+export type EtatDesLieuxFormData = z.infer<typeof etatDesLieuxSchema>;
+
+export const etatDesLieuxItemSchema = z.object({
+  room: z.string().min(1, 'Pièce requise').max(100),
+  element: z.string().min(1, 'Élément requis').max(200),
+  condition: z.enum(['BON', 'CORRECT', 'DEGRADE', 'MAUVAIS']),
+  notes: z.string().max(1000).default(''),
+});
+export type EtatDesLieuxItemFormData = z.infer<typeof etatDesLieuxItemSchema>;
+
+// Mission Report (MI10)
+export const missionReportSchema = z.object({
+  mission_id: z.string().uuid('Mission invalide'),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+  issues_found: z.string().max(5000, 'Description trop longue').default(''),
+});
+export type MissionReportFormData = z.infer<typeof missionReportSchema>;
+
+// Mission Template (MI17)
+export const missionTemplateSchema = z.object({
+  name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
+  type: z.enum(['CHECKIN', 'CHECKOUT', 'MENAGE', 'INTERVENTION', 'URGENCE']),
+  logement_id: z.string().default(''),
+  description: z.string().max(5000, 'Description trop longue').default(''),
+  estimated_duration_minutes: nullableNumber,
+  priority: z.enum(['NORMALE', 'HAUTE', 'CRITIQUE']).default('NORMALE'),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+});
+export type MissionTemplateFormData = z.infer<typeof missionTemplateSchema>;
+
+// Webhook Endpoint (MI18 + R22)
+export const webhookEndpointSchema = z.object({
+  url: z.string().url('URL invalide'),
+  events: z.array(z.string()).min(1, 'Au moins un événement requis'),
+  description: z.string().max(500, 'Description trop longue').default(''),
+  active: z.boolean().default(true),
+});
+export type WebhookEndpointFormData = z.infer<typeof webhookEndpointSchema>;
+
+// Intervention Checklist (IN12)
+export const interventionChecklistSchema = z.object({
+  incident_id: z.string().uuid('Incident invalide'),
+  items: z.array(z.object({
+    label: z.string().min(1, 'Libellé requis'),
+    checked: z.boolean().default(false),
+    note: z.string().max(500).optional(),
+  })).min(1, 'Au moins un élément requis'),
+});
+export type InterventionChecklistFormData = z.infer<typeof interventionChecklistSchema>;
+
+// Contract Template (CO7)
+export const contratTemplateSchema = z.object({
+  name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
+  content: z.string().min(1, 'Contenu requis').max(50000, 'Contenu trop long'),
+  category: z.string().max(50, 'Catégorie trop longue').default('GENERAL'),
+});
+export type ContratTemplateFormData = z.infer<typeof contratTemplateSchema>;
+
+// Owner Payment (FI8)
+export const ownerPaymentSchema = z.object({
+  proprietaire_id: z.string().min(1, 'Propriétaire requis'),
+  contrat_id: z.string().default(''),
+  amount: z.coerce.number().min(0, 'Le montant doit être positif'),
+  period_start: z.string().default(''),
+  period_end: z.string().default(''),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+});
+export type OwnerPaymentFormData = z.infer<typeof ownerPaymentSchema>;
+
+// Prestataire Document (PR7)
+export const prestataireDocumentSchema = z.object({
+  prestataire_id: z.string().min(1, 'Prestataire requis'),
+  type: z.enum(['CERTIFICATION', 'ASSURANCE', 'KBIS', 'RIB', 'AUTRE']),
+  name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
+  file_url: z.string().min(1, 'Fichier requis'),
+  expires_at: z.string().default(''),
+  notes: z.string().max(1000, 'Notes trop longues').default(''),
+});
+export type PrestataireDocumentFormData = z.infer<typeof prestataireDocumentSchema>;
+
+// Proprietaire Document (PO6)
+export const proprietaireDocumentSchema = z.object({
+  proprietaire_id: z.string().min(1, 'Propriétaire requis'),
+  type: z.enum(['IDENTITE', 'DIAGNOSTIC', 'TITRE_PROPRIETE', 'ASSURANCE', 'RIB', 'AUTRE']),
+  name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
+  file_url: z.string().min(1, 'Fichier requis'),
+  expires_at: z.string().default(''),
+  notes: z.string().max(1000, 'Notes trop longues').default(''),
+});
+export type ProprietaireDocumentFormData = z.infer<typeof proprietaireDocumentSchema>;

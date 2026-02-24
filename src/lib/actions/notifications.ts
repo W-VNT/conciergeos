@@ -5,7 +5,7 @@ import { requireProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { successResponse, errorResponse } from "@/lib/action-response";
-import type { Notification } from "@/types/database";
+import type { Notification, NotificationType } from "@/types/database";
 
 export async function getUnreadNotifications() {
   const profile = await requireProfile();
@@ -150,6 +150,80 @@ export async function getNotificationsPaginated(
 
   if (error) {
     console.error("Error fetching paginated notifications:", error);
+    return { notifications: [] as Notification[], nextCursor: null };
+  }
+
+  const notifications = (data || []) as Notification[];
+  const nextCursor =
+    notifications.length === safeLimit
+      ? notifications[notifications.length - 1].created_at
+      : null;
+
+  return { notifications, nextCursor };
+}
+
+// ---------------------------------------------------------------------------
+// NO7 — Filtered cursor-based pagination
+// ---------------------------------------------------------------------------
+
+export type NotificationFilter =
+  | "all"
+  | "unread"
+  | "MISSION_ASSIGNED"
+  | "MISSION_URGENT"
+  | "INCIDENT_CRITICAL"
+  | "INCIDENT_ASSIGNED"
+  | "SYSTEM";
+
+const MISSION_TYPES: NotificationType[] = ["MISSION_ASSIGNED", "MISSION_URGENT"];
+const INCIDENT_TYPES: NotificationType[] = [
+  "INCIDENT_CRITICAL",
+  "INCIDENT_ASSIGNED",
+];
+const SYSTEM_TYPES: NotificationType[] = [
+  "CONTRACT_EXPIRING",
+  "TEAM_INVITATION",
+  "RESERVATION_CREATED",
+  "SYSTEM",
+];
+
+export async function getNotificationsPaginatedFiltered(
+  filter: NotificationFilter = "all",
+  cursor?: string,
+  limit: number = 20
+) {
+  const profile = await requireProfile();
+  const supabase = createClient();
+  const safeLimit = Math.min(Math.max(1, limit), 100);
+
+  let query = supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", profile.id)
+    .eq("organisation_id", profile.organisation_id)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(safeLimit);
+
+  // Apply filter
+  if (filter === "unread") {
+    query = query.is("read_at", null);
+  } else if (filter === "MISSION_ASSIGNED" || filter === "MISSION_URGENT") {
+    query = query.in("type", MISSION_TYPES);
+  } else if (filter === "INCIDENT_CRITICAL" || filter === "INCIDENT_ASSIGNED") {
+    query = query.in("type", INCIDENT_TYPES);
+  } else if (filter === "SYSTEM") {
+    query = query.in("type", SYSTEM_TYPES);
+  }
+
+  if (cursor) {
+    query = query.lt("created_at", cursor);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching filtered notifications:", error);
     return { notifications: [] as Notification[], nextCursor: null };
   }
 

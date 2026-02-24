@@ -23,6 +23,9 @@ import type { MissionComment, SlaConfig, MissionType, MissionStatus } from "@/ty
 import { MissionMap } from "@/components/missions/mission-map";
 import { GpsCheckinButton } from "@/components/missions/gps-checkin-button";
 import { DependencyChain } from "@/components/missions/dependency-chain";
+import { MissionReportSection } from "@/components/missions/mission-report-section";
+import { getMissionReport } from "@/lib/actions/mission-reports";
+import type { MissionReport } from "@/types/database";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -136,6 +139,9 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     },
     (slaConfigs ?? []) as SlaConfig[]
   );
+
+  // Fetch mission report
+  const missionReport = await getMissionReport(params.id);
 
   const logement = mission.logement as {
     id: string;
@@ -910,6 +916,13 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
           </CardContent>
         </Card>
       )}
+
+      {/* Rapport de mission */}
+      <MissionReportSection
+        missionId={params.id}
+        report={missionReport as MissionReport | null}
+        isAdmin={admin}
+      />
 
       {/* Commentaires */}
       <CommentsSection

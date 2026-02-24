@@ -43,6 +43,15 @@ export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
 export type FactureStatus = 'ATTENTE' | 'VALIDEE' | 'PAYEE' | 'REFUSEE';
 export type DevisStatus = 'SOUMIS' | 'ACCEPTE' | 'REFUSE';
 
+// Sprint 5
+export type EtatDesLieuxType = 'ENTREE' | 'SORTIE';
+export type EtatDesLieuxStatus = 'BROUILLON' | 'SIGNE' | 'VALIDE';
+export type ItemCondition = 'BON' | 'CORRECT' | 'DEGRADE' | 'MAUVAIS';
+export type MissionReportStatus = 'SOUMIS' | 'VALIDE' | 'REJETE';
+export type OwnerPaymentStatus = 'DU' | 'PAYE' | 'PARTIEL' | 'EN_RETARD';
+export type PrestataireDocType = 'CERTIFICATION' | 'ASSURANCE' | 'KBIS' | 'RIB' | 'AUTRE';
+export type ProprietaireDocType = 'IDENTITE' | 'DIAGNOSTIC' | 'TITRE_PROPRIETE' | 'ASSURANCE' | 'RIB' | 'AUTRE';
+
 // Tables
 export interface Organisation {
   id: string;
@@ -601,6 +610,198 @@ export interface OwnerMessage {
   sender?: Profile | null;
 }
 
+// Sprint 5: Audit Log
+export interface AuditLog {
+  id: string;
+  organisation_id: string;
+  user_id: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  changes: Record<string, unknown>;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  // Joined
+  user?: Profile | null;
+}
+
+// Sprint 5: État des lieux
+export interface EtatDesLieux {
+  id: string;
+  organisation_id: string;
+  reservation_id: string | null;
+  logement_id: string;
+  type: EtatDesLieuxType;
+  status: EtatDesLieuxStatus;
+  inspector_id: string | null;
+  guest_signature_url: string | null;
+  inspector_signature_url: string | null;
+  notes: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+  reservation?: Reservation | null;
+  inspector?: Profile | null;
+  items?: EtatDesLieuxItem[];
+}
+
+export interface EtatDesLieuxItem {
+  id: string;
+  etat_des_lieux_id: string;
+  room: string;
+  element: string;
+  condition: ItemCondition;
+  photo_urls: string[];
+  notes: string | null;
+  position: number;
+}
+
+// Sprint 5: Webhooks
+export interface WebhookEndpoint {
+  id: string;
+  organisation_id: string;
+  url: string;
+  secret: string;
+  events: string[];
+  active: boolean;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhook_id: string;
+  event: string;
+  payload: Record<string, unknown>;
+  status_code: number | null;
+  response_body: string | null;
+  delivered_at: string;
+}
+
+// Sprint 5: Mission Reports
+export interface MissionReport {
+  id: string;
+  mission_id: string;
+  organisation_id: string;
+  submitted_by: string | null;
+  status: MissionReportStatus;
+  checklist: Array<{ label: string; checked: boolean }>;
+  notes: string | null;
+  photo_urls: string[];
+  issues_found: string | null;
+  supplies_used: Array<{ name: string; quantity: number }>;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  mission?: Mission | null;
+  submitter?: Profile | null;
+}
+
+// Sprint 5: Mission Templates
+export interface MissionTemplate {
+  id: string;
+  organisation_id: string;
+  name: string;
+  type: string;
+  logement_id: string | null;
+  description: string | null;
+  estimated_duration_minutes: number | null;
+  checklist: Array<{ label: string }>;
+  priority: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+}
+
+// Sprint 5: Intervention Checklist
+export interface InterventionChecklist {
+  id: string;
+  incident_id: string;
+  organisation_id: string;
+  items: Array<{ label: string; checked: boolean; note?: string }>;
+  completed_by: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+// Sprint 5: Contract Template
+export interface ContratTemplate {
+  id: string;
+  organisation_id: string;
+  name: string;
+  content: string;
+  variables: Array<{ key: string; label: string; default_value?: string }>;
+  category: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Sprint 5: Contract Version
+export interface ContratVersion {
+  id: string;
+  contrat_id: string;
+  organisation_id: string;
+  version_number: number;
+  content: Record<string, unknown>;
+  changed_by: string | null;
+  change_summary: string | null;
+  created_at: string;
+  // Joined
+  changer?: Profile | null;
+}
+
+// Sprint 5: Owner Payments
+export interface OwnerPayment {
+  id: string;
+  organisation_id: string;
+  proprietaire_id: string;
+  contrat_id: string | null;
+  amount: number;
+  period_start: string | null;
+  period_end: string | null;
+  status: OwnerPaymentStatus;
+  paid_amount: number;
+  paid_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  proprietaire?: Proprietaire | null;
+  contrat?: Contrat | null;
+}
+
+// Sprint 5: Prestataire Documents
+export interface PrestataireDocument {
+  id: string;
+  prestataire_id: string;
+  organisation_id: string;
+  type: PrestataireDocType;
+  name: string;
+  file_url: string;
+  expires_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+// Sprint 5: Proprietaire Documents
+export interface ProprietaireDocument {
+  id: string;
+  proprietaire_id: string;
+  organisation_id: string;
+  type: ProprietaireDocType;
+  name: string;
+  file_url: string;
+  expires_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 // Enum label maps for UI display
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrateur',
@@ -761,4 +962,52 @@ export const FACTURE_STATUS_LABELS: Record<FactureStatus, string> = {
   VALIDEE: 'Validée',
   PAYEE: 'Payée',
   REFUSEE: 'Refusée',
+};
+
+export const ETAT_DES_LIEUX_TYPE_LABELS: Record<EtatDesLieuxType, string> = {
+  ENTREE: 'Entrée',
+  SORTIE: 'Sortie',
+};
+
+export const ETAT_DES_LIEUX_STATUS_LABELS: Record<EtatDesLieuxStatus, string> = {
+  BROUILLON: 'Brouillon',
+  SIGNE: 'Signé',
+  VALIDE: 'Validé',
+};
+
+export const ITEM_CONDITION_LABELS: Record<ItemCondition, string> = {
+  BON: 'Bon',
+  CORRECT: 'Correct',
+  DEGRADE: 'Dégradé',
+  MAUVAIS: 'Mauvais',
+};
+
+export const MISSION_REPORT_STATUS_LABELS: Record<MissionReportStatus, string> = {
+  SOUMIS: 'Soumis',
+  VALIDE: 'Validé',
+  REJETE: 'Rejeté',
+};
+
+export const OWNER_PAYMENT_STATUS_LABELS: Record<OwnerPaymentStatus, string> = {
+  DU: 'Dû',
+  PAYE: 'Payé',
+  PARTIEL: 'Partiel',
+  EN_RETARD: 'En retard',
+};
+
+export const PRESTATAIRE_DOC_TYPE_LABELS: Record<PrestataireDocType, string> = {
+  CERTIFICATION: 'Certification',
+  ASSURANCE: 'Assurance',
+  KBIS: 'KBIS',
+  RIB: 'RIB',
+  AUTRE: 'Autre',
+};
+
+export const PROPRIETAIRE_DOC_TYPE_LABELS: Record<ProprietaireDocType, string> = {
+  IDENTITE: 'Pièce d\'identité',
+  DIAGNOSTIC: 'Diagnostic',
+  TITRE_PROPRIETE: 'Titre de propriété',
+  ASSURANCE: 'Assurance',
+  RIB: 'RIB',
+  AUTRE: 'Autre',
 };

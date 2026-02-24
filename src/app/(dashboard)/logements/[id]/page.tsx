@@ -24,7 +24,9 @@ import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UrlTabs } from "@/components/shared/url-tabs";
 import { Badge } from "@/components/ui/badge";
 import { IncidentsTable } from "@/components/logements/incidents-table";
+import { LogementHistory } from "@/components/logements/logement-history";
 import { SensitiveField } from "@/components/shared/sensitive-field";
+import { IncidentReportLink } from "@/components/logements/incident-report-link";
 import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -228,6 +230,16 @@ export default async function LogementDetailPage({ params }: { params: { id: str
       <PhotoSection organisationId={profile.organisation_id} entityType="LOGEMENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={admin} canDelete={admin} />
 
       <PricingSeasonSection logementId={params.id} isAdmin={admin} />
+
+      {admin && (
+        <IncidentReportLink
+          logementId={params.id}
+          existingToken={(logement as Record<string, unknown>).incident_report_token as string | null}
+        />
+      )}
+
+      {/* Historique des modifications (L9) */}
+      <LogementHistory logementId={params.id} />
 
       <UrlTabs defaultValue="inventaire">
         <Card className="p-2 mb-6">

@@ -2,6 +2,8 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { getCalendarData, getCalendarFilters } from "@/lib/actions/calendar";
 import Calendar from "@/components/calendrier/calendar";
 import { IcalExportButton } from "@/components/calendrier/ical-export-button";
+import { ConflictAlert } from "@/components/calendrier/conflict-alert";
+import { detectConflicts } from "@/lib/actions/calendar-conflicts";
 
 export const metadata = { title: "Calendrier" };
 export const dynamic = "force-dynamic";
@@ -28,11 +30,21 @@ export default async function CalendrierPage({
   const validYear =
     year >= 2020 && year <= 2100 ? year : now.getFullYear();
 
+  // Calculate date range for conflict detection (same as calendar data range)
+  const startDate = new Date(validYear, validMonth - 1, 1);
+  startDate.setDate(startDate.getDate() - 7);
+  const rangeStart = startDate.toISOString().split("T")[0];
+
+  const endDate = new Date(validYear, validMonth, 0); // Last day of month
+  endDate.setDate(endDate.getDate() + 8);
+  const rangeEnd = endDate.toISOString().split("T")[0];
+
   // Fetch data in parallel
-  const [{ missions, reservations }, { logements, operators }] =
+  const [{ missions, reservations }, { logements, operators }, conflicts] =
     await Promise.all([
       getCalendarData(validMonth, validYear),
       getCalendarFilters(),
+      detectConflicts(rangeStart, rangeEnd),
     ]);
 
   const admin = isAdmin(profile);
@@ -49,6 +61,11 @@ export default async function CalendrierPage({
         {admin && (
           <IcalExportButton organisationId={profile.organisation_id} />
         )}
+      </div>
+
+      {/* Conflict detection alert */}
+      <div className="mb-4">
+        <ConflictAlert conflicts={conflicts} />
       </div>
 
       <Calendar

@@ -21,6 +21,7 @@ import { DevisSection } from "@/components/incidents/devis-section";
 import { FactureSection } from "@/components/incidents/facture-section";
 import { ResponseTemplatesSection } from "@/components/incidents/response-templates-section";
 import { getIncidentTemplates } from "@/lib/actions/incident-templates";
+import { InterventionChecklist } from "@/components/incidents/intervention-checklist";
 import type { Prestataire } from "@/types/database";
 
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
@@ -121,6 +122,7 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         templates={templates}
       />
       <PhotoSection organisationId={profile.organisation_id} entityType="INCIDENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={true} canDelete={true} />
+      <InterventionChecklist incidentId={params.id} isAdmin={admin} />
       <DevisSection incidentId={params.id} organisationId={profile.organisation_id} prestataires={(prestataires ?? []) as Prestataire[]} />
       <FactureSection incidentId={params.id} organisationId={profile.organisation_id} />
       <Card>

@@ -15,6 +15,8 @@ import { Pencil, Star, BarChart3, CheckCircle, Clock, Euro } from "lucide-react"
 import Link from "next/link";
 import { PortalTokenSection } from "@/components/prestataires/portal-token-section";
 import { FactureSection } from "@/components/incidents/facture-section";
+import { PrestataireDocumentsSection } from "@/components/prestataires/documents-section";
+import { BillingSection } from "@/components/prestataires/billing-section";
 
 export default async function PrestataireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -137,6 +139,12 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
       {isAdminOrManager(profile) && (
         <PortalTokenSection prestataireId={prestataire.id} />
       )}
+
+      {/* Documents prestataire */}
+      <PrestataireDocumentsSection prestataireId={prestataire.id} />
+
+      {/* Résumé facturation */}
+      <BillingSection prestataireId={prestataire.id} />
 
       {/* Factures prestataire */}
       <FactureSection prestataireId={prestataire.id} organisationId={profile.organisation_id} />

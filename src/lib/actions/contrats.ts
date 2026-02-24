@@ -5,6 +5,7 @@ import { requireProfile, isAdmin } from "@/lib/auth";
 import { contratSchema, type ContratFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
+import { createContratVersion } from "@/lib/actions/contrat-versions";
 
 export async function createContrat(data: ContratFormData): Promise<ActionResponse<{ id: string }>> {
   try {
@@ -69,11 +70,32 @@ export async function updateContrat(id: string, data: ContratFormData): Promise<
 
     if (error) return errorResponse(error.message) as ActionResponse<{ id: string }>;
 
+    // CO8: Auto-create version snapshot after update
+    const versionContent = {
+      proprietaire_id: parsed.proprietaire_id,
+      logement_id: parsed.logement_id || null,
+      type: parsed.type,
+      start_date: parsed.start_date,
+      end_date: parsed.end_date,
+      commission_rate: parsed.commission_rate,
+      status: parsed.status,
+      conditions: parsed.conditions || null,
+      auto_renew: parsed.auto_renew ?? false,
+      renewal_duration_months: parsed.renewal_duration_months ?? 12,
+    };
+
+    // Determine what changed for the summary
+    const changes: string[] = [];
+    if (existing.status !== parsed.status) changes.push(`Statut: ${parsed.status}`);
+    changes.push("Contrat mis \u00e0 jour");
+
+    await createContratVersion(id, versionContent, changes[0]);
+
     revalidatePath("/contrats");
     revalidatePath(`/contrats/${id}`);
-    return successResponse("Contrat mis à jour avec succès", { id });
+    return successResponse("Contrat mis \u00e0 jour avec succ\u00e8s", { id });
   } catch (err) {
-    return errorResponse((err as Error).message ?? "Erreur lors de la mise à jour du contrat") as ActionResponse<{ id: string }>;
+    return errorResponse((err as Error).message ?? "Erreur lors de la mise \u00e0 jour du contrat") as ActionResponse<{ id: string }>;
   }
 }
 

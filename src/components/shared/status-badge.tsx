@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils";
 
 const colorMap: Record<string, string> = {
   EN_ATTENTE: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  ATTENTE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  VALIDEE: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  PAYEE: "bg-green-500/15 text-green-700 dark:text-green-300",
+  REFUSEE: "bg-red-500/15 text-red-700 dark:text-red-300",
+  DU: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  EN_RETARD: "bg-red-500/15 text-red-700 dark:text-red-300",
   CONFIRMEE: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   ANNULEE: "bg-red-500/15 text-red-700 dark:text-red-300",
   TERMINEE: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
@@ -38,6 +44,16 @@ const colorMap: Record<string, string> = {
   ELECTRICITE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
   CLIM: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",
   AUTRE: "bg-muted text-muted-foreground",
+  // État des lieux
+  ENTREE: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  SORTIE: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
+  BROUILLON: "bg-muted text-muted-foreground",
+  SIGNE: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  VALIDE: "bg-green-500/15 text-green-700 dark:text-green-300",
+  BON: "bg-green-500/15 text-green-700 dark:text-green-300",
+  CORRECT: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  DEGRADE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  MAUVAIS: "bg-red-500/15 text-red-700 dark:text-red-300",
 };
 
 interface StatusBadgeProps {

@@ -8,6 +8,65 @@ import { factureSchema, type FactureFormData } from "@/lib/schemas";
 import type { FacturePrestataire } from "@/types/database";
 
 // ---------------------------------------------------------------------------
+// Get All Factures (for admin dashboard)
+// ---------------------------------------------------------------------------
+
+export async function getAllFactures(filters?: {
+  status?: string;
+  prestataire_search?: string;
+}): Promise<FacturePrestataire[]> {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  let query = supabase
+    .from("factures_prestataires")
+    .select("*, prestataire:prestataires(id, full_name), mission:missions(id, type), incident:incidents(id, description), devis:devis_prestataires(id, montant, description)")
+    .eq("organisation_id", profile.organisation_id)
+    .order("created_at", { ascending: false });
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) return [];
+
+  let results = (data ?? []) as unknown as FacturePrestataire[];
+
+  // Client-side filter for prestataire name (since it's a joined field)
+  if (filters?.prestataire_search) {
+    const search = filters.prestataire_search.toLowerCase();
+    results = results.filter((f) =>
+      f.prestataire?.full_name?.toLowerCase().includes(search)
+    );
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Get Facture by ID (for detail page)
+// ---------------------------------------------------------------------------
+
+export async function getFactureById(
+  factureId: string
+): Promise<FacturePrestataire | null> {
+  const profile = await requireProfile();
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("factures_prestataires")
+    .select("*, prestataire:prestataires(id, full_name, phone, email, specialty), mission:missions(id, type, status), incident:incidents(id, description, status, severity), devis:devis_prestataires(id, montant, description, status)")
+    .eq("id", factureId)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+
+  if (error || !data) return null;
+  return data as unknown as FacturePrestataire;
+}
+
+// ---------------------------------------------------------------------------
 // Get Factures for a Prestataire
 // ---------------------------------------------------------------------------
 
