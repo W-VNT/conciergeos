@@ -15,7 +15,8 @@ import { Pencil, Users, Calendar, Coins, KeyRound, History, CheckCircle, Mail, G
 import Link from "next/link";
 import { SendMessageDialog } from "@/components/messaging/send-message-dialog";
 import { PortalLinkSection } from "@/components/messaging/portal-link-section";
-import type { Reservation, Logement, MessageTemplate, GuestMessage, GuestPortalToken } from "@/types/database";
+import { VoyageurCard } from "@/components/reservations/voyageur-card";
+import type { Reservation, Logement, MessageTemplate, GuestMessage, GuestPortalToken, Voyageur } from "@/types/database";
 
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -37,7 +38,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
 
   // Parallel fetches
-  const [{ data: missions }, { data: pastReservations }, messages, templates, portalToken] = await Promise.all([
+  const [{ data: missions }, { data: pastReservations }, messages, templates, portalToken, { data: voyageur }] = await Promise.all([
     supabase
       .from("missions")
       .select("id, type, status, scheduled_at")
@@ -57,6 +58,14 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     getMessagesForReservation(params.id),
     getMessageTemplates(),
     getPortalTokenForReservation(params.id),
+    reservation.voyageur_id
+      ? supabase
+          .from("voyageurs")
+          .select("*")
+          .eq("id", reservation.voyageur_id)
+          .eq("organisation_id", profile.organisation_id)
+          .single()
+      : Promise.resolve({ data: null }),
   ]);
 
   const MESSAGE_STATUS_LABELS: Record<string, string> = {
@@ -191,6 +200,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
           </CardContent>
         </Card>
       </div>
+
+      {/* Fiche voyageur CRM (R15) */}
+      {voyageur && <VoyageurCard voyageur={voyageur as Voyageur} />}
 
       {reservation.amount && (
         <Card>

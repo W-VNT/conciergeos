@@ -19,7 +19,10 @@ import { PhotoSection } from "@/components/shared/photo-section";
 import { CommentsSection } from "@/components/missions/comments-section";
 import { checkMissionSla } from "@/lib/actions/sla";
 import { Badge } from "@/components/ui/badge";
-import type { MissionComment, SlaConfig } from "@/types/database";
+import type { MissionComment, SlaConfig, MissionType, MissionStatus } from "@/types/database";
+import { MissionMap } from "@/components/missions/mission-map";
+import { GpsCheckinButton } from "@/components/missions/gps-checkin-button";
+import { DependencyChain } from "@/components/missions/dependency-chain";
 
 export default async function MissionDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -28,7 +31,7 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
 
   const { data: mission } = await supabase
     .from("missions")
-    .select("*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes), assignee:profiles(id, full_name)")
+    .select("*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes, latitude, longitude), assignee:profiles(id, full_name), depends_on:missions!depends_on_mission_id(id, type, status)")
     .eq("id", params.id)
     .eq("organisation_id", profile.organisation_id)
     .single();
@@ -147,7 +150,11 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
     beds: number | null;
     menage_price: number | null;
     notes: string | null;
+    latitude: number | null;
+    longitude: number | null;
   } | null;
+
+  const dependsOn = mission.depends_on as { id: string; type: string; status: string } | null;
 
   const addressText = logement ? [logement.address_line1, logement.postal_code, logement.city].filter(Boolean).join(", ") : null;
   const mapsUrl = addressText ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressText)}` : null;
@@ -843,6 +850,65 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
 
           <ChecklistManager missionId={params.id} />
         </>
+      )}
+
+      {/* Dependency Chain */}
+      {dependsOn && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Dependance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DependencyChain
+              currentMission={{
+                id: mission.id,
+                type: mission.type as MissionType,
+                status: mission.status as MissionStatus,
+              }}
+              dependsOn={{
+                id: dependsOn.id,
+                type: dependsOn.type as MissionType,
+                status: dependsOn.status as MissionStatus,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* GPS Check-in/Check-out buttons */}
+      {mission.status !== "TERMINE" && mission.status !== "ANNULE" && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Geolocalisation</CardTitle>
+          </CardHeader>
+          <CardContent className="flex gap-2 flex-wrap">
+            {mission.status === "A_FAIRE" && (
+              <GpsCheckinButton missionId={mission.id} type="checkin" />
+            )}
+            {mission.status === "EN_COURS" && (
+              <GpsCheckinButton missionId={mission.id} type="checkout" />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mission Map (GPS coordinates) */}
+      {(mission.check_in_lat || mission.check_out_lat || logement?.latitude) && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Carte</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MissionMap
+              checkInLat={mission.check_in_lat}
+              checkInLng={mission.check_in_lng}
+              checkOutLat={mission.check_out_lat}
+              checkOutLng={mission.check_out_lng}
+              logementLat={logement?.latitude}
+              logementLng={logement?.longitude}
+            />
+          </CardContent>
+        </Card>
       )}
 
       {/* Commentaires */}

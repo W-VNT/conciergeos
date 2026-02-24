@@ -74,7 +74,7 @@ export function DateFilter({ className }: Props) {
     <div className={`flex items-center gap-2 ${className}`}>
       <Calendar className="h-4 w-4 text-muted-foreground" />
       <Select value={currentRange} onValueChange={handleRangeChange}>
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

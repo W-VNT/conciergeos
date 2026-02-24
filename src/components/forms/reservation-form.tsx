@@ -18,15 +18,20 @@ import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import type { Reservation, Logement } from "@/types/database";
 import { BOOKING_PLATFORM_LABELS, RESERVATION_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/types/database";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { VoyageurSelector } from "@/components/reservations/voyageur-selector";
 import { Info, Loader2 } from "lucide-react";
 
 interface Props {
   reservation?: Reservation;
   logements: Logement[];
+  organisationId?: string;
 }
 
-export function ReservationForm({ reservation, logements }: Props) {
+export function ReservationForm({ reservation, logements, organisationId }: Props) {
   const [loading, setLoading] = useState(false);
+  const [selectedVoyageurId, setSelectedVoyageurId] = useState<string | null>(
+    reservation?.voyageur_id ?? null
+  );
   const router = useRouter();
   const isEdit = !!reservation;
 
@@ -92,6 +97,27 @@ export function ReservationForm({ reservation, logements }: Props) {
         <CardContent className="pt-6 space-y-4">
           <h3 className="font-semibold text-lg mb-4">Informations voyageur</h3>
 
+          {organisationId && (
+            <div>
+              <Label>Voyageur existant</Label>
+              <VoyageurSelector
+                value={selectedVoyageurId}
+                onChange={(voyageurId, voyageur) => {
+                  setSelectedVoyageurId(voyageurId);
+                  if (voyageur) {
+                    form.setValue("guest_name", voyageur.full_name, { shouldDirty: true });
+                    if (voyageur.email) form.setValue("guest_email", voyageur.email, { shouldDirty: true });
+                    if (voyageur.phone) form.setValue("guest_phone", voyageur.phone, { shouldDirty: true });
+                  }
+                }}
+                organisationId={organisationId}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Sélectionnez un voyageur existant ou remplissez les champs manuellement.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="guest_name">
@@ -110,12 +136,12 @@ export function ReservationForm({ reservation, logements }: Props) {
 
             <div>
               <Label htmlFor="guest_email">Email</Label>
-              <Input id="guest_email" type="email" {...form.register("guest_email")} />
+              <Input id="guest_email" type="email" inputMode="email" autoComplete="email" {...form.register("guest_email")} />
             </div>
 
             <div>
               <Label htmlFor="guest_phone">Téléphone</Label>
-              <Input id="guest_phone" type="tel" {...form.register("guest_phone")} />
+              <Input id="guest_phone" type="tel" inputMode="tel" autoComplete="tel" {...form.register("guest_phone")} />
             </div>
           </div>
         </CardContent>

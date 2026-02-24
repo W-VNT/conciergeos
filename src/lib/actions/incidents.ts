@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdminOrManager } from "@/lib/auth";
 import { incidentSchema, type IncidentFormData } from "@/lib/schemas";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -178,7 +178,7 @@ export async function updateIncidentStatus(id: string, status: string) {
 export async function deleteIncident(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé");
     const supabase = createClient();
 
     const { error } = await supabase.from("incidents").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
@@ -270,7 +270,7 @@ export async function bulkAssignIncidents(data: {
 export async function bulkDeleteIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(incidentIds);
     const supabase = createClient();
 

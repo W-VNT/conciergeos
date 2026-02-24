@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdminOrManager } from "@/lib/auth";
 import { z } from "zod";
 import {
   missionSchema,
@@ -23,7 +23,7 @@ import type {
 export async function createMission(data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
     const parsed = missionSchema.parse(data);
     const supabase = createClient();
 
@@ -54,7 +54,7 @@ export async function createMission(data: MissionFormData): Promise<ActionRespon
 export async function updateMission(id: string, data: MissionFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
     const parsed = missionSchema.parse(data);
     const supabase = createClient();
 
@@ -97,17 +97,46 @@ export async function updateMission(id: string, data: MissionFormData): Promise<
   }
 }
 
-export async function startMission(id: string) {
+export async function startMission(id: string, coords?: { lat: number; lng: number }) {
   const profile = await requireProfile();
   const supabase = createClient();
 
+  // Check dependency: if depends_on_mission_id is set, verify dependency is TERMINE
+  const { data: mission, error: fetchError } = await supabase
+    .from("missions")
+    .select("depends_on_mission_id")
+    .eq("id", id)
+    .eq("organisation_id", profile.organisation_id)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  if (mission?.depends_on_mission_id) {
+    const { data: dependency } = await supabase
+      .from("missions")
+      .select("status")
+      .eq("id", mission.depends_on_mission_id)
+      .single();
+
+    if (dependency && dependency.status !== "TERMINE") {
+      throw new Error("La mission dépendante n'est pas encore terminée");
+    }
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: "EN_COURS",
+    completed_at: null,
+    started_at: new Date().toISOString(),
+  };
+
+  if (coords) {
+    updateData.check_in_lat = coords.lat;
+    updateData.check_in_lng = coords.lng;
+  }
+
   const { error } = await supabase
     .from("missions")
-    .update({
-      status: "EN_COURS",
-      completed_at: null,
-      started_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq("id", id)
     .eq("status", "A_FAIRE")
     .eq("organisation_id", profile.organisation_id);
@@ -118,7 +147,7 @@ export async function startMission(id: string) {
   revalidatePath("/dashboard");
 }
 
-export async function completeMission(id: string) {
+export async function completeMission(id: string, coords?: { lat: number; lng: number }) {
   const profile = await requireProfile();
   const supabase = createClient();
 
@@ -145,6 +174,11 @@ export async function completeMission(id: string) {
     );
   }
 
+  if (coords) {
+    updateData.check_out_lat = coords.lat;
+    updateData.check_out_lng = coords.lng;
+  }
+
   const { error } = await supabase
     .from("missions")
     .update(updateData)
@@ -161,7 +195,7 @@ export async function completeMission(id: string) {
 export async function deleteMission(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé");
     const supabase = createClient();
 
     const { error } = await supabase.from("missions").delete().eq("id", id).eq("organisation_id", profile.organisation_id);
@@ -220,7 +254,7 @@ export async function bulkDeleteMissions(
 ): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(missionIds);
     const supabase = createClient();
 
@@ -509,7 +543,7 @@ export async function updateOperatorCapabilities(
 ): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé");
     const validated = operatorCapabilitiesSchema.parse(capabilities);
     const supabase = createClient();
 

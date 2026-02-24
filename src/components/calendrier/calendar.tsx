@@ -11,12 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
-import type { Mission, Reservation, MissionType, MissionStatus, ReservationStatus } from "@/types/database";
+import type { Mission, Reservation, MissionType, ReservationStatus } from "@/types/database";
 import { MISSION_TYPE_LABELS, RESERVATION_STATUS_LABELS } from "@/types/database";
 import Link from "next/link";
-import { formatTime } from "@/lib/format-date";
+import { CalendarDndWrapper } from "@/components/calendrier/calendar-dnd-wrapper";
+import { DraggableMissionCard } from "@/components/calendrier/draggable-mission-card";
+import { DroppableCell } from "@/components/calendrier/droppable-cell";
+import { InlineCreateDialog } from "@/components/calendrier/inline-create-dialog";
+import { rescheduleMission } from "@/lib/actions/calendar-dnd";
 
 type ViewType = "jour" | "semaine" | "mois" | "annee";
 
@@ -45,14 +49,6 @@ const MISSION_TYPE_COLORS: Record<MissionType, string> = {
   MENAGE: "bg-green-500",
   INTERVENTION: "bg-orange-500",
   URGENCE: "bg-red-500",
-};
-
-const MISSION_TYPE_BORDER_COLORS: Record<MissionType, string> = {
-  CHECKIN: "border-l-blue-500",
-  CHECKOUT: "border-l-purple-500",
-  MENAGE: "border-l-green-500",
-  INTERVENTION: "border-l-orange-500",
-  URGENCE: "border-l-red-500",
 };
 
 const RESERVATION_STATUS_COLORS: Record<ReservationStatus, string> = {
@@ -113,6 +109,20 @@ export default function Calendar({
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | "ALL">("ALL");
   const [filterLogement, setFilterLogement] = useState<string>("ALL");
   const [filterOperator, setFilterOperator] = useState<string>("ALL");
+
+  // Inline create dialog state
+  const [inlineCreateOpen, setInlineCreateOpen] = useState(false);
+  const [inlineCreateDate, setInlineCreateDate] = useState("");
+  const [inlineCreateTime, setInlineCreateTime] = useState("09:00");
+
+  function openInlineCreate(date: Date, hour?: number) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    setInlineCreateDate(`${yyyy}-${mm}-${dd}`);
+    setInlineCreateTime(hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "09:00");
+    setInlineCreateOpen(true);
+  }
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -430,116 +440,142 @@ export default function Calendar({
 
         const hasEvents = dayReservations.length > 0 || dayMissions.length > 0;
 
+        // Helper to build ISO datetime for a given hour on currentDate
+        const buildDateTime = (hour: number) => {
+          const yyyy = currentDate.getFullYear();
+          const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
+          const dd = String(currentDate.getDate()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}T${String(hour).padStart(2, "0")}:00:00`;
+        };
+
         return (
-          <Card className="p-0 overflow-hidden">
-            {/* Reservations - all day banner */}
-            {dayReservations.length > 0 && (
-              <div className="p-3 border-b bg-muted/30">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Reservations</p>
-                <div className="space-y-1.5">
-                  {dayReservations.map((r) => {
-                    const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
+          <CalendarDndWrapper missions={filteredMissions} onReschedule={rescheduleMission}>
+            <Card className="p-0 overflow-hidden">
+              {/* Reservations - all day banner */}
+              {dayReservations.length > 0 && (
+                <div className="p-3 border-b bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Reservations</p>
+                  <div className="space-y-1.5">
+                    {dayReservations.map((r) => {
+                      const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
+                      return (
+                        <Link key={r.id} href={`/reservations/${r.id}`} className="block">
+                          <div className={`text-sm px-3 py-2 rounded border-l-4 ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                            <span className="font-medium">{logement?.name}</span>
+                            <span className="text-xs opacity-75 ml-2">{r.guest_name}</span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Hourly grid */}
+              {hasEvents || true ? (
+                <div className="divide-y">
+                  {HOURS.map((hour) => {
+                    const hourMissions = missionsByHour[hour] || [];
+                    const nowDate = new Date();
+                    const isCurrentHour = isToday(currentDate) && nowDate.getHours() === hour;
+
                     return (
-                      <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-sm px-3 py-2 rounded border-l-4 ${RESERVATION_STATUS_COLORS[r.status]}`}>
-                          <span className="font-medium">{logement?.name}</span>
-                          <span className="text-xs opacity-75 ml-2">{r.guest_name}</span>
+                      <DroppableCell
+                        key={hour}
+                        dateTime={buildDateTime(hour)}
+                        className={`flex min-h-[3.5rem] ${isCurrentHour ? "bg-primary/5" : ""}`}
+                      >
+                        <div className="w-12 sm:w-14 flex-shrink-0 px-2 py-3 text-xs font-mono text-muted-foreground text-right border-r">
+                          {String(hour).padStart(2, "0")}:00
                         </div>
-                      </Link>
+                        <div
+                          className="flex-1 px-2 py-2 space-y-1 cursor-pointer"
+                          onClick={(e) => {
+                            // Only open dialog if clicking on empty space (not on a mission card)
+                            if ((e.target as HTMLElement).closest("[data-mission-card]")) return;
+                            openInlineCreate(currentDate, hour);
+                          }}
+                        >
+                          {hourMissions.map((m) => (
+                            <div key={m.id} data-mission-card>
+                              <DraggableMissionCard mission={m} variant="jour" />
+                            </div>
+                          ))}
+                          {hourMissions.length === 0 && (
+                            <div className="flex items-center justify-center h-full min-h-[1.5rem] opacity-0 hover:opacity-100 transition-opacity">
+                              <Plus className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </DroppableCell>
                     );
                   })}
                 </div>
-              </div>
-            )}
-
-            {/* Hourly grid */}
-            {hasEvents ? (
-              <div className="divide-y">
-                {HOURS.map((hour) => {
-                  const hourMissions = missionsByHour[hour] || [];
-                  const nowDate = new Date();
-                  const isCurrentHour = isToday(currentDate) && nowDate.getHours() === hour;
-
-                  return (
-                    <div key={hour} className={`flex min-h-[3.5rem] ${isCurrentHour ? "bg-primary/5" : ""}`}>
-                      <div className="w-14 flex-shrink-0 px-2 py-3 text-xs font-mono text-muted-foreground text-right border-r">
-                        {String(hour).padStart(2, "0")}:00
-                      </div>
-                      <div className="flex-1 px-2 py-2 space-y-1">
-                        {hourMissions.map((m) => {
-                          const logement = m.logement as { name: string } | null;
-                          return (
-                            <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                              <div className={`flex items-center gap-2 px-2.5 py-2.5 rounded border-l-4 bg-muted/40 hover:bg-muted transition-colors ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
-                                <span className="text-xs font-mono text-muted-foreground">
-                                  {formatTime(m.scheduled_at)}
-                                </span>
-                                <span className="text-sm font-medium">{MISSION_TYPE_LABELS[m.type as MissionType]}</span>
-                                <span className="text-xs text-muted-foreground truncate">{logement?.name}</span>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <EmptyState
-                variant="inline"
-                icon={CalendarIcon}
-                title="Aucun evenement ce jour"
-              />
-            )}
-          </Card>
+              ) : (
+                <EmptyState
+                  variant="inline"
+                  icon={CalendarIcon}
+                  title="Aucun evenement ce jour"
+                />
+              )}
+            </Card>
+          </CalendarDndWrapper>
         );
       })()}
 
       {/* -- VUE SEMAINE -- */}
       {view === "semaine" && (
-        <Card className="p-2 sm:p-4">
-          <div className="grid grid-cols-7 gap-px bg-border">
-            {weekDays.map((day, i) => (
-              <div key={i} className="bg-background p-1 sm:p-2">
-                <div className="mb-1 sm:mb-2 text-center">
-                  <p className="text-[11px] sm:text-xs text-muted-foreground">
-                    <span className="sm:hidden">{DAYS_SHORT[i]}</span>
-                    <span className="hidden sm:inline">{DAYS[i]}</span>
-                  </p>
-                  <span className={`relative inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-medium after:content-[''] after:absolute after:-inset-2 ${
-                    isToday(day) ? "bg-primary text-primary-foreground" : ""
-                  }`}>
-                    {day.getDate()}
-                  </span>
-                </div>
-                <div className="space-y-1 min-h-[80px] sm:min-h-[120px]">
-                  {getReservationsForDate(day).map((r) => {
-                    const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
-                    return (
-                      <Link key={r.id} href={`/reservations/${r.id}`} className="block">
-                        <div className={`text-xs p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
-                          <div className="font-medium truncate">{logement?.name}</div>
+        <CalendarDndWrapper missions={filteredMissions} onReschedule={rescheduleMission}>
+          <Card className="p-2 sm:p-4">
+            <div className="grid grid-cols-7 gap-px bg-border">
+              {weekDays.map((day, i) => {
+                const yyyy = day.getFullYear();
+                const mm = String(day.getMonth() + 1).padStart(2, "0");
+                const dd = String(day.getDate()).padStart(2, "0");
+                const dayDateTime = `${yyyy}-${mm}-${dd}T09:00:00`;
+
+                return (
+                  <DroppableCell key={i} dateTime={dayDateTime} className="bg-background p-1 sm:p-2">
+                    <div className="mb-1 sm:mb-2 text-center">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground">
+                        <span className="sm:hidden">{DAYS_SHORT[i]}</span>
+                        <span className="hidden sm:inline">{DAYS[i]}</span>
+                      </p>
+                      <span className={`relative inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-medium after:content-[''] after:absolute after:-inset-2 ${
+                        isToday(day) ? "bg-primary text-primary-foreground" : ""
+                      }`}>
+                        {day.getDate()}
+                      </span>
+                    </div>
+                    <div
+                      className="space-y-1 min-h-[80px] sm:min-h-[120px] cursor-pointer"
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest("[data-mission-card]")) return;
+                        openInlineCreate(day);
+                      }}
+                    >
+                      {getReservationsForDate(day).map((r) => {
+                        const logement = Array.isArray(r.logement) ? r.logement[0] : r.logement;
+                        return (
+                          <Link key={r.id} href={`/reservations/${r.id}`} className="block">
+                            <div className={`text-xs p-0.5 sm:p-1 rounded border-l-2 leading-tight ${RESERVATION_STATUS_COLORS[r.status]}`}>
+                              <div className="font-medium truncate">{logement?.name}</div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {getMissionsForDate(day).map((m) => (
+                        <div key={m.id} data-mission-card>
+                          <DraggableMissionCard mission={m} variant="semaine" />
                         </div>
-                      </Link>
-                    );
-                  })}
-                  {getMissionsForDate(day).map((m) => (
-                    <Link key={m.id} href={`/missions/${m.id}`} className="block">
-                      <div className={`text-xs p-0.5 sm:p-1 rounded border-l-2 bg-muted/40 leading-tight ${MISSION_TYPE_BORDER_COLORS[m.type as MissionType]}`}>
-                        <div className="font-medium truncate flex items-center gap-0.5 sm:gap-1">
-                          <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full ${MISSION_TYPE_COLORS[m.type as MissionType]}`} />
-                          <span className="hidden sm:inline">{formatTime(m.scheduled_at)}</span>
-                          <span className="truncate">{MISSION_TYPE_LABELS[m.type as MissionType]}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+                      ))}
+                    </div>
+                  </DroppableCell>
+                );
+              })}
+            </div>
+          </Card>
+        </CalendarDndWrapper>
       )}
 
       {/* -- VUE MOIS -- */}
@@ -692,6 +728,16 @@ export default function Calendar({
           </div>
         </Card>
       )}
+
+      {/* Inline create mission dialog */}
+      <InlineCreateDialog
+        open={inlineCreateOpen}
+        onOpenChange={setInlineCreateOpen}
+        defaultDate={inlineCreateDate}
+        defaultTime={inlineCreateTime}
+        logements={logements}
+        operators={operators}
+      />
     </div>
   );
 }

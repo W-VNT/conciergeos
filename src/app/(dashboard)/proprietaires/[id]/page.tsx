@@ -14,6 +14,8 @@ import Link from "next/link";
 import { formatPhone } from "@/lib/utils";
 import { getProprietaireFinances } from "@/lib/actions/owner-analytics";
 import { formatCurrency } from "@/lib/format-currency";
+import { AdminOwnerMessages } from "@/components/owner/admin-owner-messages";
+import { getAdminOwnerMessages } from "@/lib/actions/owner-portal";
 
 export default async function ProprietaireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -55,6 +57,9 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
   // Fetch finance summary for this proprietaire
   const finances = await getProprietaireFinances(proprietaire.id, profile.organisation_id);
   const fmtEur = formatCurrency;
+
+  // Fetch messages for this proprietaire
+  const ownerMessages = await getAdminOwnerMessages(proprietaire.id).catch(() => []);
 
   return (
     <div className="space-y-6">
@@ -162,6 +167,13 @@ export default async function ProprietaireDetailPage({ params }: { params: { id:
           )}
         </CardContent>
       </Card>
+
+      {/* Messages */}
+      <AdminOwnerMessages
+        proprietaireId={proprietaire.id}
+        organisationId={profile.organisation_id}
+        initialMessages={ownerMessages}
+      />
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdminOrManager } from "@/lib/auth";
 import { reservationSchema, type ReservationFormData } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
 import { findLogementTemplate } from "@/lib/actions/checklists";
+import { findOrCreateVoyageur } from "@/lib/actions/voyageurs";
 
 async function checkOverlap(
   supabase: ReturnType<typeof createClient>,
@@ -38,7 +39,7 @@ async function checkOverlap(
 export async function createReservation(data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = reservationSchema.parse(data);
     const supabase = createClient();
@@ -99,8 +100,27 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
       );
     }
 
+    // CRM Voyageur (R15): find or create a voyageur and link to the reservation
+    if (reservation) {
+      const voyageurId = await findOrCreateVoyageur(
+        profile.organisation_id,
+        parsed.guest_name,
+        parsed.guest_email || null,
+        parsed.guest_phone || null
+      );
+      if (voyageurId) {
+        const linkSupabase = createClient();
+        await linkSupabase
+          .from("reservations")
+          .update({ voyageur_id: voyageurId })
+          .eq("id", reservation.id)
+          .eq("organisation_id", profile.organisation_id);
+      }
+    }
+
     revalidatePath("/reservations");
     revalidatePath("/finances");
+    revalidatePath("/voyageurs");
     return successResponse("Réservation créée avec succès", { id: reservation.id });
   } catch (err) {
     return errorResponse((err as Error).message ?? "Erreur lors de la création de la réservation") as ActionResponse<{ id: string }>;
@@ -110,7 +130,7 @@ export async function createReservation(data: ReservationFormData): Promise<Acti
 export async function updateReservation(id: string, data: ReservationFormData): Promise<ActionResponse<{ id: string }>> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ id: string }>;
 
     const parsed = reservationSchema.parse(data);
     const supabase = createClient();
@@ -200,7 +220,7 @@ export async function updateReservation(id: string, data: ReservationFormData): 
 
 export async function terminateReservation(id: string) {
   const profile = await requireProfile();
-  if (!isAdmin(profile)) throw new Error("Non autorisé");
+  if (!isAdminOrManager(profile)) throw new Error("Non autorisé");
 
   const supabase = createClient();
   const { error } = await supabase
@@ -219,7 +239,7 @@ export async function terminateReservation(id: string) {
 export async function deleteReservation(id: string): Promise<ActionResponse> {
   try {
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé");
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé");
 
     const supabase = createClient();
     await cancelMissionsForReservation(id, profile.organisation_id);
@@ -243,7 +263,7 @@ export async function bulkCancelReservations(reservationIds: string[]): Promise<
     }
 
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
 
     const supabase = createClient();
 
@@ -298,7 +318,7 @@ export async function bulkDeleteReservations(reservationIds: string[]): Promise<
     }
 
     const profile = await requireProfile();
-    if (!isAdmin(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
 
     const supabase = createClient();
 
@@ -407,6 +427,18 @@ async function createMissionsForReservation(
     .from("missions")
     .insert(missions)
     .select("id, type");
+
+  // Set dependency: MENAGE depends on CHECKOUT
+  if (created && created.length > 0) {
+    const checkoutMission = created.find((m) => m.type === "CHECKOUT");
+    const menageMission = created.find((m) => m.type === "MENAGE");
+    if (checkoutMission && menageMission) {
+      await supabase
+        .from("missions")
+        .update({ depends_on_mission_id: checkoutMission.id })
+        .eq("id", menageMission.id);
+    }
+  }
 
   // Auto-assign checklist templates per logement + mission type
   if (created && created.length > 0) {

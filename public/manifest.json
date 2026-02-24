@@ -2,12 +2,34 @@
   "name": "ConciergeOS",
   "short_name": "Concierge",
   "description": "Back-office premium pour conciergeries",
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#171717",
   "orientation": "portrait",
   "scope": "/",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Missions",
+      "short_name": "Missions",
+      "url": "/missions",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Calendrier",
+      "short_name": "Calendrier",
+      "url": "/calendrier",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Réservations",
+      "short_name": "Réservations",
+      "url": "/reservations",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",

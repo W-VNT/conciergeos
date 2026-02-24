@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, LogOut, LayoutDashboard, Home, CalendarDays } from "lucide-react";
+import {
+  Building2,
+  LogOut,
+  LayoutDashboard,
+  Home,
+  CalendarDays,
+  User,
+  FileText,
+  AlertTriangle,
+  MessageCircle,
+  Wallet,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { Profile } from "@/types/database";
 import { cn } from "@/lib/utils";
@@ -17,6 +28,11 @@ const navItems = [
   { href: "/owner/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/owner/logements", label: "Logements", icon: Home },
   { href: "/owner/reservations", label: "Réservations", icon: CalendarDays },
+  { href: "/owner/contrats", label: "Contrats", icon: FileText },
+  { href: "/owner/incidents", label: "Incidents", icon: AlertTriangle },
+  { href: "/owner/messages", label: "Messages", icon: MessageCircle },
+  { href: "/owner/finances", label: "Finances", icon: Wallet },
+  { href: "/owner/profile", label: "Profil", icon: User },
 ];
 
 export function OwnerTopbar({ profile, organisationName }: OwnerTopbarProps) {

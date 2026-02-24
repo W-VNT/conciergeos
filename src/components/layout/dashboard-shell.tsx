@@ -20,14 +20,25 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [topbarVisible, setTopbarVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const scrollDelta = useRef(0);
 
   useEffect(() => {
+    const THRESHOLD = 10;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+      const diff = currentScrollY - lastScrollY.current;
+
+      if (Math.sign(diff) !== Math.sign(scrollDelta.current)) {
+        scrollDelta.current = 0;
+      }
+      scrollDelta.current += diff;
+
+      if (scrollDelta.current > THRESHOLD && currentScrollY > 60) {
         setTopbarVisible(false);
-      } else {
+        scrollDelta.current = 0;
+      } else if (scrollDelta.current < -THRESHOLD) {
         setTopbarVisible(true);
+        scrollDelta.current = 0;
       }
       lastScrollY.current = currentScrollY;
     };

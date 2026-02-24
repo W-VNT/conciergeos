@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -27,16 +27,16 @@ import {
 import { createMessageTemplate, updateMessageTemplate, deleteMessageTemplate } from "@/lib/actions/guest-messaging";
 import { MESSAGE_TEMPLATE_TYPE_LABELS } from "@/types/database";
 import type { MessageTemplate, MessageTemplateType, MessageChannel } from "@/types/database";
+import { VariablePicker } from "@/components/messaging/variable-picker";
+import { TemplatePreview } from "@/components/messaging/template-preview";
 
-const TEMPLATE_VARIABLES = [
-  { key: "{{guest_name}}", label: "Nom du voyageur" },
-  { key: "{{logement_name}}", label: "Nom du logement" },
-  { key: "{{check_in_date}}", label: "Date d'arrivée" },
-  { key: "{{check_out_date}}", label: "Date de départ" },
-  { key: "{{lockbox_code}}", label: "Code boîte à clés" },
-  { key: "{{wifi_name}}", label: "Nom WiFi" },
-  { key: "{{wifi_password}}", label: "Mot de passe WiFi" },
-];
+const TRIGGER_EVENT_LABELS: Record<string, string> = {
+  RESERVATION_CONFIRMED: "Réservation confirmée",
+  RESERVATION_CANCELLED: "Réservation annulée",
+  CHECK_IN_REMINDER: "Rappel check-in",
+  CHECK_OUT_REMINDER: "Rappel check-out",
+  POST_STAY_THANKS: "Remerciement post-séjour",
+};
 
 interface MessageTemplateFormProps {
   template?: MessageTemplate;
@@ -50,12 +50,14 @@ export function MessageTemplateForm({ template, trigger, onSuccess }: MessageTem
   const [isDeleting, startDeleteTransition] = useTransition();
   const router = useRouter();
   const isEdit = !!template;
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const [name, setName] = useState(template?.name ?? "");
   const [type, setType] = useState<MessageTemplateType>(template?.type ?? "CUSTOM");
   const [channel, setChannel] = useState<MessageChannel>(template?.channel ?? "EMAIL");
   const [subject, setSubject] = useState(template?.subject ?? "");
   const [body, setBody] = useState(template?.body ?? "");
+  const [triggerEvent, setTriggerEvent] = useState(template?.trigger_event ?? "");
 
   function resetForm() {
     if (!isEdit) {
@@ -64,18 +66,41 @@ export function MessageTemplateForm({ template, trigger, onSuccess }: MessageTem
       setChannel("EMAIL");
       setSubject("");
       setBody("");
+      setTriggerEvent("");
     }
   }
 
   function handleInsertVariable(variable: string) {
-    setBody((prev) => prev + variable);
+    const textarea = bodyRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newBody = body.substring(0, start) + variable + body.substring(end);
+      setBody(newBody);
+      // Restore cursor position after the inserted variable
+      requestAnimationFrame(() => {
+        textarea.focus();
+        const newPos = start + variable.length;
+        textarea.setSelectionRange(newPos, newPos);
+      });
+    } else {
+      setBody((prev) => prev + variable);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     startTransition(async () => {
-      const data = { name, type, channel, subject, body, active: true };
+      const data = {
+        name,
+        type,
+        channel,
+        subject,
+        body,
+        active: true,
+        trigger_event: triggerEvent === "NONE" ? "" : triggerEvent || "",
+      };
 
       const result = isEdit
         ? await updateMessageTemplate(template!.id, data)
@@ -119,7 +144,7 @@ export function MessageTemplateForm({ template, trigger, onSuccess }: MessageTem
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit ? "Modifier le template" : "Nouveau template de message"}
@@ -176,6 +201,26 @@ export function MessageTemplateForm({ template, trigger, onSuccess }: MessageTem
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Déclencheur automatique</Label>
+            <Select value={triggerEvent} onValueChange={setTriggerEvent}>
+              <SelectTrigger>
+                <SelectValue placeholder="Manuel (aucun déclencheur)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NONE">Manuel (aucun déclencheur)</SelectItem>
+                {Object.entries(TRIGGER_EVENT_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Si un déclencheur est sélectionné, le message sera envoyé automatiquement lors de cet événement.
+            </p>
+          </div>
+
           {channel === "EMAIL" && (
             <div className="space-y-2">
               <Label htmlFor="tpl-subject">Sujet</Label>
@@ -189,33 +234,26 @@ export function MessageTemplateForm({ template, trigger, onSuccess }: MessageTem
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="tpl-body">Contenu du message</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tpl-body">Contenu du message</Label>
+              <VariablePicker onInsert={handleInsertVariable} />
+            </div>
             <Textarea
               id="tpl-body"
+              ref={bodyRef}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Rédigez votre message ici..."
+              placeholder="Rédigez votre message ici... Utilisez le bouton Variables pour insérer des données dynamiques."
               rows={8}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Variables disponibles</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {TEMPLATE_VARIABLES.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  onClick={() => handleInsertVariable(v.key)}
-                  className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-mono hover:bg-muted transition-colors"
-                  title={v.label}
-                >
-                  {v.key}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Live Preview */}
+          <TemplatePreview
+            body={body}
+            subject={channel === "EMAIL" ? subject : ""}
+          />
 
           <DialogFooter className="gap-2">
             {isEdit && (

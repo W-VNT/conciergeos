@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Plus,
   Calendar,
+  CalendarDays,
   Menu,
   CalendarCheck,
   AlertTriangle,
@@ -19,6 +20,7 @@ import {
   DollarSign,
   BarChart3,
   Sun,
+  Contact2,
 } from "lucide-react";
 import {
   Sheet,
@@ -47,6 +49,8 @@ const menuItems = [
   { href: "/proprietaires", label: "Propriétaires", icon: Users },
   { href: "/contrats", label: "Contrats", icon: FileText },
   { href: "/reservations", label: "Réservations", icon: CalendarCheck },
+  { href: "/voyageurs", label: "Voyageurs", icon: Contact2 },
+  { href: "/planning", label: "Planning", icon: CalendarDays },
   { href: "/incidents", label: "Incidents", icon: AlertTriangle },
   { href: "/prestataires", label: "Prestataires", icon: Wrench },
   { href: "/finances", label: "Finances", icon: DollarSign },
@@ -91,7 +95,7 @@ export function BottomTabBar() {
                   className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground"
                 >
                   <tab.icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{tab.label}</span>
+                  <span className="text-[10px] font-medium truncate max-w-full">{tab.label}</span>
                 </button>
               );
             }
@@ -108,7 +112,7 @@ export function BottomTabBar() {
                 )}
               >
                 <tab.icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{tab.label}</span>
+                <span className="text-[10px] font-medium truncate max-w-full">{tab.label}</span>
               </Link>
             );
           })}

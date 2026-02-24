@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile, isAdmin } from "@/lib/auth";
+import { requireProfile, isAdmin, isAdminOrManager } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -13,6 +13,8 @@ import { deletePrestataire } from "@/lib/actions/prestataires";
 import { getPrestataireStats } from "@/lib/actions/prestataire-stats";
 import { Pencil, Star, BarChart3, CheckCircle, Clock, Euro } from "lucide-react";
 import Link from "next/link";
+import { PortalTokenSection } from "@/components/prestataires/portal-token-section";
+import { FactureSection } from "@/components/incidents/facture-section";
 
 export default async function PrestataireDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -130,6 +132,14 @@ export default async function PrestataireDetailPage({ params }: { params: { id: 
           </div>
         </CardContent>
       </Card>
+
+      {/* Portail prestataire */}
+      {isAdminOrManager(profile) && (
+        <PortalTokenSection prestataireId={prestataire.id} />
+      )}
+
+      {/* Factures prestataire */}
+      <FactureSection prestataireId={prestataire.id} organisationId={profile.organisation_id} />
     </div>
   );
 }

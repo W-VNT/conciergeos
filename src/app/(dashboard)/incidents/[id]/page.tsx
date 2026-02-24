@@ -17,6 +17,9 @@ import { DeleteConfirmDialog } from "@/components/shared/delete-confirm-dialog";
 import { getActivityLogs } from "@/lib/actions/activity-logs";
 import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { checkIncidentSla } from "@/lib/actions/sla";
+import { DevisSection } from "@/components/incidents/devis-section";
+import { FactureSection } from "@/components/incidents/facture-section";
+import type { Prestataire } from "@/types/database";
 
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
   const profile = await requireProfile();
@@ -44,10 +47,11 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
     reservation = data;
   }
 
-  // Fetch activity logs and SLA status in parallel
-  const [activityLogs, slaStatus] = await Promise.all([
+  // Fetch activity logs, SLA status, and prestataires in parallel
+  const [activityLogs, slaStatus, { data: prestataires }] = await Promise.all([
     getActivityLogs("INCIDENT", params.id),
     checkIncidentSla(incident),
+    supabase.from("prestataires").select("*").eq("organisation_id", profile.organisation_id).order("full_name"),
   ]);
 
   return (
@@ -109,6 +113,8 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
         </Card>
       )}
       <PhotoSection organisationId={profile.organisation_id} entityType="INCIDENT" entityId={params.id} initialAttachments={attachments ?? []} canUpload={true} canDelete={true} />
+      <DevisSection incidentId={params.id} organisationId={profile.organisation_id} prestataires={(prestataires ?? []) as Prestataire[]} />
+      <FactureSection incidentId={params.id} organisationId={profile.organisation_id} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

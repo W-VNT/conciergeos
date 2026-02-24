@@ -3,7 +3,7 @@
 // ============================================================
 
 // Enums
-export type UserRole = 'ADMIN' | 'OPERATEUR' | 'PROPRIETAIRE';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'OPERATEUR' | 'PROPRIETAIRE';
 export type StatutJuridique = 'PARTICULIER' | 'SCI' | 'SARL' | 'SAS' | 'EURL' | 'AUTRE';
 export type OfferTier = 'ESSENTIEL' | 'SERENITE' | 'SIGNATURE';
 export type LogementStatus = 'ACTIF' | 'PAUSE' | 'ARCHIVE';
@@ -41,6 +41,7 @@ export type SeasonType = 'HAUTE' | 'BASSE' | 'MOYENNE';
 export type EquipementCategorie = 'ELECTROMENAGER' | 'MOBILIER' | 'LINGE' | 'CONSOMMABLE' | 'AUTRE';
 export type EquipementEtat = 'BON' | 'MOYEN' | 'A_REMPLACER';
 export type FactureStatus = 'ATTENTE' | 'VALIDEE' | 'PAYEE' | 'REFUSEE';
+export type DevisStatus = 'SOUMIS' | 'ACCEPTE' | 'REFUSE';
 
 // Tables
 export interface Organisation {
@@ -128,12 +129,14 @@ export interface Reservation {
   payment_status: PaymentStatus | null;
   payment_date: string | null;
   source: string | null;
+  voyageur_id: string | null;
   notes: string | null;
   access_instructions: string | null;
   created_at: string;
   updated_at: string;
   // Joined
   logement?: Logement | null;
+  voyageur?: Voyageur | null;
 }
 
 export interface Revenu {
@@ -161,6 +164,7 @@ export interface FacturePrestataire {
   id: string;
   organisation_id: string;
   prestataire_id: string;
+  devis_id: string | null;
   mission_id: string | null;
   incident_id: string | null;
   numero_facture: string | null;
@@ -177,6 +181,7 @@ export interface FacturePrestataire {
   prestataire?: Prestataire | null;
   mission?: Mission | null;
   incident?: Incident | null;
+  devis?: DevisPrestataire | null;
 }
 
 export interface Logement {
@@ -234,6 +239,11 @@ export interface Mission {
   completed_at: string | null;
   started_at: string | null;
   time_spent_minutes: number | null;
+  depends_on_mission_id: string | null;
+  check_in_lat: number | null;
+  check_in_lng: number | null;
+  check_out_lat: number | null;
+  check_out_lng: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -241,6 +251,7 @@ export interface Mission {
   logement?: Logement | null;
   assignee?: Profile | null;
   reservation?: Reservation | null;
+  depends_on?: Mission | null;
 }
 
 export interface Prestataire {
@@ -469,6 +480,7 @@ export interface MessageTemplate {
   type: MessageTemplateType;
   channel: MessageChannel;
   active: boolean;
+  trigger_event: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -523,9 +535,76 @@ export interface AutoAssignmentResult {
   }>;
 }
 
+// Sprint 4: Voyageur CRM
+export interface Voyageur {
+  id: string;
+  organisation_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  language: string | null;
+  nationality: string | null;
+  notes: string | null;
+  preferences: Record<string, unknown>;
+  tags: string[];
+  total_stays: number;
+  total_revenue: number;
+  average_rating: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Sprint 4: Devis Prestataire
+export interface DevisPrestataire {
+  id: string;
+  organisation_id: string;
+  prestataire_id: string;
+  incident_id: string | null;
+  mission_id: string | null;
+  montant: number;
+  description: string;
+  status: DevisStatus;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  prestataire?: Prestataire | null;
+  incident?: Incident | null;
+  mission?: Mission | null;
+  reviewer?: Profile | null;
+}
+
+// Sprint 4: Prestataire Portal Token
+export interface PrestatairePortalToken {
+  id: string;
+  prestataire_id: string;
+  organisation_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}
+
+// Sprint 4: Owner Messages
+export interface OwnerMessage {
+  id: string;
+  organisation_id: string;
+  proprietaire_id: string;
+  sender_type: 'ADMIN' | 'OWNER';
+  sender_id: string | null;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+  // Joined
+  sender?: Profile | null;
+}
+
 // Enum label maps for UI display
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrateur',
+  MANAGER: 'Manager',
   OPERATEUR: 'Opérateur',
   PROPRIETAIRE: 'Propriétaire',
 };
@@ -669,4 +748,17 @@ export const EMAIL_DIGEST_LABELS: Record<EmailDigest, string> = {
   NONE: 'Aucun',
   QUOTIDIEN: 'Quotidien',
   HEBDOMADAIRE: 'Hebdomadaire',
+};
+
+export const DEVIS_STATUS_LABELS: Record<DevisStatus, string> = {
+  SOUMIS: 'Soumis',
+  ACCEPTE: 'Accepté',
+  REFUSE: 'Refusé',
+};
+
+export const FACTURE_STATUS_LABELS: Record<FactureStatus, string> = {
+  ATTENTE: 'En attente',
+  VALIDEE: 'Validée',
+  PAYEE: 'Payée',
+  REFUSEE: 'Refusée',
 };

@@ -28,7 +28,7 @@ export default async function EditReservationPage({ params }: { params: { id: st
   return (
     <div>
       <PageHeader title="Modifier la réservation" />
-      <ReservationForm reservation={reservation} logements={logements ?? []} />
+      <ReservationForm reservation={reservation} logements={logements ?? []} organisationId={profile.organisation_id} />
     </div>
   );
 }

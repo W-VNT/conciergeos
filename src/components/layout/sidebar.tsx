@@ -14,8 +14,10 @@ import {
   Calendar,
   FileText,
   CalendarCheck,
+  CalendarDays,
   BarChart3,
   DollarSign,
+  Contact2,
 } from "lucide-react";
 import type { Profile, Organisation } from "@/types/database";
 
@@ -40,7 +42,9 @@ const navGroups = [
     label: "Activité",
     items: [
       { href: "/reservations", label: "Réservations", icon: CalendarCheck },
+      { href: "/voyageurs", label: "Voyageurs", icon: Contact2 },
       { href: "/missions", label: "Missions", icon: ClipboardList },
+      { href: "/planning", label: "Planning", icon: CalendarDays },
       { href: "/incidents", label: "Incidents", icon: AlertTriangle },
       { href: "/prestataires", label: "Prestataires", icon: Wrench },
     ],
@@ -85,6 +89,7 @@ function getAvatarColor(name: string): string {
 export function Sidebar({ profile, organisation }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = profile.role === "ADMIN";
+  const isAdminOrManager = profile.role === "ADMIN" || profile.role === "MANAGER";
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-background border-r border-border">
@@ -96,7 +101,7 @@ export function Sidebar({ profile, organisation }: SidebarProps) {
       </div>
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
         {navGroups
-          .filter((group) => group.label !== "Finances" || isAdmin)
+          .filter((group) => group.label !== "Finances" || isAdminOrManager)
           .map((group, groupIndex) => (
           <div key={groupIndex} className={groupIndex > 0 ? "mt-4" : ""}>
             {group.label && (

@@ -51,6 +51,7 @@ export async function createMessageTemplate(
         type: parsed.type,
         channel: parsed.channel,
         active: parsed.active,
+        trigger_event: parsed.trigger_event || null,
       })
       .select()
       .single();
@@ -85,6 +86,7 @@ export async function updateMessageTemplate(
         type: parsed.type,
         channel: parsed.channel,
         active: parsed.active,
+        trigger_event: parsed.trigger_event || null,
       })
       .eq("id", id)
       .eq("organisation_id", profile.organisation_id);
@@ -231,9 +233,10 @@ export async function replaceTemplateVariables(
   const profile = await requireProfile();
   const supabase = createClient();
 
+  // Fetch reservation with logement and owner (proprietaire) joins
   const { data: reservation } = await supabase
     .from("reservations")
-    .select("*, logement:logements(*)")
+    .select("*, logement:logements(*, proprietaire:proprietaires(*))")
     .eq("id", reservationId)
     .eq("organisation_id", profile.organisation_id)
     .single();
@@ -242,23 +245,69 @@ export async function replaceTemplateVariables(
 
   const logement = reservation.logement as {
     name: string;
+    address_line1: string | null;
+    city: string | null;
+    postal_code: string | null;
     lockbox_code: string | null;
     wifi_name: string | null;
     wifi_password: string | null;
+    proprietaire?: {
+      full_name: string;
+      email: string | null;
+    } | null;
   } | null;
 
+  // Fetch organisation details for org_* variables
+  const { data: organisation } = await supabase
+    .from("organisations")
+    .select("name, phone, email")
+    .eq("id", profile.organisation_id)
+    .single();
+
+  // Build logement address string
+  const addressParts = [
+    logement?.address_line1,
+    logement?.postal_code,
+    logement?.city,
+  ].filter(Boolean);
+  const logementAddress = addressParts.join(", ");
+
+  // Format amount
+  const formattedAmount = reservation.amount != null
+    ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(reservation.amount)
+    : "";
+
   const replacements: Record<string, string> = {
+    // Voyageur
     "{{guest_name}}": reservation.guest_name ?? "",
-    "{{logement_name}}": logement?.name ?? "",
+    "{{guest_email}}": reservation.guest_email ?? "",
+    "{{guest_phone}}": reservation.guest_phone ?? "",
+    // Réservation
     "{{check_in_date}}": reservation.check_in_date
       ? new Date(reservation.check_in_date).toLocaleDateString("fr-FR")
       : "",
     "{{check_out_date}}": reservation.check_out_date
       ? new Date(reservation.check_out_date).toLocaleDateString("fr-FR")
       : "",
+    "{{check_in_time}}": reservation.check_in_time ?? "",
+    "{{check_out_time}}": reservation.check_out_time ?? "",
+    "{{amount}}": formattedAmount,
+    "{{platform}}": reservation.platform ?? "",
+    // Logement
+    "{{logement_name}}": logement?.name ?? "",
+    "{{logement_address}}": logementAddress,
     "{{lockbox_code}}": logement?.lockbox_code ?? "",
     "{{wifi_name}}": logement?.wifi_name ?? "",
     "{{wifi_password}}": logement?.wifi_password ?? "",
+    // Organisation
+    "{{org_name}}": organisation?.name ?? "",
+    "{{org_phone}}": organisation?.phone ?? "",
+    "{{org_email}}": organisation?.email ?? "",
+    // Propriétaire
+    "{{owner_name}}": logement?.proprietaire?.full_name ?? "",
+    "{{owner_email}}": logement?.proprietaire?.email ?? "",
+    // Opérateur (current user acting as operator)
+    "{{operator_name}}": profile.full_name ?? "",
   };
 
   let result = text;

@@ -199,7 +199,7 @@ export const slaConfigSchema = z.object({
 });
 export type SlaConfigFormData = z.infer<typeof slaConfigSchema>;
 
-// Message Templates (R3)
+// Message Templates (R3 + NO6)
 export const messageTemplateSchema = z.object({
   name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long'),
   subject: z.string().max(500, 'Sujet trop long').default(''),
@@ -207,6 +207,7 @@ export const messageTemplateSchema = z.object({
   type: z.enum(['CONFIRMATION', 'RAPPEL', 'REMERCIEMENT', 'ACCES', 'CUSTOM']).default('CUSTOM'),
   channel: z.enum(['EMAIL', 'SMS']).default('EMAIL'),
   active: z.boolean().default(true),
+  trigger_event: z.string().max(50, 'Déclencheur trop long').default(''),
 });
 export type MessageTemplateFormData = z.infer<typeof messageTemplateSchema>;
 
@@ -219,3 +220,41 @@ export const sendGuestMessageSchema = z.object({
   body: z.string().min(1, 'Message requis').max(10000, 'Message trop long'),
 });
 export type SendGuestMessageFormData = z.infer<typeof sendGuestMessageSchema>;
+
+// Voyageur CRM (R15)
+export const voyageurSchema = z.object({
+  full_name: z.string().min(1, 'Nom requis').max(200, 'Nom trop long (200 caractères max)'),
+  email: z.string().email('Email invalide').or(z.literal('')).default(''),
+  phone: z.string().max(30, 'Numéro trop long').default(''),
+  language: z.string().max(10, 'Langue trop longue').default(''),
+  nationality: z.string().max(100, 'Nationalité trop longue').default(''),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+  tags: z.array(z.string().max(50, 'Tag trop long')).max(20, 'Maximum 20 tags').default([]),
+});
+export type VoyageurFormData = z.infer<typeof voyageurSchema>;
+
+// Devis Prestataire (IN8)
+export const devisSchema = z.object({
+  prestataire_id: z.string().min(1, 'Prestataire requis'),
+  incident_id: z.string().default(''),
+  mission_id: z.string().default(''),
+  montant: z.coerce.number().min(0, 'Le montant doit être positif'),
+  description: z.string().min(1, 'Description requise').max(5000, 'Description trop longue'),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+});
+export type DevisFormData = z.infer<typeof devisSchema>;
+
+// Facture Prestataire (IN8)
+export const factureSchema = z.object({
+  prestataire_id: z.string().min(1, 'Prestataire requis'),
+  devis_id: z.string().default(''),
+  mission_id: z.string().default(''),
+  incident_id: z.string().default(''),
+  numero_facture: z.string().max(100, 'Numéro trop long').default(''),
+  montant: z.coerce.number().min(0, 'Le montant doit être positif'),
+  date_emission: z.string().min(1, 'Date requise'),
+  date_echeance: z.string().default(''),
+  description: z.string().max(5000, 'Description trop longue').default(''),
+  notes: z.string().max(5000, 'Notes trop longues').default(''),
+});
+export type FactureFormData = z.infer<typeof factureSchema>;

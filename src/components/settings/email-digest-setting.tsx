@@ -58,7 +58,7 @@ export function EmailDigestSetting({ initialValue }: EmailDigestSettingProps) {
         </p>
       </div>
       <Select value={value} onValueChange={handleChange} disabled={saving}>
-        <SelectTrigger id="email-digest" className="w-[180px]">
+        <SelectTrigger id="email-digest" className="w-full sm:w-[180px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

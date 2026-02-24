@@ -350,6 +350,7 @@ export function LogementForm({ logement, proprietaires }: Props) {
             <Input
               id="ical_url"
               type="url"
+              inputMode="url"
               {...form.register("ical_url")}
               placeholder="https://www.airbnb.com/calendar/ical/..."
             />

@@ -399,7 +399,7 @@ export default function TeamSettings({ profile }: TeamSettingsProps) {
           if (!open) setSelectedOperator(null);
         }}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Compétences de {selectedOperator?.full_name}</DialogTitle>
             <DialogDescription>

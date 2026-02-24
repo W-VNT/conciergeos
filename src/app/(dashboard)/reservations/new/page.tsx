@@ -25,7 +25,7 @@ export default async function NewReservationPage() {
   return (
     <div>
       <PageHeader title="Nouvelle réservation" />
-      <ReservationForm logements={logements ?? []} />
+      <ReservationForm logements={logements ?? []} organisationId={profile.organisation_id} />
     </div>
   );
 }

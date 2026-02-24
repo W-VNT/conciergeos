@@ -326,7 +326,7 @@ export function PhotoSection({
                 <div className="aspect-square">
                   <img
                     src={`/api/storage/${att.storage_path}`}
-                    alt={att.caption || ""}
+                    alt={att.caption || "Photo"}
                     className="w-full h-full object-cover"
                     draggable={false}
                   />

@@ -60,6 +60,14 @@ export function isAdmin(profile: Profile): boolean {
   return profile.role === 'ADMIN';
 }
 
+export function isManager(profile: Profile): boolean {
+  return profile.role === 'MANAGER';
+}
+
+export function isAdminOrManager(profile: Profile): boolean {
+  return profile.role === 'ADMIN' || profile.role === 'MANAGER';
+}
+
 export function isProprietaire(profile: Profile): boolean {
   return profile.role === 'PROPRIETAIRE';
 }

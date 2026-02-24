@@ -177,11 +177,11 @@ export function PrestataireForm({ prestataire }: { prestataire?: Prestataire }) 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" {...form.register("phone")} />
+                <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" {...form.register("phone")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...form.register("email")} />
+                <Input id="email" type="email" inputMode="email" autoComplete="email" {...form.register("email")} />
               </div>
             </div>
           </div>

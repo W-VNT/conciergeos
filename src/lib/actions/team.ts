@@ -97,7 +97,7 @@ export async function getPendingInvitations() {
 
 export async function inviteMember(data: {
   email: string;
-  role: "ADMIN" | "OPERATEUR";
+  role: "ADMIN" | "MANAGER" | "OPERATEUR";
   name?: string;
 }) {
   try {
