@@ -20,9 +20,10 @@ import { CalendarDndWrapper } from "@/components/calendrier/calendar-dnd-wrapper
 import { DraggableMissionCard } from "@/components/calendrier/draggable-mission-card";
 import { DroppableCell } from "@/components/calendrier/droppable-cell";
 import { InlineCreateDialog } from "@/components/calendrier/inline-create-dialog";
+import { MultiLogementView } from "@/components/calendrier/multi-logement-view";
 import { rescheduleMission } from "@/lib/actions/calendar-dnd";
 
-type ViewType = "jour" | "semaine" | "mois" | "annee";
+type ViewType = "jour" | "semaine" | "mois" | "annee" | "multi";
 
 interface CalendarLogement {
   id: string;
@@ -292,6 +293,7 @@ export default function Calendar({
     { key: "semaine", label: "Semaine" },
     { key: "mois", label: "Mois", mobileClass: "hidden sm:flex" },
     { key: "annee", label: "Annee", mobileClass: "hidden sm:flex" },
+    { key: "multi", label: "Multi", mobileClass: "hidden sm:flex" },
   ];
 
   return (
@@ -699,8 +701,18 @@ export default function Calendar({
         </div>
       )}
 
+      {/* -- VUE MULTI-LOGEMENT -- */}
+      {view === "multi" && (
+        <MultiLogementView
+          missions={filteredMissions}
+          reservations={filteredReservations}
+          logements={logements}
+          weekDays={weekDays}
+        />
+      )}
+
       {/* Legend */}
-      {view !== "annee" && (
+      {view !== "annee" && view !== "multi" && (
         <Card className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

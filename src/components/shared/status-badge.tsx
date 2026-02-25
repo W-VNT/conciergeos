@@ -54,6 +54,19 @@ const colorMap: Record<string, string> = {
   CORRECT: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
   DEGRADE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
   MAUVAIS: "bg-red-500/15 text-red-700 dark:text-red-300",
+  // Sprint 6
+  NON_RAPPROCHE: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  RAPPROCHE: "bg-green-500/15 text-green-700 dark:text-green-300",
+  ECART: "bg-red-500/15 text-red-700 dark:text-red-300",
+  GARANTIE: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  ASSURANCE: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
+  ACCEPTE: "bg-green-500/15 text-green-700 dark:text-green-300",
+  REFUSE: "bg-red-500/15 text-red-700 dark:text-red-300",
+  SOUMIS: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  GLOBAL: "bg-muted text-muted-foreground",
+  REVENUS: "bg-green-500/15 text-green-700 dark:text-green-300",
+  CHARGES: "bg-red-500/15 text-red-700 dark:text-red-300",
+  MAINTENANCE: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
 };
 
 interface StatusBadgeProps {

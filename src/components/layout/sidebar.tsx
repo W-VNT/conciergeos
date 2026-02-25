@@ -18,6 +18,10 @@ import {
   BarChart3,
   DollarSign,
   Contact2,
+  ShoppingCart,
+  Scale,
+  PiggyBank,
+  Receipt,
 } from "lucide-react";
 import type { Profile, Organisation } from "@/types/database";
 
@@ -47,12 +51,16 @@ const navGroups = [
       { href: "/planning", label: "Planning", icon: CalendarDays },
       { href: "/incidents", label: "Incidents", icon: AlertTriangle },
       { href: "/prestataires", label: "Prestataires", icon: Wrench },
+      { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
     ],
   },
   {
     label: "Finances",
     items: [
       { href: "/finances", label: "Finances", icon: DollarSign },
+      { href: "/finances/reconciliation", label: "Réconciliation", icon: Scale },
+      { href: "/finances/budgets", label: "Budgets", icon: PiggyBank },
+      { href: "/finances/fiscalite", label: "Fiscalité", icon: Receipt },
     ],
   },
 ];

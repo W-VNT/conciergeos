@@ -52,6 +52,15 @@ export type OwnerPaymentStatus = 'DU' | 'PAYE' | 'PARTIEL' | 'EN_RETARD';
 export type PrestataireDocType = 'CERTIFICATION' | 'ASSURANCE' | 'KBIS' | 'RIB' | 'AUTRE';
 export type ProprietaireDocType = 'IDENTITE' | 'DIAGNOSTIC' | 'TITRE_PROPRIETE' | 'ASSURANCE' | 'RIB' | 'AUTRE';
 
+// Sprint 6
+export type BidStatus = 'EN_ATTENTE' | 'ACCEPTE' | 'REFUSE';
+export type StockMovementType = 'ENTREE' | 'SORTIE' | 'AJUSTEMENT';
+export type PreventiveFrequency = 'HEBDOMADAIRE' | 'BIMENSUEL' | 'MENSUEL' | 'TRIMESTRIEL' | 'SEMESTRIEL' | 'ANNUEL';
+export type WarrantyType = 'GARANTIE' | 'ASSURANCE';
+export type ReconciliationStatus = 'NON_RAPPROCHE' | 'RAPPROCHE' | 'ECART';
+export type BudgetCategory = 'GLOBAL' | 'REVENUS' | 'CHARGES' | 'MAINTENANCE';
+export type Currency = 'EUR' | 'USD' | 'GBP';
+
 // Tables
 export interface Organisation {
   id: string;
@@ -65,6 +74,7 @@ export interface Organisation {
   phone: string | null;
   email: string | null;
   statut_juridique: string | null;
+  preferred_currency: Currency;
   created_at: string;
 }
 
@@ -137,6 +147,8 @@ export interface Reservation {
   status: ReservationStatus;
   payment_status: PaymentStatus | null;
   payment_date: string | null;
+  currency: Currency;
+  amount_eur: number | null;
   source: string | null;
   voyageur_id: string | null;
   notes: string | null;
@@ -159,6 +171,10 @@ export interface Revenu {
   montant_commission: number;
   montant_net: number;
   date_reservation: string;
+  tva_rate: number;
+  tva_amount: number;
+  currency: Currency;
+  montant_brut_eur: number | null;
   date_checkin: string;
   date_checkout: string;
   created_at: string;
@@ -253,6 +269,7 @@ export interface Mission {
   check_in_lng: number | null;
   check_out_lat: number | null;
   check_out_lng: number | null;
+  open_for_bids: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -296,6 +313,7 @@ export interface Incident {
   cost: number | null;
   notes: string | null;
   expected_resolution_date: string | null;
+  open_for_bids: boolean;
   opened_at: string;
   resolved_at: string | null;
   created_at: string;
@@ -355,6 +373,8 @@ export interface Equipement {
   nom: string;
   quantite: number;
   etat: EquipementEtat;
+  seuil_alerte: number | null;
+  unite: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -1010,4 +1030,242 @@ export const PROPRIETAIRE_DOC_TYPE_LABELS: Record<ProprietaireDocType, string> =
   ASSURANCE: 'Assurance',
   RIB: 'RIB',
   AUTRE: 'Autre',
+};
+
+// ── Sprint 6 Interfaces ──────────────────────────────────────
+
+export interface MarketplaceBid {
+  id: string;
+  organisation_id: string;
+  prestataire_id: string;
+  mission_id: string | null;
+  incident_id: string | null;
+  proposed_price: number;
+  message: string | null;
+  status: BidStatus;
+  responded_at: string | null;
+  responded_by: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  prestataire?: Prestataire | null;
+  mission?: Mission | null;
+  incident?: Incident | null;
+  responder?: Profile | null;
+}
+
+export interface OperatorPoint {
+  id: string;
+  organisation_id: string;
+  operator_id: string;
+  points: number;
+  reason: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+}
+
+export interface OperatorBadge {
+  id: string;
+  organisation_id: string;
+  operator_id: string;
+  badge_code: string;
+  badge_label: string;
+  earned_at: string;
+}
+
+export interface StockMovement {
+  id: string;
+  organisation_id: string;
+  equipement_id: string;
+  mission_id: string | null;
+  type: StockMovementType;
+  quantite: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  // Joined
+  equipement?: Equipement | null;
+  mission?: Mission | null;
+  creator?: Profile | null;
+}
+
+export interface PreventiveSchedule {
+  id: string;
+  organisation_id: string;
+  logement_id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  severity: IncidentSeverity;
+  frequency: PreventiveFrequency;
+  day_of_week: number | null;
+  day_of_month: number | null;
+  next_due_date: string;
+  last_generated_at: string | null;
+  active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+}
+
+export interface Warranty {
+  id: string;
+  organisation_id: string;
+  logement_id: string | null;
+  equipement_id: string | null;
+  type: WarrantyType;
+  provider: string;
+  policy_number: string | null;
+  start_date: string;
+  end_date: string;
+  coverage_details: string | null;
+  annual_cost: number | null;
+  contact_info: string | null;
+  document_url: string | null;
+  alert_days_before: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+  equipement?: Equipement | null;
+}
+
+export interface PlatformPayment {
+  id: string;
+  organisation_id: string;
+  platform: BookingPlatform;
+  reference: string | null;
+  amount: number;
+  payment_date: string;
+  reservation_id: string | null;
+  reconciliation_status: ReconciliationStatus;
+  ecart_amount: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  reservation?: Reservation | null;
+}
+
+export interface Budget {
+  id: string;
+  organisation_id: string;
+  logement_id: string | null;
+  year: number;
+  month: number | null;
+  category: BudgetCategory;
+  amount: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  logement?: Logement | null;
+}
+
+export interface TvaConfig {
+  id: string;
+  organisation_id: string;
+  label: string;
+  rate: number;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExchangeRate {
+  id: string;
+  organisation_id: string;
+  from_currency: string;
+  to_currency: string;
+  rate: number;
+  effective_date: string;
+  created_at: string;
+}
+
+export interface ContratLogement {
+  id: string;
+  contrat_id: string;
+  logement_id: string;
+  commission_rate: number;
+  notes: string | null;
+  created_at: string;
+  // Joined
+  logement?: Logement | null;
+}
+
+export interface PrestataireAvailability {
+  id: string;
+  organisation_id: string;
+  prestataire_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+}
+
+export interface PrestataireBlackout {
+  id: string;
+  organisation_id: string;
+  prestataire_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+  created_at: string;
+}
+
+// Sprint 6 Label Maps
+
+export const BID_STATUS_LABELS: Record<BidStatus, string> = {
+  EN_ATTENTE: 'En attente',
+  ACCEPTE: 'Accepté',
+  REFUSE: 'Refusé',
+};
+
+export const STOCK_MOVEMENT_TYPE_LABELS: Record<StockMovementType, string> = {
+  ENTREE: 'Entrée',
+  SORTIE: 'Sortie',
+  AJUSTEMENT: 'Ajustement',
+};
+
+export const PREVENTIVE_FREQUENCY_LABELS: Record<PreventiveFrequency, string> = {
+  HEBDOMADAIRE: 'Hebdomadaire',
+  BIMENSUEL: 'Bimensuel',
+  MENSUEL: 'Mensuel',
+  TRIMESTRIEL: 'Trimestriel',
+  SEMESTRIEL: 'Semestriel',
+  ANNUEL: 'Annuel',
+};
+
+export const WARRANTY_TYPE_LABELS: Record<WarrantyType, string> = {
+  GARANTIE: 'Garantie',
+  ASSURANCE: 'Assurance',
+};
+
+export const RECONCILIATION_STATUS_LABELS: Record<ReconciliationStatus, string> = {
+  NON_RAPPROCHE: 'Non rapproché',
+  RAPPROCHE: 'Rapproché',
+  ECART: 'Écart',
+};
+
+export const BUDGET_CATEGORY_LABELS: Record<BudgetCategory, string> = {
+  GLOBAL: 'Global',
+  REVENUS: 'Revenus',
+  CHARGES: 'Charges',
+  MAINTENANCE: 'Maintenance',
+};
+
+export const CURRENCY_LABELS: Record<Currency, string> = {
+  EUR: 'Euro (€)',
+  USD: 'Dollar ($)',
+  GBP: 'Livre (£)',
+};
+
+export const CURRENCY_SYMBOLS: Record<Currency, string> = {
+  EUR: '€',
+  USD: '$',
+  GBP: '£',
 };

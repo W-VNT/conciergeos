@@ -18,3 +18,20 @@ export function formatCurrency(amount: number): string {
 export function formatCurrencyDecimals(amount: number): string {
   return formatterDecimals.format(amount);
 }
+
+/** Format a number in the specified currency (e.g. "1 250 $") */
+export function formatMultiCurrency(amount: number, currency: string = 'EUR'): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/** Format a number in the specified currency with decimals */
+export function formatMultiCurrencyDecimals(amount: number, currency: string = 'EUR'): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+  }).format(amount);
+}

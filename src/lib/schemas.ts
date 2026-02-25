@@ -31,8 +31,14 @@ export const logementSchema = z.object({
   city: z.string().max(200, 'Ville trop longue').default(''),
   postal_code: z.string().max(20, 'Code postal trop long').default(''),
   country: z.string().max(100, 'Pays trop long').default('France'),
-  latitude: nullableNumber,
-  longitude: nullableNumber,
+  latitude: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().min(-90, 'Latitude doit être entre -90 et 90').max(90, 'Latitude doit être entre -90 et 90').nullable().default(null)
+  ),
+  longitude: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().min(-180, 'Longitude doit être entre -180 et 180').max(180, 'Longitude doit être entre -180 et 180').nullable().default(null)
+  ),
   offer_tier: z.enum(['ESSENTIEL', 'SERENITE', 'SIGNATURE']).default('ESSENTIEL'),
   lockbox_code: z.string().max(50, 'Code trop long').default(''),
   wifi_name: z.string().max(100, 'Nom WiFi trop long').default(''),
@@ -365,3 +371,122 @@ export const proprietaireDocumentSchema = z.object({
   notes: z.string().max(1000, 'Notes trop longues').default(''),
 });
 export type ProprietaireDocumentFormData = z.infer<typeof proprietaireDocumentSchema>;
+
+// ── Sprint 6 Schemas ──────────────────────────────────────────
+
+// Marketplace Bid (MI13)
+export const marketplaceBidSchema = z.object({
+  prestataire_id: z.string().min(1, 'Prestataire requis'),
+  mission_id: z.string().default(''),
+  incident_id: z.string().default(''),
+  proposed_price: z.coerce.number().min(0, 'Le prix doit être positif'),
+  message: z.string().max(2000, 'Message trop long').default(''),
+});
+export type MarketplaceBidFormData = z.infer<typeof marketplaceBidSchema>;
+
+// Stock Movement (MI16)
+export const stockMovementSchema = z.object({
+  equipement_id: z.string().min(1, 'Équipement requis'),
+  type: z.enum(['ENTREE', 'SORTIE', 'AJUSTEMENT']),
+  quantite: z.coerce.number().int('Quantité entière requise').min(1, 'Minimum 1'),
+  mission_id: z.string().default(''),
+  notes: z.string().max(1000, 'Notes trop longues').default(''),
+});
+export type StockMovementFormData = z.infer<typeof stockMovementSchema>;
+
+// Preventive Schedule (IN13)
+export const preventiveScheduleSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  title: z.string().min(1, 'Titre requis').max(200, 'Titre trop long'),
+  description: z.string().max(2000, 'Description trop longue').default(''),
+  category: z.enum(['PLOMBERIE', 'ELECTRICITE', 'SERRURERIE', 'NUISIBLES', 'MENAGE', 'BRUIT', 'EQUIPEMENT', 'AUTRE']).default('AUTRE'),
+  severity: z.enum(['MINEUR', 'MOYEN', 'CRITIQUE']).default('MINEUR'),
+  frequency: z.enum(['HEBDOMADAIRE', 'BIMENSUEL', 'MENSUEL', 'TRIMESTRIEL', 'SEMESTRIEL', 'ANNUEL']),
+  day_of_week: z.coerce.number().int().min(0).max(6).nullable().default(null),
+  day_of_month: z.coerce.number().int().min(1).max(31).nullable().default(null),
+  next_due_date: z.string().min(1, 'Date requise'),
+  notes: z.string().max(2000, 'Notes trop longues').default(''),
+  active: z.boolean().default(true),
+});
+export type PreventiveScheduleFormData = z.infer<typeof preventiveScheduleSchema>;
+
+// Warranty (IN15)
+export const warrantySchema = z.object({
+  logement_id: z.string().default(''),
+  equipement_id: z.string().default(''),
+  type: z.enum(['GARANTIE', 'ASSURANCE']),
+  provider: z.string().min(1, 'Fournisseur requis').max(200, 'Nom trop long'),
+  policy_number: z.string().max(100, 'Numéro trop long').default(''),
+  start_date: z.string().min(1, 'Date de début requise'),
+  end_date: z.string().min(1, 'Date de fin requise'),
+  coverage_details: z.string().max(5000, 'Détails trop longs').default(''),
+  annual_cost: z.coerce.number().min(0).nullable().default(null),
+  contact_info: z.string().max(500, 'Contact trop long').default(''),
+  document_url: z.string().default(''),
+  alert_days_before: z.coerce.number().int().min(1).max(365).default(30),
+  notes: z.string().max(2000, 'Notes trop longues').default(''),
+});
+export type WarrantyFormData = z.infer<typeof warrantySchema>;
+
+// Platform Payment (FI9)
+export const platformPaymentSchema = z.object({
+  platform: z.enum(['AIRBNB', 'BOOKING', 'DIRECT', 'AUTRE']),
+  reference: z.string().max(200, 'Référence trop longue').default(''),
+  amount: z.coerce.number().min(0, 'Le montant doit être positif'),
+  payment_date: z.string().min(1, 'Date requise'),
+  reservation_id: z.string().default(''),
+  notes: z.string().max(2000, 'Notes trop longues').default(''),
+});
+export type PlatformPaymentFormData = z.infer<typeof platformPaymentSchema>;
+
+// Budget (FI10)
+export const budgetSchema = z.object({
+  logement_id: z.string().default(''),
+  year: z.coerce.number().int().min(2020).max(2040),
+  month: z.coerce.number().int().min(0).max(12).nullable().default(null),
+  category: z.enum(['GLOBAL', 'REVENUS', 'CHARGES', 'MAINTENANCE']).default('GLOBAL'),
+  amount: z.coerce.number().min(0, 'Le montant doit être positif'),
+  notes: z.string().max(1000, 'Notes trop longues').default(''),
+});
+export type BudgetFormData = z.infer<typeof budgetSchema>;
+
+// TVA Config (FI11)
+export const tvaConfigSchema = z.object({
+  label: z.string().min(1, 'Libellé requis').max(100, 'Libellé trop long'),
+  rate: z.coerce.number().min(0, 'Le taux doit être positif').max(100, 'Maximum 100%'),
+  is_default: z.boolean().default(false),
+});
+export type TvaConfigFormData = z.infer<typeof tvaConfigSchema>;
+
+// Exchange Rate (FI13)
+export const exchangeRateSchema = z.object({
+  from_currency: z.string().length(3, 'Code devise 3 caractères'),
+  to_currency: z.string().length(3, 'Code devise 3 caractères'),
+  rate: z.coerce.number().min(0.000001, 'Le taux doit être positif'),
+  effective_date: z.string().min(1, 'Date requise'),
+});
+export type ExchangeRateFormData = z.infer<typeof exchangeRateSchema>;
+
+// Contrat Logement (CO9)
+export const contratLogementSchema = z.object({
+  logement_id: z.string().min(1, 'Logement requis'),
+  commission_rate: z.coerce.number().min(0, 'Commission positive').max(100, 'Maximum 100%'),
+  notes: z.string().max(500, 'Notes trop longues').default(''),
+});
+export type ContratLogementFormData = z.infer<typeof contratLogementSchema>;
+
+// Prestataire Availability (PR4)
+export const prestataireAvailabilitySchema = z.object({
+  day_of_week: z.coerce.number().int().min(0).max(6),
+  start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Format HH:MM'),
+  end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Format HH:MM'),
+});
+export type PrestataireAvailabilityFormData = z.infer<typeof prestataireAvailabilitySchema>;
+
+// Prestataire Blackout (PR4)
+export const prestataireBlackoutSchema = z.object({
+  start_date: z.string().min(1, 'Date de début requise'),
+  end_date: z.string().min(1, 'Date de fin requise'),
+  reason: z.string().max(500, 'Raison trop longue').default(''),
+});
+export type PrestataireBlackoutFormData = z.infer<typeof prestataireBlackoutSchema>;
