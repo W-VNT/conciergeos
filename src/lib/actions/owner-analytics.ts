@@ -23,6 +23,9 @@ export async function getOwnerFinanceDashboard(
   startDate?: Date,
   endDate?: Date
 ): Promise<OwnerFinanceSummary[]> {
+  const profile = await requireProfile();
+  // Always use caller's org — ignore parameter to prevent cross-org access
+  organisationId = profile.organisation_id;
   const supabase = createClient();
 
   // Get all active contrats with their proprietaire and logement info
@@ -155,6 +158,9 @@ export async function getProprietaireFinances(
   proprietaireId: string,
   organisationId: string
 ): Promise<ProprietaireFinanceSummary> {
+  const profile = await requireProfile();
+  // Always use caller's org — ignore parameter to prevent cross-org access
+  organisationId = profile.organisation_id;
   const supabase = createClient();
 
   // Get logements for this proprietaire via active contrats

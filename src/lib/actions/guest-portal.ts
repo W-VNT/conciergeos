@@ -33,8 +33,8 @@ export async function generatePortalToken(
       return errorResponse("Réservation introuvable") as ActionResponse<{ token: string; url: string }>;
     }
 
-    // Generate a secure random token
-    const token = crypto.randomUUID() + "-" + crypto.randomUUID();
+    // Generate a cryptographically secure random token
+    const token = (await import("crypto")).randomBytes(32).toString("hex");
 
     // Expire in 30 days
     const expiresAt = new Date();

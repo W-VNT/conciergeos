@@ -104,14 +104,19 @@ export async function startMission(id: string, coords?: { lat: number; lng: numb
   // Check dependency: if depends_on_mission_id is set, verify dependency is TERMINE
   const { data: mission, error: fetchError } = await supabase
     .from("missions")
-    .select("depends_on_mission_id")
+    .select("depends_on_mission_id, assigned_to")
     .eq("id", id)
     .eq("organisation_id", profile.organisation_id)
     .single();
 
-  if (fetchError) throw new Error(fetchError.message);
+  if (fetchError || !mission) throw new Error(fetchError?.message ?? "Mission introuvable");
 
-  if (mission?.depends_on_mission_id) {
+  // Verify caller is admin/manager or the assigned operator
+  if (!isAdminOrManager(profile) && mission.assigned_to !== profile.id) {
+    throw new Error("Non autorisé : vous n'êtes pas assigné à cette mission");
+  }
+
+  if (mission.depends_on_mission_id) {
     const { data: dependency } = await supabase
       .from("missions")
       .select("status")
@@ -154,12 +159,17 @@ export async function completeMission(id: string, coords?: { lat: number; lng: n
   // Fetch the mission first to read started_at for time calculation
   const { data: mission, error: fetchError } = await supabase
     .from("missions")
-    .select("started_at")
+    .select("started_at, assigned_to")
     .eq("id", id)
     .eq("organisation_id", profile.organisation_id)
     .single();
 
-  if (fetchError) throw new Error(fetchError.message);
+  if (fetchError || !mission) throw new Error(fetchError?.message ?? "Mission introuvable");
+
+  // Verify caller is admin/manager or the assigned operator
+  if (!isAdminOrManager(profile) && mission.assigned_to !== profile.id) {
+    throw new Error("Non autorisé : vous n'êtes pas assigné à cette mission");
+  }
 
   const now = new Date();
   const updateData: Record<string, unknown> = {
@@ -217,6 +227,7 @@ export async function bulkCompleteMissions(
 ): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(missionIds);
     const supabase = createClient();
 
@@ -294,6 +305,7 @@ export async function bulkAssignMissions(data: {
 }): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validated = bulkAssignmentSchema.parse(data);
     const supabase = createClient();
 
@@ -385,6 +397,7 @@ export async function getMatchingOperators(params: {
 }): Promise<Array<{ id: string; full_name: string; email: string; operator_capabilities: OperatorCapabilities | null }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return [];
     const supabase = createClient();
 
     let query = supabase
@@ -429,6 +442,7 @@ export async function autoAssignMissions(data: {
 }): Promise<AutoAssignmentResult> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return { assigned: [], unassigned: [] };
     const validated = autoAssignmentSchema.parse(data);
     const supabase = createClient();
 

@@ -57,7 +57,8 @@ export async function getIncidentAnalytics(
   organisationId?: string
 ): Promise<IncidentAnalytics> {
   const profile = await requireProfile();
-  const orgId = organisationId ?? profile.organisation_id;
+  // Always use caller's org — ignore parameter to prevent cross-org access
+  const orgId = profile.organisation_id;
   const supabase = createClient();
 
   // Fetch all incidents in range with logement name

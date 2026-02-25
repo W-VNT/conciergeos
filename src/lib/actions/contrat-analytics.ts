@@ -15,7 +15,8 @@ export async function getContratAnalytics(
   organisationId?: string
 ): Promise<ContratAnalytics> {
   const profile = await requireProfile();
-  const orgId = organisationId ?? profile.organisation_id;
+  // Always use caller's org — ignore parameter to prevent cross-org access
+  const orgId = profile.organisation_id;
   const supabase = createClient();
 
   const today = new Date();

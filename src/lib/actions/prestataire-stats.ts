@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 
 export interface PrestataireStats {
   total_incidents: number;
@@ -20,6 +21,8 @@ export async function getPrestataireStats(
   prestataireId: string,
   organisationId: string
 ): Promise<PrestataireStats> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = await createClient();
 
   const { data: incidents } = await supabase

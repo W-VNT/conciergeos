@@ -22,7 +22,8 @@ export async function generateIcalToken(organisationId: string) {
     return errorResponse("Organisation non autorisee");
   }
 
-  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET || "conciergeos-ical-default-secret";
+  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET;
+  if (!secret) throw new Error("ICAL_SECRET ou CRON_SECRET non configuré");
   const token = crypto
     .createHmac("sha256", secret)
     .update(organisationId)
@@ -44,7 +45,8 @@ export async function getIcalUrl(organisationId: string) {
     return errorResponse("Organisation non autorisee");
   }
 
-  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET || "conciergeos-ical-default-secret";
+  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET;
+  if (!secret) throw new Error("ICAL_SECRET ou CRON_SECRET non configuré");
   const token = crypto
     .createHmac("sha256", secret)
     .update(organisationId)
@@ -64,7 +66,8 @@ export async function verifyIcalToken(
   organisationId: string,
   token: string
 ): Promise<boolean> {
-  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET || "conciergeos-ical-default-secret";
+  const secret = process.env.ICAL_SECRET || process.env.CRON_SECRET;
+  if (!secret) throw new Error("ICAL_SECRET ou CRON_SECRET non configuré");
   const expectedToken = crypto
     .createHmac("sha256", secret)
     .update(organisationId)

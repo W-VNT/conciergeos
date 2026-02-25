@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 
 export interface OperatorStat {
   operator_id: string;
@@ -23,6 +24,8 @@ export interface OperatorStat {
 export async function getOperatorStats(
   organisationId: string
 ): Promise<OperatorStat[]> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = await createClient();
 
   // Get all operators (OPERATEUR role)

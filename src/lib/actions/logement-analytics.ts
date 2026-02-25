@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 
 export interface LogementAnalytics {
   taux_occupation: number; // percentage 0-100
@@ -24,6 +25,8 @@ export async function getLogementAnalytics(
   logementId: string,
   organisationId: string
 ): Promise<LogementAnalytics> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = await createClient();
   const now = new Date();
   const ninetyDaysAgo = new Date(now);

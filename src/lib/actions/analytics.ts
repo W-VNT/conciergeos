@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import type { BookingPlatform } from "@/types/database";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -62,6 +63,8 @@ export async function getRevenueAnalytics(
   endDate: Date,
   organisationId: string,
 ): Promise<RevenueAnalytics> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = createClient();
 
   // Parallel queries
@@ -147,6 +150,8 @@ export async function getOccupationByLogement(
   endDate: Date,
   organisationId: string,
 ): Promise<OccupationByLogement[]> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = createClient();
 
   const [{ data: logements }, { data: reservations }] = await Promise.all([
@@ -227,6 +232,8 @@ export async function getOccupationByMonth(
   endDate: Date,
   organisationId: string,
 ): Promise<OccupationByMonth[]> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = createClient();
 
   const [{ data: logements }, { data: reservations }] = await Promise.all([
@@ -343,6 +350,8 @@ export async function getRevenueByPlatform(
   endDate: Date,
   organisationId: string,
 ): Promise<RevenueByPlatform[]> {
+  const profile = await requireProfile();
+  if (profile.organisation_id !== organisationId) throw new Error("Non autorisé");
   const supabase = createClient();
 
   const { data: reservations } = await supabase

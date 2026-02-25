@@ -192,8 +192,13 @@ export async function renderContratTemplate(
       return errorResponse("Mod\u00e8le non trouv\u00e9") as ActionResponse<{ rendered: string }>;
 
     let rendered = template.content as string;
+    // Only allow safe variable keys (alphanumeric + underscore) to prevent ReDoS
+    const SAFE_KEY_RE = /^[a-zA-Z0-9_]+$/;
     for (const [key, value] of Object.entries(variables)) {
-      rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+      if (!SAFE_KEY_RE.test(key)) continue;
+      // Escape HTML in values to prevent injection
+      const safeValue = String(value).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), safeValue);
     }
 
     return successResponse("Mod\u00e8le rendu avec succ\u00e8s", { rendered });

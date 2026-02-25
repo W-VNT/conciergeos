@@ -170,6 +170,13 @@ export async function sendOwnerMessage(
   content: string
 ): Promise<ActionResponse> {
   try {
+    if (!content || content.trim().length === 0) {
+      return errorResponse("Le message ne peut pas être vide");
+    }
+    if (content.trim().length > 5000) {
+      return errorResponse("Le message ne peut pas dépasser 5000 caractères");
+    }
+
     const profile = await requireOwnerProfile();
     const supabase = createClient();
 

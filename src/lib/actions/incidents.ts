@@ -194,6 +194,7 @@ export async function deleteIncident(id: string): Promise<ActionResponse> {
 export async function bulkCloseIncidents(incidentIds: string[]): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(incidentIds);
     const supabase = createClient();
 
@@ -229,6 +230,7 @@ export async function bulkAssignIncidents(data: {
 }): Promise<ActionResponse<{ count: number }>> {
   try {
     const profile = await requireProfile();
+    if (!isAdminOrManager(profile)) return errorResponse("Non autorisé") as ActionResponse<{ count: number }>;
     const validatedIds = z.array(z.string().uuid()).min(1).max(100).parse(data.incident_ids);
     const supabase = createClient();
 

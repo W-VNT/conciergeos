@@ -145,7 +145,8 @@ export async function markOwnerPaymentPaid(
         paid_amount: paidAmount,
         paid_at: paidAt || new Date().toISOString().split("T")[0],
       })
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message);
 
@@ -197,7 +198,8 @@ export async function markOwnerPaymentPartial(
         paid_amount: paidAmount,
         paid_at: new Date().toISOString().split("T")[0],
       })
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message);
 
@@ -240,7 +242,8 @@ export async function deleteOwnerPayment(
     const { error } = await supabase
       .from("owner_payments")
       .delete()
-      .eq("id", paymentId);
+      .eq("id", paymentId)
+      .eq("organisation_id", profile.organisation_id);
 
     if (error) return errorResponse(error.message);
 
