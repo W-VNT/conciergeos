@@ -25,7 +25,7 @@ export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <header className="h-14 sm:h-16 border-b flex items-center justify-between px-3 sm:px-4 md:px-6">
-        <Link href="/organisation" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link href="/organisation" className="flex md:hidden items-center gap-2 hover:opacity-80 transition-opacity">
           {organisation?.logo_url ? (
             <Image
               src={organisation.logo_url}
@@ -43,6 +43,7 @@ export function Topbar({ profile, organisation, visible = true }: TopbarProps) {
             {organisation?.name ?? "ConciergeOS"}
           </span>
         </Link>
+        <div className="hidden md:block" />
         <div className="flex items-center gap-1.5 sm:gap-2">
           <NotificationBell userId={profile.id} />
           <ThemeToggle />
