@@ -19,7 +19,7 @@ export type ContractType = 'EXCLUSIF' | 'SIMPLE';
 export type ContractStatus = 'ACTIF' | 'EXPIRE' | 'RESILIE' | 'SIGNE';
 export type BookingPlatform = 'AIRBNB' | 'BOOKING' | 'DIRECT' | 'AUTRE';
 export type ReservationStatus = 'EN_ATTENTE' | 'CONFIRMEE' | 'ANNULEE' | 'TERMINEE';
-export type IncidentCategory = 'PLOMBERIE' | 'ELECTRICITE' | 'SERRURERIE' | 'NUISIBLES' | 'MENAGE' | 'BRUIT' | 'EQUIPEMENT' | 'AUTRE';
+export type IncidentCategory = 'PLOMBERIE' | 'ELECTRICITE' | 'SERRURERIE' | 'NUISIBLES' | 'ELECTROMENAGER' | 'CHAUFFAGE_CLIM' | 'DEGATS_DES_EAUX' | 'BRUIT_VOISINAGE' | 'NETTOYAGE' | 'AUTRE';
 export type PaymentStatus = 'EN_ATTENTE' | 'PARTIEL' | 'PAYE' | 'REMBOURSE';
 export type NotificationType =
   | 'MISSION_ASSIGNED'
@@ -924,9 +924,11 @@ export const INCIDENT_CATEGORY_LABELS: Record<IncidentCategory, string> = {
   ELECTRICITE: 'Électricité',
   SERRURERIE: 'Serrurerie',
   NUISIBLES: 'Nuisibles',
-  MENAGE: 'Ménage',
-  BRUIT: 'Bruit / Voisinage',
-  EQUIPEMENT: 'Équipement',
+  ELECTROMENAGER: 'Électroménager',
+  CHAUFFAGE_CLIM: 'Chauffage / Climatisation',
+  DEGATS_DES_EAUX: 'Dégâts des eaux',
+  BRUIT_VOISINAGE: 'Bruit / Voisinage',
+  NETTOYAGE: 'Nettoyage',
   AUTRE: 'Autre',
 };
 
