@@ -14,20 +14,24 @@ CREATE TABLE IF NOT EXISTS pricing_seasons (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_pricing_seasons_logement ON pricing_seasons(logement_id);
-CREATE INDEX idx_pricing_seasons_org ON pricing_seasons(organisation_id);
+CREATE INDEX IF NOT EXISTS idx_pricing_seasons_logement ON pricing_seasons(logement_id);
+CREATE INDEX IF NOT EXISTS idx_pricing_seasons_org ON pricing_seasons(organisation_id);
 
 ALTER TABLE pricing_seasons ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "pricing_seasons_org" ON pricing_seasons;
 CREATE POLICY "pricing_seasons_org" ON pricing_seasons
   USING (organisation_id = (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "pricing_seasons_insert" ON pricing_seasons;
 CREATE POLICY "pricing_seasons_insert" ON pricing_seasons
   FOR INSERT WITH CHECK (organisation_id = (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "pricing_seasons_update" ON pricing_seasons;
 CREATE POLICY "pricing_seasons_update" ON pricing_seasons
   FOR UPDATE USING (organisation_id = (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "pricing_seasons_delete" ON pricing_seasons;
 CREATE POLICY "pricing_seasons_delete" ON pricing_seasons
   FOR DELETE USING (organisation_id = (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
@@ -43,6 +47,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS pricing_seasons_updated_at ON pricing_seasons;
 CREATE TRIGGER pricing_seasons_updated_at
   BEFORE UPDATE ON pricing_seasons
   FOR EACH ROW EXECUTE FUNCTION update_pricing_seasons_updated_at();

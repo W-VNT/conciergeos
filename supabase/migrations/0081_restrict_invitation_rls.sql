@@ -8,6 +8,7 @@
 DROP POLICY IF EXISTS "Public can view invitations by token" ON invitations;
 
 -- Restrict public/anon SELECT to only pending, non-expired invitations
+DROP POLICY IF EXISTS "Public can view pending invitations" ON invitations;
 CREATE POLICY "Public can view pending invitations"
 ON invitations FOR SELECT
 USING (

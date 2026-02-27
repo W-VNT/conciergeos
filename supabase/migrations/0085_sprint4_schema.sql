@@ -31,18 +31,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_voyageurs_unique_email
 
 ALTER TABLE voyageurs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "voyageurs_org_select" ON voyageurs;
 CREATE POLICY "voyageurs_org_select" ON voyageurs
   FOR SELECT USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "voyageurs_org_insert" ON voyageurs;
 CREATE POLICY "voyageurs_org_insert" ON voyageurs
   FOR INSERT WITH CHECK (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "voyageurs_org_update" ON voyageurs;
 CREATE POLICY "voyageurs_org_update" ON voyageurs
   FOR UPDATE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "voyageurs_org_delete" ON voyageurs;
 CREATE POLICY "voyageurs_org_delete" ON voyageurs
   FOR DELETE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP TRIGGER IF EXISTS set_voyageurs_updated_at ON voyageurs;
 CREATE TRIGGER set_voyageurs_updated_at
   BEFORE UPDATE ON voyageurs
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Link reservations to voyageurs
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS voyageur_id UUID REFERENCES voyageurs(id) ON DELETE SET NULL;
@@ -73,8 +78,10 @@ CREATE INDEX IF NOT EXISTS idx_prestataire_portal_presta ON prestataire_portal_t
 
 ALTER TABLE prestataire_portal_tokens ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "prestataire_portal_tokens_anon_read" ON prestataire_portal_tokens;
 CREATE POLICY "prestataire_portal_tokens_anon_read" ON prestataire_portal_tokens
   FOR SELECT USING (true);
+DROP POLICY IF EXISTS "prestataire_portal_tokens_auth_manage" ON prestataire_portal_tokens;
 CREATE POLICY "prestataire_portal_tokens_auth_manage" ON prestataire_portal_tokens
   FOR ALL USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
@@ -102,18 +109,23 @@ CREATE INDEX IF NOT EXISTS idx_devis_incident ON devis_prestataires(incident_id)
 
 ALTER TABLE devis_prestataires ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "devis_prestataires_org_select" ON devis_prestataires;
 CREATE POLICY "devis_prestataires_org_select" ON devis_prestataires
   FOR SELECT USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "devis_prestataires_org_insert" ON devis_prestataires;
 CREATE POLICY "devis_prestataires_org_insert" ON devis_prestataires
   FOR INSERT WITH CHECK (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "devis_prestataires_org_update" ON devis_prestataires;
 CREATE POLICY "devis_prestataires_org_update" ON devis_prestataires
   FOR UPDATE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "devis_prestataires_org_delete" ON devis_prestataires;
 CREATE POLICY "devis_prestataires_org_delete" ON devis_prestataires
   FOR DELETE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP TRIGGER IF EXISTS set_devis_prestataires_updated_at ON devis_prestataires;
 CREATE TRIGGER set_devis_prestataires_updated_at
   BEFORE UPDATE ON devis_prestataires
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ── IN8: Factures prestataire ────────────────────────────────
 -- Note: FacturePrestataire type already exists in code, ensure table exists
@@ -141,18 +153,23 @@ CREATE INDEX IF NOT EXISTS idx_factures_presta_presta ON factures_prestataires(p
 
 ALTER TABLE factures_prestataires ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "factures_prestataires_org_select" ON factures_prestataires;
 CREATE POLICY "factures_prestataires_org_select" ON factures_prestataires
   FOR SELECT USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "factures_prestataires_org_insert" ON factures_prestataires;
 CREATE POLICY "factures_prestataires_org_insert" ON factures_prestataires
   FOR INSERT WITH CHECK (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "factures_prestataires_org_update" ON factures_prestataires;
 CREATE POLICY "factures_prestataires_org_update" ON factures_prestataires
   FOR UPDATE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "factures_prestataires_org_delete" ON factures_prestataires;
 CREATE POLICY "factures_prestataires_org_delete" ON factures_prestataires
   FOR DELETE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
 
+DROP TRIGGER IF EXISTS set_factures_prestataires_updated_at ON factures_prestataires;
 CREATE TRIGGER set_factures_prestataires_updated_at
   BEFORE UPDATE ON factures_prestataires
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ── NO6: Trigger event on message templates ──────────────────
 ALTER TABLE message_templates ADD COLUMN IF NOT EXISTS trigger_event TEXT;
@@ -174,9 +191,12 @@ CREATE INDEX IF NOT EXISTS idx_owner_messages_proprio ON owner_messages(propriet
 
 ALTER TABLE owner_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "owner_messages_org_select" ON owner_messages;
 CREATE POLICY "owner_messages_org_select" ON owner_messages
   FOR SELECT USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "owner_messages_org_insert" ON owner_messages;
 CREATE POLICY "owner_messages_org_insert" ON owner_messages
   FOR INSERT WITH CHECK (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));
+DROP POLICY IF EXISTS "owner_messages_org_update" ON owner_messages;
 CREATE POLICY "owner_messages_org_update" ON owner_messages
   FOR UPDATE USING (organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid()));

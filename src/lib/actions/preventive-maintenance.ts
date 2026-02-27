@@ -99,8 +99,7 @@ export async function generateDueIncidents() {
     const { error } = await supabase.from('incidents').insert({
       organisation_id: profile.organisation_id,
       logement_id: s.logement_id,
-      title: `[Préventif] ${s.title}`,
-      description: s.description || '',
+      description: `[Préventif] ${s.title}${s.description ? ' — ' + s.description : ''}`,
       category: s.category || 'AUTRE',
       severity: s.severity,
       status: 'OUVERT',

@@ -5,11 +5,13 @@
 -- IN1: Incident categories
 -- ============================================================
 
-CREATE TYPE incident_category AS ENUM (
-  'PLOMBERIE', 'ELECTRICITE', 'SERRURERIE', 'NUISIBLES',
-  'ELECTROMENAGER', 'CHAUFFAGE_CLIM', 'DEGATS_DES_EAUX',
-  'BRUIT_VOISINAGE', 'NETTOYAGE', 'AUTRE'
-);
+DO $$ BEGIN
+  CREATE TYPE incident_category AS ENUM (
+    'PLOMBERIE', 'ELECTRICITE', 'SERRURERIE', 'NUISIBLES',
+    'ELECTROMENAGER', 'CHAUFFAGE_CLIM', 'DEGATS_DES_EAUX',
+    'BRUIT_VOISINAGE', 'NETTOYAGE', 'AUTRE'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE incidents ADD COLUMN IF NOT EXISTS category incident_category DEFAULT 'AUTRE';
 
@@ -23,7 +25,9 @@ ALTER TYPE reservation_status ADD VALUE IF NOT EXISTS 'EN_ATTENTE' BEFORE 'CONFI
 -- R2: Payment tracking on reservations
 -- ============================================================
 
-CREATE TYPE payment_status AS ENUM ('EN_ATTENTE', 'PARTIEL', 'PAYE', 'REMBOURSE');
+DO $$ BEGIN
+  CREATE TYPE payment_status AS ENUM ('EN_ATTENTE', 'PARTIEL', 'PAYE', 'REMBOURSE');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_status payment_status DEFAULT 'EN_ATTENTE';
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS payment_date DATE;
@@ -57,6 +61,7 @@ CREATE TABLE IF NOT EXISTS incident_response_templates (
 
 ALTER TABLE incident_response_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "org_members_can_read_templates" ON incident_response_templates;
 CREATE POLICY "org_members_can_read_templates" ON incident_response_templates
   FOR SELECT USING (
     organisation_id IN (
@@ -64,6 +69,7 @@ CREATE POLICY "org_members_can_read_templates" ON incident_response_templates
     )
   );
 
+DROP POLICY IF EXISTS "admins_can_manage_templates" ON incident_response_templates;
 CREATE POLICY "admins_can_manage_templates" ON incident_response_templates
   FOR ALL USING (
     organisation_id IN (

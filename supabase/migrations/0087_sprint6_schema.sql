@@ -26,6 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_marketplace_bids_mission ON marketplace_bids(miss
 CREATE INDEX IF NOT EXISTS idx_marketplace_bids_incident ON marketplace_bids(incident_id) WHERE incident_id IS NOT NULL;
 
 ALTER TABLE marketplace_bids ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "marketplace_bids_org_access" ON marketplace_bids;
 CREATE POLICY "marketplace_bids_org_access" ON marketplace_bids
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -44,6 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_operator_points_org ON operator_points(organisati
 CREATE INDEX IF NOT EXISTS idx_operator_points_operator ON operator_points(operator_id);
 
 ALTER TABLE operator_points ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "operator_points_org_access" ON operator_points;
 CREATE POLICY "operator_points_org_access" ON operator_points
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -58,6 +60,7 @@ CREATE TABLE IF NOT EXISTS operator_badges (
 );
 
 ALTER TABLE operator_badges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "operator_badges_org_access" ON operator_badges;
 CREATE POLICY "operator_badges_org_access" ON operator_badges
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -80,6 +83,7 @@ CREATE INDEX IF NOT EXISTS idx_stock_movements_org ON stock_movements(organisati
 CREATE INDEX IF NOT EXISTS idx_stock_movements_equipement ON stock_movements(equipement_id);
 
 ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "stock_movements_org_access" ON stock_movements;
 CREATE POLICY "stock_movements_org_access" ON stock_movements
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -107,6 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_preventive_schedules_logement ON preventive_sched
 CREATE INDEX IF NOT EXISTS idx_preventive_schedules_due ON preventive_schedules(next_due_date) WHERE active = true;
 
 ALTER TABLE preventive_schedules ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "preventive_schedules_org_access" ON preventive_schedules;
 CREATE POLICY "preventive_schedules_org_access" ON preventive_schedules
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -135,6 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_warranties_logement ON warranties(logement_id);
 CREATE INDEX IF NOT EXISTS idx_warranties_end ON warranties(end_date);
 
 ALTER TABLE warranties ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "warranties_org_access" ON warranties;
 CREATE POLICY "warranties_org_access" ON warranties
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -157,6 +163,7 @@ CREATE INDEX IF NOT EXISTS idx_platform_payments_org ON platform_payments(organi
 CREATE INDEX IF NOT EXISTS idx_platform_payments_reservation ON platform_payments(reservation_id);
 
 ALTER TABLE platform_payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "platform_payments_org_access" ON platform_payments;
 CREATE POLICY "platform_payments_org_access" ON platform_payments
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -177,6 +184,7 @@ CREATE TABLE IF NOT EXISTS budgets (
 CREATE INDEX IF NOT EXISTS idx_budgets_org ON budgets(organisation_id);
 
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "budgets_org_access" ON budgets;
 CREATE POLICY "budgets_org_access" ON budgets
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -192,6 +200,7 @@ CREATE TABLE IF NOT EXISTS tva_configs (
 );
 
 ALTER TABLE tva_configs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tva_configs_org_access" ON tva_configs;
 CREATE POLICY "tva_configs_org_access" ON tva_configs
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -212,6 +221,7 @@ CREATE TABLE IF NOT EXISTS exchange_rates (
 CREATE INDEX IF NOT EXISTS idx_exchange_rates_org ON exchange_rates(organisation_id);
 
 ALTER TABLE exchange_rates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "exchange_rates_org_access" ON exchange_rates;
 CREATE POLICY "exchange_rates_org_access" ON exchange_rates
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -235,6 +245,7 @@ CREATE INDEX IF NOT EXISTS idx_contrat_logements_contrat ON contrat_logements(co
 CREATE INDEX IF NOT EXISTS idx_contrat_logements_logement ON contrat_logements(logement_id);
 
 ALTER TABLE contrat_logements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "contrat_logements_access" ON contrat_logements;
 CREATE POLICY "contrat_logements_access" ON contrat_logements
   FOR ALL USING (
     EXISTS (
@@ -258,6 +269,7 @@ CREATE TABLE IF NOT EXISTS prestataire_availability (
 CREATE INDEX IF NOT EXISTS idx_prestataire_avail_presta ON prestataire_availability(prestataire_id);
 
 ALTER TABLE prestataire_availability ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "prestataire_availability_org_access" ON prestataire_availability;
 CREATE POLICY "prestataire_availability_org_access" ON prestataire_availability
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -274,5 +286,6 @@ CREATE TABLE IF NOT EXISTS prestataire_blackouts (
 CREATE INDEX IF NOT EXISTS idx_prestataire_blackouts_presta ON prestataire_blackouts(prestataire_id);
 
 ALTER TABLE prestataire_blackouts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "prestataire_blackouts_org_access" ON prestataire_blackouts;
 CREATE POLICY "prestataire_blackouts_org_access" ON prestataire_blackouts
   FOR ALL USING (organisation_id = get_my_org_id());

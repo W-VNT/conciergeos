@@ -24,6 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_mission_comments_org ON mission_comments(organisa
 
 ALTER TABLE mission_comments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mission_comments_org_access" ON mission_comments;
 CREATE POLICY "mission_comments_org_access" ON mission_comments
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
@@ -53,14 +54,16 @@ CREATE INDEX IF NOT EXISTS idx_mission_recurrences_logement ON mission_recurrenc
 
 ALTER TABLE mission_recurrences ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mission_recurrences_org_access" ON mission_recurrences;
 CREATE POLICY "mission_recurrences_org_access" ON mission_recurrences
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
   );
 
+DROP TRIGGER IF EXISTS set_mission_recurrences_updated_at ON mission_recurrences;
 CREATE TRIGGER set_mission_recurrences_updated_at
   BEFORE UPDATE ON mission_recurrences
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ── SLA Configs (MI9 + IN6) ────────────────────────────────
 CREATE TABLE IF NOT EXISTS sla_configs (
@@ -76,14 +79,16 @@ CREATE TABLE IF NOT EXISTS sla_configs (
 
 ALTER TABLE sla_configs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "sla_configs_org_access" ON sla_configs;
 CREATE POLICY "sla_configs_org_access" ON sla_configs
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
   );
 
+DROP TRIGGER IF EXISTS set_sla_configs_updated_at ON sla_configs;
 CREATE TRIGGER set_sla_configs_updated_at
   BEFORE UPDATE ON sla_configs
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ── Activity Logs (IN2 timeline) ───────────────────────────
 CREATE TABLE IF NOT EXISTS activity_logs (
@@ -105,6 +110,7 @@ CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at
 
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "activity_logs_org_access" ON activity_logs;
 CREATE POLICY "activity_logs_org_access" ON activity_logs
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
@@ -128,14 +134,16 @@ CREATE INDEX IF NOT EXISTS idx_message_templates_org ON message_templates(organi
 
 ALTER TABLE message_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "message_templates_org_access" ON message_templates;
 CREATE POLICY "message_templates_org_access" ON message_templates
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
   );
 
+DROP TRIGGER IF EXISTS set_message_templates_updated_at ON message_templates;
 CREATE TRIGGER set_message_templates_updated_at
   BEFORE UPDATE ON message_templates
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ── Guest Messages Log (R3) ───────────────────────────────
 CREATE TABLE IF NOT EXISTS guest_messages (
@@ -158,6 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_guest_messages_org ON guest_messages(organisation
 
 ALTER TABLE guest_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "guest_messages_org_access" ON guest_messages;
 CREATE POLICY "guest_messages_org_access" ON guest_messages
   FOR ALL USING (
     organisation_id IN (SELECT organisation_id FROM profiles WHERE id = auth.uid())
@@ -178,9 +187,11 @@ CREATE INDEX IF NOT EXISTS idx_guest_portal_reservation ON guest_portal_tokens(r
 -- No RLS — public access via token
 ALTER TABLE guest_portal_tokens ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "guest_portal_tokens_anon_read" ON guest_portal_tokens;
 CREATE POLICY "guest_portal_tokens_anon_read" ON guest_portal_tokens
   FOR SELECT USING (TRUE);
 
+DROP POLICY IF EXISTS "guest_portal_tokens_auth_manage" ON guest_portal_tokens;
 CREATE POLICY "guest_portal_tokens_auth_manage" ON guest_portal_tokens
   FOR ALL USING (
     reservation_id IN (

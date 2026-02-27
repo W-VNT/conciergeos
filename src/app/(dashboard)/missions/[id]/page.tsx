@@ -32,12 +32,29 @@ export default async function MissionDetailPage({ params }: { params: { id: stri
   const admin = isAdmin(profile);
   const supabase = createClient();
 
-  const { data: mission } = await supabase
+  // Try with depends_on join first, fallback without if FK doesn't exist yet
+  let mission: any = null;
+  const baseSelect = "*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes, latitude, longitude), assignee:profiles(id, full_name)";
+
+  const { data, error: err1 } = await supabase
     .from("missions")
-    .select("*, logement:logements(id, name, address_line1, city, postal_code, lockbox_code, wifi_name, wifi_password, bedrooms, beds, menage_price, notes, latitude, longitude), assignee:profiles(id, full_name), depends_on:missions!depends_on_mission_id(id, type, status)")
+    .select(`${baseSelect}, depends_on:missions!depends_on_mission_id(id, type, status)`)
     .eq("id", params.id)
     .eq("organisation_id", profile.organisation_id)
     .single();
+
+  if (err1 && err1.message.includes("could not find a relationship")) {
+    // FK not yet in DB — query without the join
+    const { data: fallback } = await supabase
+      .from("missions")
+      .select(baseSelect)
+      .eq("id", params.id)
+      .eq("organisation_id", profile.organisation_id)
+      .single();
+    mission = fallback;
+  } else {
+    mission = data;
+  }
 
   if (!mission) notFound();
 

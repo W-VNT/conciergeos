@@ -63,6 +63,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trigger_notify_reservation_confirmed ON reservations;
 CREATE TRIGGER trigger_notify_reservation_confirmed
   AFTER INSERT ON reservations
   FOR EACH ROW

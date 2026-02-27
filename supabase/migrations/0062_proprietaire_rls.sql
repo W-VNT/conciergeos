@@ -10,6 +10,7 @@ $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 -- ============================================================
 -- LOGEMENTS : le propriétaire voit ses propres logements
 -- ============================================================
+DROP POLICY IF EXISTS "Proprietaires can view own logements" ON public.logements;
 CREATE POLICY "Proprietaires can view own logements"
   ON public.logements FOR SELECT
   TO authenticated
@@ -21,6 +22,7 @@ CREATE POLICY "Proprietaires can view own logements"
 -- ============================================================
 -- RESERVATIONS : le propriétaire voit les réservations de ses logements
 -- ============================================================
+DROP POLICY IF EXISTS "Proprietaires can view own reservations" ON public.reservations;
 CREATE POLICY "Proprietaires can view own reservations"
   ON public.reservations FOR SELECT
   TO authenticated
@@ -34,6 +36,7 @@ CREATE POLICY "Proprietaires can view own reservations"
 -- ============================================================
 -- CONTRATS : le propriétaire voit ses contrats
 -- ============================================================
+DROP POLICY IF EXISTS "Proprietaires can view own contrats" ON public.contrats;
 CREATE POLICY "Proprietaires can view own contrats"
   ON public.contrats FOR SELECT
   TO authenticated
@@ -48,6 +51,7 @@ CREATE POLICY "Proprietaires can view own contrats"
 DO $$
 BEGIN
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'revenus') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Proprietaires can view own revenus" ON public.revenus';
     EXECUTE '
       CREATE POLICY "Proprietaires can view own revenus"
         ON public.revenus FOR SELECT

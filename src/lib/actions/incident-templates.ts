@@ -20,7 +20,7 @@ export async function getIncidentTemplates(
     .from("incident_response_templates")
     .select("*")
     .eq("organisation_id", profile.organisation_id)
-    .order("name");
+    .order("title");
 
   if (category) {
     query = query.eq("category", category);
@@ -51,7 +51,7 @@ export async function createIncidentTemplate(data: {
       .from("incident_response_templates")
       .insert({
         organisation_id: profile.organisation_id,
-        name: data.name.trim(),
+        title: data.name.trim(),
         category: data.category || null,
         content: data.content.trim(),
       })
@@ -83,7 +83,7 @@ export async function updateIncidentTemplate(
     const { error } = await supabase
       .from("incident_response_templates")
       .update({
-        name: data.name.trim(),
+        title: data.name.trim(),
         category: data.category || null,
         content: data.content.trim(),
       })

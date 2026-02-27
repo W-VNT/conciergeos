@@ -31,7 +31,7 @@ export async function getOpenJobs() {
       .order('scheduled_at'),
     supabase
       .from('incidents')
-      .select('id, title, logement:logements(id, name), severity, status, open_for_bids')
+      .select('id, description, logement:logements(id, name), severity, status, open_for_bids')
       .eq('organisation_id', profile.organisation_id)
       .eq('open_for_bids', true)
       .in('status', ['OUVERT', 'EN_COURS'])
@@ -49,7 +49,7 @@ export async function getBidsForEntity(entityType: 'mission' | 'incident', entit
   const column = entityType === 'mission' ? 'mission_id' : 'incident_id';
   const { data, error } = await supabase
     .from('marketplace_bids')
-    .select('*, prestataire:prestataires(id, nom, specialite)')
+    .select('*, prestataire:prestataires(id, full_name, specialty)')
     .eq('organisation_id', profile.organisation_id)
     .eq(column, entityId)
     .order('created_at', { ascending: false });
@@ -132,13 +132,21 @@ export async function acceptBid(bidId: string) {
     updated_at: new Date().toISOString(),
   }).eq(column, entityId).neq('id', bidId).eq('status', 'EN_ATTENTE');
 
-  // Assign prestataire to the mission/incident
-  const table = bid.mission_id ? 'missions' : 'incidents';
-  await supabase.from(table).update({
-    prestataire_id: bid.prestataire_id,
-    open_for_bids: false,
-    updated_at: new Date().toISOString(),
-  }).eq('id', entityId);
+  // Assign prestataire to the entity and close bidding
+  if (bid.incident_id) {
+    // Incidents have prestataire_id column
+    await supabase.from('incidents').update({
+      prestataire_id: bid.prestataire_id,
+      open_for_bids: false,
+      updated_at: new Date().toISOString(),
+    }).eq('id', entityId);
+  } else if (bid.mission_id) {
+    // Missions don't have prestataire_id — just close bidding
+    await supabase.from('missions').update({
+      open_for_bids: false,
+      updated_at: new Date().toISOString(),
+    }).eq('id', entityId);
+  }
 
   return { success: true, message: 'Offre acceptée, prestataire assigné' };
 }

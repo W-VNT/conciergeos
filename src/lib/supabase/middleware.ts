@@ -37,6 +37,7 @@ export async function updateSession(request: NextRequest) {
   const isResetPasswordPage = pathname === '/reset-password';
   const isRootPage = pathname === '/';
   const isApiRoute = pathname.startsWith('/api/');
+  const isPublicPage = pathname.startsWith('/guest/') || pathname.startsWith('/prestataire-portal/') || pathname.startsWith('/signalement/');
   const isAuthPage = isLoginPage || isSignupPage || isAcceptInvitationPage || isForgotPasswordPage || isResetPasswordPage;
 
   // Check if email is confirmed
@@ -55,8 +56,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Not authenticated → redirect to login (except on auth/api pages)
-  if (!user && !isAuthPage && !isApiRoute) {
+  // Not authenticated → redirect to login (except on auth/api/public pages)
+  if (!user && !isAuthPage && !isApiRoute && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);

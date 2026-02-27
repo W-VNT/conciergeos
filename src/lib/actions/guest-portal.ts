@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
@@ -137,8 +137,8 @@ export interface PortalData {
 export async function getPortalData(
   token: string
 ): Promise<{ valid: boolean; expired?: boolean; data?: PortalData }> {
-  // Use service-level access since this is a public page with no auth
-  const supabase = createClient();
+  // Use service-role client since this is a public page with no auth (bypasses RLS)
+  const supabase = createServiceRoleClient();
 
   // Fetch the token
   const { data: portalToken, error: tokenError } = await supabase

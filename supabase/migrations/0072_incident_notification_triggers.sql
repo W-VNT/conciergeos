@@ -54,6 +54,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trigger_notify_incident_opened ON incidents;
 CREATE TRIGGER trigger_notify_incident_opened
   AFTER INSERT ON incidents
   FOR EACH ROW
@@ -116,6 +117,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trigger_notify_incident_assigned ON incidents;
 CREATE TRIGGER trigger_notify_incident_assigned
   AFTER UPDATE ON incidents
   FOR EACH ROW
@@ -177,6 +179,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trigger_notify_incident_resolved ON incidents;
 CREATE TRIGGER trigger_notify_incident_resolved
   AFTER UPDATE ON incidents
   FOR EACH ROW

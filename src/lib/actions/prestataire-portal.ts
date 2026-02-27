@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { requireProfile, isAdminOrManager } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
@@ -156,7 +156,8 @@ export interface PrestatairePortalData {
 export async function getPrestatairePortalData(
   token: string
 ): Promise<{ valid: boolean; expired?: boolean; data?: PrestatairePortalData }> {
-  const supabase = createClient();
+  // Use service-role client since this is a public portal (no auth, bypasses RLS)
+  const supabase = createServiceRoleClient();
 
   // Fetch the token
   const { data: portalToken, error: tokenError } = await supabase
@@ -245,7 +246,7 @@ export async function updateMissionStatusFromPortal(
   status: "EN_COURS" | "TERMINE"
 ): Promise<ActionResponse> {
   try {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     // Validate token
     const { data: portalToken } = await supabase
@@ -303,7 +304,7 @@ export async function updateIncidentStatusFromPortal(
   status: "EN_COURS" | "RESOLU"
 ): Promise<ActionResponse> {
   try {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     // Validate token
     const { data: portalToken } = await supabase
@@ -363,7 +364,7 @@ export async function submitDevisFromPortal(
   }
 ): Promise<ActionResponse> {
   try {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     // Validate token
     const { data: portalToken } = await supabase

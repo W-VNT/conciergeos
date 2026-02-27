@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Home, Calendar, KeyRound, Wifi, MapPin, AlertTriangle } from "lucide-react";
@@ -32,7 +32,8 @@ interface PortalData {
 async function getPortalData(
   token: string
 ): Promise<{ valid: boolean; expired?: boolean; data?: PortalData }> {
-  const supabase = createClient();
+  // Use service-role client since this is a public page (no auth, bypasses RLS)
+  const supabase = createServiceRoleClient();
 
   const { data: portalToken, error: tokenError } = await supabase
     .from("guest_portal_tokens")

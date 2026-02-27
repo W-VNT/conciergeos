@@ -1,7 +1,7 @@
 "use server";
 
 import crypto from "crypto";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { requireProfile, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { type ActionResponse, successResponse, errorResponse } from "@/lib/action-response";
@@ -50,7 +50,7 @@ export async function getPublicLogementInfo(
   organisation_id: string;
 } | null> {
   try {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     const { data, error } = await supabase
       .from("logements")
@@ -83,7 +83,7 @@ export async function submitPublicIncident(
   }
 ): Promise<ActionResponse> {
   try {
-    const supabase = createClient();
+    const supabase = createServiceRoleClient();
 
     // Validate token and get logement
     const { data: logement, error: logementError } = await supabase

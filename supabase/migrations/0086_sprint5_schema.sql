@@ -20,6 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, enti
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
 
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "audit_logs_org_access" ON audit_logs;
 CREATE POLICY "audit_logs_org_access" ON audit_logs
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -48,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_edl_org ON etats_des_lieux(organisation_id);
 CREATE INDEX IF NOT EXISTS idx_edl_logement ON etats_des_lieux(logement_id);
 
 ALTER TABLE etats_des_lieux ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "edl_org_access" ON etats_des_lieux;
 CREATE POLICY "edl_org_access" ON etats_des_lieux
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -63,6 +65,7 @@ CREATE TABLE IF NOT EXISTS etat_des_lieux_items (
 );
 
 ALTER TABLE etat_des_lieux_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "edl_items_access" ON etat_des_lieux_items;
 CREATE POLICY "edl_items_access" ON etat_des_lieux_items
   FOR ALL USING (
     EXISTS (
@@ -86,6 +89,7 @@ CREATE TABLE IF NOT EXISTS webhook_endpoints (
 );
 
 ALTER TABLE webhook_endpoints ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "webhook_org_access" ON webhook_endpoints;
 CREATE POLICY "webhook_org_access" ON webhook_endpoints
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -100,6 +104,7 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
 );
 
 ALTER TABLE webhook_deliveries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "webhook_deliveries_access" ON webhook_deliveries;
 CREATE POLICY "webhook_deliveries_access" ON webhook_deliveries
   FOR ALL USING (
     EXISTS (
@@ -126,6 +131,7 @@ CREATE TABLE IF NOT EXISTS mission_reports (
 );
 
 ALTER TABLE mission_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "mission_reports_org_access" ON mission_reports;
 CREATE POLICY "mission_reports_org_access" ON mission_reports
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -146,6 +152,7 @@ CREATE TABLE IF NOT EXISTS mission_templates (
 );
 
 ALTER TABLE mission_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "mission_templates_org_access" ON mission_templates;
 CREATE POLICY "mission_templates_org_access" ON mission_templates
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -164,6 +171,7 @@ CREATE TABLE IF NOT EXISTS intervention_checklists (
 );
 
 ALTER TABLE intervention_checklists ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "intervention_checklists_org_access" ON intervention_checklists;
 CREATE POLICY "intervention_checklists_org_access" ON intervention_checklists
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -180,6 +188,7 @@ CREATE TABLE IF NOT EXISTS contrat_templates (
 );
 
 ALTER TABLE contrat_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "contrat_templates_org_access" ON contrat_templates;
 CREATE POLICY "contrat_templates_org_access" ON contrat_templates
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -196,6 +205,7 @@ CREATE TABLE IF NOT EXISTS contrat_versions (
 );
 
 ALTER TABLE contrat_versions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "contrat_versions_org_access" ON contrat_versions;
 CREATE POLICY "contrat_versions_org_access" ON contrat_versions
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -217,6 +227,7 @@ CREATE TABLE IF NOT EXISTS owner_payments (
 );
 
 ALTER TABLE owner_payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "owner_payments_org_access" ON owner_payments;
 CREATE POLICY "owner_payments_org_access" ON owner_payments
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -234,6 +245,7 @@ CREATE TABLE IF NOT EXISTS prestataire_documents (
 );
 
 ALTER TABLE prestataire_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "prestataire_documents_org_access" ON prestataire_documents;
 CREATE POLICY "prestataire_documents_org_access" ON prestataire_documents
   FOR ALL USING (organisation_id = get_my_org_id());
 
@@ -251,6 +263,7 @@ CREATE TABLE IF NOT EXISTS proprietaire_documents (
 );
 
 ALTER TABLE proprietaire_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "proprietaire_documents_org_access" ON proprietaire_documents;
 CREATE POLICY "proprietaire_documents_org_access" ON proprietaire_documents
   FOR ALL USING (organisation_id = get_my_org_id());
 

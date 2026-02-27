@@ -33,21 +33,25 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own preferences
+DROP POLICY IF EXISTS "Users can view own notification preferences" ON notification_preferences;
 CREATE POLICY "Users can view own notification preferences"
   ON notification_preferences FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Policy: Users can update their own preferences
+DROP POLICY IF EXISTS "Users can update own notification preferences" ON notification_preferences;
 CREATE POLICY "Users can update own notification preferences"
   ON notification_preferences FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Policy: Users can insert their own preferences
+DROP POLICY IF EXISTS "Users can insert own notification preferences" ON notification_preferences;
 CREATE POLICY "Users can insert own notification preferences"
   ON notification_preferences FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Create updated_at trigger
+DROP TRIGGER IF EXISTS update_notification_preferences_updated_at ON notification_preferences;
 CREATE TRIGGER update_notification_preferences_updated_at
   BEFORE UPDATE ON notification_preferences
   FOR EACH ROW

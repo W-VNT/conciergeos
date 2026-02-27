@@ -65,10 +65,10 @@ export async function getBudgetVsActual(year: number) {
     .is('logement_id', null)
     .eq('category', 'GLOBAL');
 
-  // Get actual revenues by month
+  // Get actual revenues by month (revenus table tracks all revenue, no type column)
   const { data: revenus } = await supabase
     .from('revenus')
-    .select('montant_brut, type, created_at')
+    .select('montant_brut, montant_commission, created_at')
     .eq('organisation_id', profile.organisation_id)
     .gte('created_at', `${year}-01-01`)
     .lte('created_at', `${year}-12-31`);
@@ -80,8 +80,8 @@ export async function getBudgetVsActual(year: number) {
       const d = new Date(r.created_at);
       return d.getMonth() + 1 === m;
     });
-    const rev = monthRevenus.filter((r: any) => r.type !== 'CHARGE').reduce((s: number, r: any) => s + Number(r.montant_brut || 0), 0);
-    const charges = monthRevenus.filter((r: any) => r.type === 'CHARGE').reduce((s: number, r: any) => s + Math.abs(Number(r.montant_brut || 0)), 0);
+    const rev = monthRevenus.reduce((s: number, r: any) => s + Number(r.montant_brut || 0), 0);
+    const charges = monthRevenus.reduce((s: number, r: any) => s + Number(r.montant_commission || 0), 0);
     const budget = budgetEntry ? Number(budgetEntry.amount) : 0;
     monthlyData.push({ month: m, budget, actual_revenus: rev, actual_charges: charges, variance: rev - budget });
   }
@@ -101,8 +101,7 @@ export async function getForecast(monthsAhead: number = 6) {
     .from('revenus')
     .select('montant_brut, created_at')
     .eq('organisation_id', profile.organisation_id)
-    .gte('created_at', sixMonthsAgo.toISOString())
-    .neq('type', 'CHARGE');
+    .gte('created_at', sixMonthsAgo.toISOString());
 
   const totalRevenue = (revenus || []).reduce((s: number, r: any) => s + Number(r.montant_brut || 0), 0);
   const avgMonthly = totalRevenue / 6;

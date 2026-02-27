@@ -3,13 +3,13 @@
 
 -- Add capabilities column to profiles
 ALTER TABLE profiles
-ADD COLUMN operator_capabilities JSONB DEFAULT '{
+ADD COLUMN IF NOT EXISTS operator_capabilities JSONB DEFAULT '{
   "mission_types": [],
   "zones": []
 }'::jsonb;
 
 -- Create GIN index for fast JSONB queries
-CREATE INDEX idx_profiles_operator_capabilities
+CREATE INDEX IF NOT EXISTS idx_profiles_operator_capabilities
 ON profiles USING gin (operator_capabilities);
 
 -- Update existing operators with empty capabilities

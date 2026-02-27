@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS app_config (
 ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;
 
 -- Create policy: Only service role can read/write
+DROP POLICY IF EXISTS "Service role full access on app_config" ON app_config;
 CREATE POLICY "Service role full access on app_config"
   ON app_config
   FOR ALL

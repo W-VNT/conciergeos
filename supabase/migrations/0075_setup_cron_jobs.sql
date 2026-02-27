@@ -1,9 +1,29 @@
--- Enable pg_cron extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS pg_cron;
+-- Enable pg_cron extension if not already enabled (skip if already exists with privileges)
+DO $$ BEGIN
+  CREATE EXTENSION IF NOT EXISTS pg_cron;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 -- Grant permissions to execute cron jobs
-GRANT USAGE ON SCHEMA cron TO postgres;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cron TO postgres;
+DO $$ BEGIN
+  GRANT USAGE ON SCHEMA cron TO postgres;
+  GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cron TO postgres;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- Unschedule existing jobs to avoid duplicates on re-run
+DO $$ BEGIN
+  PERFORM cron.unschedule('checkin-reminders');
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN
+  PERFORM cron.unschedule('checkout-notifications');
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN
+  PERFORM cron.unschedule('urgent-missions-check');
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN
+  PERFORM cron.unschedule('critical-incidents-check');
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- 1. Rappels check-in (quotidien à 8h00 UTC)
 -- Envoie des rappels pour les check-ins prévus demain
@@ -42,4 +62,7 @@ SELECT jobid, schedule, command, nodename, nodeport, database, username, active
 FROM cron.job
 ORDER BY jobid;
 
-COMMENT ON EXTENSION pg_cron IS 'Job scheduler for PostgreSQL';
+DO $$ BEGIN
+  COMMENT ON EXTENSION pg_cron IS 'Job scheduler for PostgreSQL';
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
