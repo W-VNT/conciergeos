@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTr
 import { Building2, CheckCircle2, Mail, Eye, EyeOff, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
+import { checkEmailExists } from "@/lib/actions/auth";
 import { toast } from "sonner";
 
 export default function SignupPage() {
@@ -145,6 +146,15 @@ export default function SignupPage() {
 
     if (!acceptTerms) {
       setError("Vous devez accepter les conditions d'utilisation");
+      return;
+    }
+
+    // Check if email already exists
+    setLoading(true);
+    const exists = await checkEmailExists(email.trim());
+    setLoading(false);
+    if (exists) {
+      setError("Un compte existe déjà avec cet email.");
       return;
     }
 

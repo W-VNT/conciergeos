@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export async function updatePassword(
@@ -71,6 +71,15 @@ export async function updatePassword(
     console.error("Update password error:", error);
     return { error: "Une erreur est survenue" };
   }
+}
+
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.rpc('check_email_exists', {
+    email_input: email.trim().toLowerCase(),
+  });
+  if (error) return false;
+  return !!data;
 }
 
 export async function deleteAccount(confirmationEmail: string) {
