@@ -85,13 +85,23 @@ export default function SignupPage() {
   useEffect(() => {
     if (step !== 4) return;
     const interval = setInterval(async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email_confirmed_at) {
+      // Force refresh session to get updated email_confirmed_at from server
+      const { data: { session } } = await supabase.auth.refreshSession();
+      if (session?.user?.email_confirmed_at) {
         router.push("/dashboard");
+        return;
+      }
+      // Fallback: also try signInWithPassword in case session was created in browser
+      // but not in PWA (confirmation link opens in system browser)
+      if (email && password) {
+        const { data } = await supabase.auth.signInWithPassword({ email, password });
+        if (data?.user?.email_confirmed_at) {
+          router.push("/dashboard");
+        }
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [step, supabase, router]);
+  }, [step, supabase, router, email, password]);
 
   // Resend cooldown timer
   useEffect(() => {
