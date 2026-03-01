@@ -203,10 +203,12 @@ export default function SignupPage() {
     });
 
     if (authError) {
-      setError(authError.message === "User already registered"
-        ? "Cet email est déjà utilisé. Voulez-vous vous connecter ?"
-        : "Une erreur est survenue lors de la création du compte"
-      );
+      if (authError.message === "User already registered") {
+        setError("Un compte existe déjà avec cet email.");
+        setStep(1);
+      } else {
+        setError("Une erreur est survenue lors de la création du compte");
+      }
       setLoading(false);
       return;
     }
@@ -219,7 +221,8 @@ export default function SignupPage() {
 
     // Supabase returns a fake success with empty identities when email already exists
     if (authData.user.identities && authData.user.identities.length === 0) {
-      setError("Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe.");
+      setError("Un compte existe déjà avec cet email.");
+      setStep(1);
       setLoading(false);
       return;
     }
@@ -336,16 +339,7 @@ export default function SignupPage() {
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive" role="alert">
               <p>{error}</p>
               {error.includes("déjà") && (
-                <div className="flex gap-3 mt-2">
-                  <Link href="/login" className="font-medium underline hover:text-destructive/80">Se connecter</Link>
-                  <Link href="/forgot-password" className="font-medium underline hover:text-destructive/80">Mot de passe oublié</Link>
-                </div>
-              )}
-              {error.includes("correspondent pas") && (
-                <p className="mt-1 text-destructive/70">Vérifiez que les deux champs sont identiques.</p>
-              )}
-              {error.includes("8 caractères") && (
-                <p className="mt-1 text-destructive/70">Ajoutez des lettres, chiffres et caractères spéciaux.</p>
+                <p className="mt-1"><Link href="/login" className="font-medium underline hover:text-destructive/80">Se connecter</Link></p>
               )}
             </div>
           )}
