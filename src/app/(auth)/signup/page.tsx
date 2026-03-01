@@ -684,6 +684,7 @@ export default function SignupPage() {
                   variant="outline"
                   onClick={() => setStep(isInvitation ? 1 : 2)}
                   className="flex-1"
+                  size="lg"
                   disabled={loading}
                 >
                   Retour
