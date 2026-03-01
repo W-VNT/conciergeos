@@ -93,11 +93,7 @@ export default function LoginPage() {
             </div>
             {error && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive" role="alert">
-                <p>{error}</p>
-                <div className="flex gap-3 mt-2">
-                  <Link href="/forgot-password" className="font-medium underline hover:text-destructive/80">Réinitialiser le mot de passe</Link>
-                  <Link href="/signup" className="font-medium underline hover:text-destructive/80">Créer un compte</Link>
-                </div>
+                {error}
               </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
