@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, CheckCircle2, Mail, Eye, EyeOff } from "lucide-react";
+import { Building2, CheckCircle2, Mail, Eye, EyeOff, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
 import { toast } from "sonner";
@@ -200,6 +200,13 @@ export default function SignupPage() {
 
     if (!authData.user) {
       setError("Erreur lors de la création du compte");
+      setLoading(false);
+      return;
+    }
+
+    // Supabase returns a fake success with empty identities when email already exists
+    if (authData.user.identities && authData.user.identities.length === 0) {
+      setError("Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe.");
       setLoading(false);
       return;
     }
@@ -599,7 +606,18 @@ export default function SignupPage() {
           )}
 
           {/* Step 4: Email Verification */}
-          {step === 4 && (
+          {step === 4 && (() => {
+            const domain = email.split('@')[1]?.toLowerCase() || '';
+            const emailProviders: { domains: string[]; name: string; url: string; color: string; icon: string }[] = [
+              { domains: ['gmail.com', 'googlemail.com'], name: 'Gmail', url: 'https://mail.google.com', color: 'bg-red-500 hover:bg-red-600', icon: '📧' },
+              { domains: ['outlook.com', 'hotmail.com', 'hotmail.fr', 'live.com', 'live.fr', 'msn.com'], name: 'Outlook', url: 'https://outlook.live.com', color: 'bg-blue-600 hover:bg-blue-700', icon: '📨' },
+              { domains: ['yahoo.com', 'yahoo.fr', 'ymail.com'], name: 'Yahoo Mail', url: 'https://mail.yahoo.com', color: 'bg-purple-600 hover:bg-purple-700', icon: '📬' },
+              { domains: ['icloud.com', 'me.com', 'mac.com'], name: 'iCloud Mail', url: 'https://www.icloud.com/mail', color: 'bg-gray-600 hover:bg-gray-700', icon: '🍎' },
+              { domains: ['protonmail.com', 'proton.me', 'pm.me'], name: 'ProtonMail', url: 'https://mail.proton.me', color: 'bg-violet-600 hover:bg-violet-700', icon: '🔒' },
+            ];
+            const matched = emailProviders.find(p => p.domains.includes(domain));
+
+            return (
             <div className="space-y-6 text-center">
               <div className="flex justify-center">
                 <div className="h-20 w-20 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -615,22 +633,34 @@ export default function SignupPage() {
                 <p className="text-lg font-medium mt-1">{email}</p>
               </div>
 
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-sm text-left">
-                <p className="font-medium text-yellow-900 dark:text-yellow-200 mb-2">📌 Instructions</p>
-                <ol className="text-yellow-800 dark:text-yellow-300 space-y-1 list-decimal list-inside">
-                  <li>Ouvrez votre boîte email</li>
-                  <li>Recherchez l&apos;email de ConciergeOS</li>
-                  <li>Cliquez sur le lien de confirmation</li>
-                  <li>Vous serez automatiquement redirigé vers votre dashboard</li>
-                </ol>
-              </div>
+              {matched ? (
+                <a
+                  href={matched.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center justify-center gap-2 w-full rounded-lg px-6 py-3 text-white font-medium text-base transition-colors ${matched.color}`}
+                >
+                  <span className="text-lg">{matched.icon}</span>
+                  Ouvrir {matched.name}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : (
+                <a
+                  href={`mailto:${email}`}
+                  className="inline-flex items-center justify-center gap-2 w-full rounded-lg px-6 py-3 bg-primary text-primary-foreground font-medium text-base transition-colors hover:bg-primary/90"
+                >
+                  <Mail className="h-4 w-4" />
+                  Ouvrir mon application mail
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
 
               <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-                <p>💡 L&apos;email peut prendre quelques minutes à arriver.</p>
+                <p>L&apos;email peut prendre quelques minutes à arriver.</p>
                 <p className="mt-1">Pensez à vérifier vos <strong>spams</strong> si vous ne le voyez pas.</p>
               </div>
 
-              <div className="space-y-3 pt-4">
+              <div className="space-y-3 pt-2">
                 <Button
                   onClick={handleResendEmail}
                   variant="outline"
@@ -655,7 +685,8 @@ export default function SignupPage() {
                 </p>
               </div>
             </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
     </div>
