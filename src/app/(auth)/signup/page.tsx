@@ -334,7 +334,19 @@ export default function SignupPage() {
         <CardContent className="pt-6">
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive" role="alert">
-              {error}
+              <p>{error}</p>
+              {error.includes("déjà") && (
+                <div className="flex gap-3 mt-2">
+                  <Link href="/login" className="font-medium underline hover:text-destructive/80">Se connecter</Link>
+                  <Link href="/forgot-password" className="font-medium underline hover:text-destructive/80">Mot de passe oublié</Link>
+                </div>
+              )}
+              {error.includes("correspondent pas") && (
+                <p className="mt-1 text-destructive/70">Vérifiez que les deux champs sont identiques.</p>
+              )}
+              {error.includes("8 caractères") && (
+                <p className="mt-1 text-destructive/70">Ajoutez des lettres, chiffres et caractères spéciaux.</p>
+              )}
             </div>
           )}
 
