@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Building2, CheckCircle2, Mail, Eye, EyeOff, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
@@ -481,6 +481,9 @@ export default function SignupPage() {
                         <h4 className="font-semibold text-foreground">9. Droit applicable</h4>
                         <p>Les présentes CGU sont régies par le droit français. En cas de litige, les tribunaux compétents seront ceux du ressort du siège social de ConciergeOS.</p>
                       </div>
+                      <DialogClose asChild>
+                        <Button variant="outline" className="w-full mt-2">Fermer</Button>
+                      </DialogClose>
                     </DialogContent>
                   </Dialog>
                   {" "}et la{" "}
@@ -538,6 +541,9 @@ export default function SignupPage() {
                         <h4 className="font-semibold text-foreground">9. Sécurité</h4>
                         <p>Nous mettons en place des mesures techniques et organisationnelles pour protéger vos données : chiffrement TLS, authentification sécurisée, politiques de sécurité par ligne (RLS), et sauvegardes régulières.</p>
                       </div>
+                      <DialogClose asChild>
+                        <Button variant="outline" className="w-full mt-2">Fermer</Button>
+                      </DialogClose>
                     </DialogContent>
                   </Dialog>
                 </label>
