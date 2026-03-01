@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Building2, CheckCircle2, Mail, Eye, EyeOff, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { verifyInvitationToken } from "@/lib/actions/team";
@@ -438,13 +439,105 @@ export default function SignupPage() {
                   className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   J&apos;accepte les{" "}
-                  <Link href="/cgu" className="underline hover:text-primary" target="_blank">
-                    conditions d&apos;utilisation
-                  </Link>{" "}
-                  et la{" "}
-                  <Link href="/privacy" className="underline hover:text-primary" target="_blank">
-                    politique de confidentialité
-                  </Link>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button type="button" className="underline hover:text-primary">
+                        conditions d&apos;utilisation
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Conditions Générales d&apos;Utilisation</DialogTitle>
+                      </DialogHeader>
+                      <div className="text-sm text-muted-foreground space-y-4 mt-2">
+                        <p className="font-medium text-foreground">Dernière mise à jour : 1er mars 2026</p>
+
+                        <h4 className="font-semibold text-foreground">1. Objet</h4>
+                        <p>Les présentes CGU régissent l&apos;utilisation de la plateforme ConciergeOS, un logiciel de gestion destiné aux conciergeries de locations saisonnières. En créant un compte, vous acceptez ces conditions sans réserve.</p>
+
+                        <h4 className="font-semibold text-foreground">2. Accès au service</h4>
+                        <p>L&apos;accès à ConciergeOS nécessite la création d&apos;un compte avec une adresse email valide. Vous êtes responsable de la confidentialité de vos identifiants et de toute activité réalisée depuis votre compte.</p>
+
+                        <h4 className="font-semibold text-foreground">3. Utilisation du service</h4>
+                        <p>Vous vous engagez à utiliser ConciergeOS conformément à sa destination : la gestion de biens immobiliers en location courte durée. Toute utilisation abusive, frauduleuse ou contraire aux lois en vigueur est interdite.</p>
+
+                        <h4 className="font-semibold text-foreground">4. Données saisies</h4>
+                        <p>Vous êtes responsable de l&apos;exactitude des données saisies dans la plateforme (logements, réservations, informations voyageurs, données financières). ConciergeOS ne saurait être tenu responsable d&apos;erreurs résultant de données incorrectes.</p>
+
+                        <h4 className="font-semibold text-foreground">5. Disponibilité</h4>
+                        <p>ConciergeOS s&apos;efforce d&apos;assurer une disponibilité continue du service. Toutefois, des interruptions pour maintenance ou mises à jour peuvent survenir. Aucune garantie de disponibilité à 100% n&apos;est fournie.</p>
+
+                        <h4 className="font-semibold text-foreground">6. Propriété intellectuelle</h4>
+                        <p>La plateforme ConciergeOS, son code source, son design et ses contenus sont protégés par le droit de la propriété intellectuelle. Toute reproduction ou utilisation non autorisée est interdite.</p>
+
+                        <h4 className="font-semibold text-foreground">7. Résiliation</h4>
+                        <p>Vous pouvez supprimer votre compte à tout moment. ConciergeOS se réserve le droit de suspendre ou résilier un compte en cas de violation des présentes CGU.</p>
+
+                        <h4 className="font-semibold text-foreground">8. Limitation de responsabilité</h4>
+                        <p>ConciergeOS est fourni &quot;en l&apos;état&quot;. La plateforme ne saurait être tenue responsable des dommages directs ou indirects liés à l&apos;utilisation du service, notamment les pertes de données ou de revenus.</p>
+
+                        <h4 className="font-semibold text-foreground">9. Droit applicable</h4>
+                        <p>Les présentes CGU sont régies par le droit français. En cas de litige, les tribunaux compétents seront ceux du ressort du siège social de ConciergeOS.</p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  {" "}et la{" "}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button type="button" className="underline hover:text-primary">
+                        politique de confidentialité
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Politique de Confidentialité</DialogTitle>
+                      </DialogHeader>
+                      <div className="text-sm text-muted-foreground space-y-4 mt-2">
+                        <p className="font-medium text-foreground">Dernière mise à jour : 1er mars 2026</p>
+
+                        <h4 className="font-semibold text-foreground">1. Responsable du traitement</h4>
+                        <p>ConciergeOS est responsable du traitement des données personnelles collectées via la plateforme, conformément au Règlement Général sur la Protection des Données (RGPD).</p>
+
+                        <h4 className="font-semibold text-foreground">2. Données collectées</h4>
+                        <p>Nous collectons les données suivantes :</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Données d&apos;identification : nom, prénom, adresse email</li>
+                          <li>Données professionnelles : nom de la conciergerie, ville</li>
+                          <li>Données d&apos;utilisation : logs de connexion, actions réalisées</li>
+                          <li>Données saisies : logements, réservations, voyageurs, finances</li>
+                        </ul>
+
+                        <h4 className="font-semibold text-foreground">3. Finalités du traitement</h4>
+                        <p>Les données sont traitées pour : la fourniture du service de gestion, l&apos;authentification, l&apos;envoi de notifications, l&apos;amélioration du service, et le respect des obligations légales.</p>
+
+                        <h4 className="font-semibold text-foreground">4. Base légale</h4>
+                        <p>Le traitement repose sur l&apos;exécution du contrat (CGU) et votre consentement lors de la création du compte.</p>
+
+                        <h4 className="font-semibold text-foreground">5. Hébergement et sous-traitants</h4>
+                        <p>Les données sont hébergées par Supabase (serveurs UE) et Vercel (CDN mondial). Les emails sont envoyés via Resend. Ces sous-traitants respectent le RGPD.</p>
+
+                        <h4 className="font-semibold text-foreground">6. Durée de conservation</h4>
+                        <p>Les données sont conservées pendant toute la durée d&apos;utilisation du compte, puis supprimées dans un délai de 30 jours après la suppression du compte, sauf obligation légale de conservation.</p>
+
+                        <h4 className="font-semibold text-foreground">7. Vos droits</h4>
+                        <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Droit d&apos;accès à vos données</li>
+                          <li>Droit de rectification</li>
+                          <li>Droit à l&apos;effacement</li>
+                          <li>Droit à la portabilité</li>
+                          <li>Droit d&apos;opposition</li>
+                        </ul>
+                        <p>Pour exercer ces droits, contactez-nous par email à l&apos;adresse indiquée dans votre espace client.</p>
+
+                        <h4 className="font-semibold text-foreground">8. Cookies</h4>
+                        <p>ConciergeOS utilise uniquement des cookies techniques nécessaires au fonctionnement du service (authentification, session). Aucun cookie de tracking ou publicitaire n&apos;est utilisé.</p>
+
+                        <h4 className="font-semibold text-foreground">9. Sécurité</h4>
+                        <p>Nous mettons en place des mesures techniques et organisationnelles pour protéger vos données : chiffrement TLS, authentification sécurisée, politiques de sécurité par ligne (RLS), et sauvegardes régulières.</p>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </label>
               </div>
 
