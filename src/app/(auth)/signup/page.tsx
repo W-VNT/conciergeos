@@ -184,6 +184,8 @@ export default function SignupPage() {
       signupOptions.data.invitation_token = invitationToken;
     }
 
+    signupOptions.emailRedirectTo = `${window.location.origin}/api/auth/callback?next=/dashboard`;
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -738,14 +740,10 @@ export default function SignupPage() {
                   <ExternalLink className="h-4 w-4" />
                 </a>
               ) : (
-                <a
-                  href={`mailto:${email}`}
-                  className="inline-flex items-center justify-center gap-2 w-full rounded-lg px-6 py-3 bg-primary text-primary-foreground font-medium text-base transition-colors hover:bg-primary/90"
-                >
-                  <Mail className="h-4 w-4" />
-                  Ouvrir mon application mail
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+                <div className="bg-muted rounded-lg p-4 text-sm">
+                  <p className="font-medium text-foreground">Ouvrez votre application email pour confirmer votre compte.</p>
+                  <p className="text-muted-foreground mt-1">Recherchez un email de ConciergeOS dans votre boîte de réception.</p>
+                </div>
               )}
 
               <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">

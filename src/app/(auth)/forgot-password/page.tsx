@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
 
     // Always show success to prevent email enumeration
     await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/callback?next=/reset-password`,
+      redirectTo: `${window.location.origin}/api/auth/callback?next=/reset-password`,
     });
 
     setSent(true);
